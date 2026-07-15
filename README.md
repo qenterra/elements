@@ -38,9 +38,9 @@ Each GitHub release contains a separate build for every supported browser:
 
 | Archive | Target | Usage |
 | --- | --- | --- |
-| `elements-v1.0.0-chrome.zip` | Chrome and Chromium browsers | Unzip and load as an unpacked extension |
-| `elements-v1.0.0-firefox.zip` | Firefox | Load temporarily for development or submit for Mozilla signing |
-| `elements-v1.0.0-safari.zip` | Safari | Use as the WebExtension input for Safari conversion and signing in Xcode |
+| `elements-1.0.0-chrome.zip` | Chrome and Chromium browsers | Unzip and load as an unpacked extension |
+| `elements-1.0.0-firefox.zip` | Firefox | Load temporarily for development or submit for Mozilla signing |
+| `elements-1.0.0-safari.zip` | Safari | Use as the WebExtension input for Safari conversion and signing in Xcode |
 
 The release archives are unsigned development/self-distribution builds. Store
 distribution still requires the signing and review process of each browser.
