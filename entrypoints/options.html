@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="wxt.open_in_tab" content="true" />
+    <title>Elements</title>
+
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0f1013;
+        --card-bg: #17181c;
+        --text: #a7adba;
+        --text-strong: #e5e7eb;
+        --text-muted: #6b7280;
+        --border: #2a2c33;
+        --accent: #22d3ee;
+        --accent-hover: #67e3f5;
+        --accent-soft: rgba(34, 211, 238, 0.12);
+        --row-alt: #1e2025;
+        --success: #4ade80;
+        --danger: #f87171;
+        --shadow: 0 1px 2px rgba(0, 0, 0, .2), 0 12px 32px rgba(0, 0, 0, .45);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      body {
+        margin: 0;
+        padding: 48px 20px 64px;
+        background: var(--bg);
+        color: var(--text);
+        font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+
+      :where(a, button, input, [tabindex]):focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      .page {
+        position: relative;
+        z-index: 1;
+        max-width: 640px;
+        margin: 0 auto;
+        animation: pageIn .35s ease both;
+        perspective: 1200px;
+      }
+
+      .bgFx {
+        position: fixed;
+        inset: 0;
+        overflow: hidden;
+        z-index: 0;
+        pointer-events: none;
+      }
+
+      .bgFx__glow {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 440px;
+        height: 440px;
+        margin: -220px 0 0 -220px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(34, 211, 238, 0.07), transparent 70%);
+        opacity: 0;
+        transition: opacity .5s ease;
+        will-change: transform;
+      }
+
+      @keyframes pageIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      .card.pageHeader {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 22px 28px;
+      }
+
+      .pageHeader__icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        flex: none;
+      }
+
+      h1 {
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--text-strong);
+        margin: 0;
+        text-wrap: balance;
+      }
+
+      .pageHeader__tagline {
+        margin: 3px 0 0;
+        font-size: 12.5px;
+        color: var(--text-muted);
+        text-wrap: pretty;
+      }
+
+      .card {
+        position: relative;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        padding: 24px 28px 28px;
+        transition: border-color .2s ease, transform .25s ease-out;
+        will-change: transform;
+      }
+
+      .card + .card {
+        margin-top: 20px;
+      }
+
+      .card:hover {
+        border-color: var(--accent);
+      }
+
+      .cardTitle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        color: var(--text-strong);
+        margin: 0 0 4px;
+      }
+
+      .cardTitle svg {
+        color: var(--accent);
+        flex: none;
+      }
+
+      .cardDescription {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin: 0 0 18px;
+        text-wrap: pretty;
+      }
+
+      .cardDescription code {
+        font: 11px/1 ui-monospace, "SF Mono", Menlo, monospace;
+        background: var(--row-alt);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 1.5px 5px;
+      }
+
+      .actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 20px;
+      }
+
+      input[type="button"] {
+        font: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        min-width: 110px;
+        color: #0f1013;
+        background: var(--accent);
+        border: none;
+        padding: 11px 18px;
+        border-radius: 9px;
+        transition: background .15s ease, transform .1s ease, border-color .15s ease;
+      }
+
+      input[type="button"]:hover {
+        background: var(--accent-hover);
+      }
+
+      input[type="button"]:active {
+        transform: scale(0.97);
+      }
+
+      input[type="button"].secondary {
+        color: var(--text-strong);
+        background: var(--row-alt);
+        border: 1px solid var(--border);
+      }
+
+      input[type="button"].secondary:hover {
+        background: var(--accent-soft);
+        border-color: var(--accent);
+      }
+
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 28px;
+        transform: translate(-50%, 14px);
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        padding: 11px 18px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-strong);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .25s ease, transform .25s ease;
+        z-index: 10;
+      }
+
+      .toast.isVisible {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+
+      .toast__icon {
+        flex: none;
+        color: var(--success);
+      }
+
+      .sortSwitch {
+        display: inline-flex;
+        gap: 2px;
+        margin-left: auto;
+        background: var(--row-alt);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 2px;
+      }
+
+      .sortSwitch__btn {
+        font: inherit;
+        font-size: 11.5px;
+        font-weight: 600;
+        color: var(--text-muted);
+        background: none;
+        border: none;
+        border-radius: 6px;
+        padding: 5px 11px;
+        cursor: pointer;
+        transition: color .15s ease, background .15s ease;
+      }
+
+      .sortSwitch__btn:hover {
+        color: var(--text-strong);
+      }
+
+      .sortSwitch__btn.isActive {
+        color: var(--accent);
+        background: var(--accent-soft);
+      }
+
+      .siteList {
+        background: var(--row-alt);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 6px;
+      }
+
+      .siteList__rows {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .siteList__empty {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin: 4px 8px;
+        text-wrap: pretty;
+      }
+
+      .siteRow {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 7px 10px;
+        border-radius: 5px;
+        transition: background .15s ease;
+      }
+
+      .siteRow:hover {
+        background: var(--card-bg);
+      }
+
+      .siteRow__domain {
+        flex: 1;
+        min-width: 80px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-strong);
+        text-decoration: none;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .siteRow__domain:hover {
+        color: var(--accent);
+        text-decoration: underline;
+      }
+
+      .siteRow__count {
+        flex: none;
+        font-size: 11px;
+        font-variant-numeric: tabular-nums;
+        color: var(--text-muted);
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 1px 8px;
+      }
+
+      .siteRow__date {
+        flex: none;
+        font-size: 11.5px;
+        font-variant-numeric: tabular-nums;
+        color: var(--text-muted);
+      }
+
+      .siteRow__delete {
+        flex: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        color: var(--text-muted);
+        background: none;
+        border: none;
+        cursor: pointer;
+        transition: color .15s ease, background .15s ease, transform .1s ease;
+      }
+
+      .siteRow__delete:hover {
+        color: var(--danger);
+        background: rgba(248, 113, 113, 0.12);
+      }
+
+      .siteRow__delete:active {
+        transform: scale(0.92);
+      }
+
+      .about {
+        font-size: 13px;
+        margin: 0;
+        text-wrap: pretty;
+      }
+
+      .about p {
+        margin: 0 0 10px;
+      }
+
+      .about p:last-child {
+        margin-bottom: 0;
+      }
+
+      .about a {
+        color: var(--accent-hover);
+        font-weight: 600;
+        text-decoration: none;
+        border-bottom: 1px solid transparent;
+        transition: border-color .15s ease;
+      }
+
+      .about a:hover {
+        border-bottom-color: var(--accent-hover);
+      }
+
+      .about .version {
+        display: inline-block;
+        font-size: 11.5px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        color: var(--text-muted);
+        background: var(--row-alt);
+        border: 1px solid var(--border);
+        border-radius: 99px;
+        padding: 1px 10px;
+        margin-left: 6px;
+        vertical-align: 1px;
+      }
+
+      @media (prefers-reduced-motion) {
+        .page {
+          animation: none;
+        }
+
+        .toast,
+        .card,
+        input[type="button"],
+        .sortSwitch__btn,
+        .siteRow,
+        .siteRow__delete,
+        .about a {
+          transition: none;
+        }
+
+        .bgFx__glow {
+          display: none;
+        }
+      }
+    </style>
+    <script type="module" src="./options/main.tsx"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

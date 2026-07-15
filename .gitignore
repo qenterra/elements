@@ -1,0 +1,6 @@
+.DS_Store
+Icon
+_metadata/
+node_modules/
+.output/
+.wxt/

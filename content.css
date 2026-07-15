@@ -1,0 +1,500 @@
+.mainWindow {
+	--elements-bg: #17181c;
+	--elements-text: #a7adba;
+	--elements-text-muted: #6b7280;
+	--elements-border: #2a2c33;
+	--elements-accent: #22d3ee;
+	--elements-accent-hover: #67e3f5;
+	--elements-accent-soft: rgba(34, 211, 238, 0.12);
+	--elements-danger: #f87171;
+	--elements-danger-hover: #fca5a5;
+	--elements-danger-soft: rgba(248, 113, 113, 0.12);
+	--elements-row-alt: #1e2025;
+
+	position: relative;
+	box-sizing: border-box;
+	padding: 0 22px;
+	width: 420px;
+	font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	color: var(--elements-text);
+	background: var(--elements-bg);
+	min-height: 200px;
+	border-radius: 16px;
+	/* clip the full-bleed element list so it doesn't poke out of the rounded
+	   corners; "clip" instead of "hidden" so the box can't be scrolled
+	   programmatically (scrollIntoView on a descendant used to scroll the
+	   whole window content out of view) */
+	overflow: clip;
+}
+
+/* the width transition is enabled only after the window has fully appeared -
+   otherwise it fires while the stylesheet is first applied and the window
+   visibly "morphs" into place from its unstyled dimensions. Height can't
+   transition from its auto value, so the minimize handler animates it with
+   the Web Animations API between pixel endpoints instead */
+.mainWindow.mainWindow_animated {
+	transition: width .35s cubic-bezier(.22, 1, .36, 1);
+}
+
+.mainWindow > *:not(.header):not(.topButtons) {
+	transition: opacity .25s ease;
+}
+
+input[type="checkbox"] {
+	cursor: pointer;
+	accent-color: var(--elements-accent);
+}
+
+hr {
+	border: none;
+	border-top: solid 1px var(--elements-border);
+	margin: 10px -22px;
+}
+
+.header {
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	padding-top: 14px;
+	height: 34px;
+}
+
+.header + hr {
+	margin-top: 8px;
+	margin-bottom: 14px;
+}
+
+.header__logo {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 14px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	color: #e5e7eb;
+}
+
+.header__logo_small {
+	display: none;
+}
+
+.header__logo svg {
+	color: var(--elements-accent);
+	flex: none;
+}
+
+.topButtons {
+	position: absolute;
+	top: 0;
+	right: 0;
+	display: flex;
+	gap: 2px;
+	padding: 8px 8px 0 0;
+}
+
+.topButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	width: 28px;
+	height: 28px;
+	border-radius: 8px;
+	color: var(--elements-text-muted);
+	padding: 0;
+	border: 0;
+	background: transparent;
+	font: inherit;
+	transition: color 0.15s ease, background 0.15s ease, transform .15s ease;
+}
+
+.topButton:active {
+	transform: scale(0.92);
+}
+
+.topButton svg {
+	width: 15px;
+	height: 15px;
+}
+
+.topButton_settings:hover {
+	background: var(--elements-row-alt);
+	color: #e5e7eb;
+}
+
+.topButton_minimize:hover {
+	background: var(--elements-accent-soft);
+	color: var(--elements-accent-hover);
+}
+
+.topButton_minimize i {
+	display: flex;
+	cursor: pointer;
+	transform: rotate(45deg);
+	transition: transform 0.4s cubic-bezier(.22, 1, .36, 1);
+}
+
+.topButton_close:hover {
+	background: var(--elements-danger-soft);
+	color: var(--elements-danger);
+}
+
+.settingsGrid {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	column-gap: 24px;
+	row-gap: 10px;
+	margin: 14px 0 16px;
+	font-size: 12px;
+	color: var(--elements-text-muted);
+}
+
+.settingsGrid .rememberRow,
+.settingsGrid .compareRow {
+	flex: 1 1 40%;
+}
+
+.settingsItem {
+	white-space: nowrap;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	font: inherit;
+	color: inherit;
+	text-align: left;
+	transition: color .2s ease;
+}
+
+.settingsItem:hover {
+	color: var(--elements-text);
+}
+
+.rememberRow,
+.compareRow {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	cursor: pointer;
+	user-select: none;
+}
+
+.toggle {
+	display: inline-flex;
+	align-items: center;
+	box-sizing: border-box;
+	width: 30px;
+	height: 17px;
+	padding: 2px;
+	border-radius: 99px;
+	background: var(--elements-border);
+	flex: none;
+}
+
+.toggle__knob {
+	width: 13px;
+	height: 13px;
+	border-radius: 50%;
+	background: #e5e7eb;
+}
+
+.mainWindow_animated .toggle {
+	transition: background .2s ease;
+}
+
+.mainWindow_animated .toggle__knob {
+	transition: transform .2s ease;
+}
+
+.toggle.toggle_on {
+	background: var(--elements-accent);
+}
+
+.toggle.toggle_on .toggle__knob {
+	background: #0f1013;
+	transform: translateX(13px);
+}
+
+.activationKeys_changeable {
+	cursor: pointer;
+}
+
+.activationKeys_changeable:hover .key {
+	background: var(--elements-accent-soft);
+	color: var(--elements-accent-hover);
+	border-color: var(--elements-accent);
+}
+
+.key {
+	display: inline-block;
+	font-family: ui-monospace, "SF Mono", Menlo, monospace;
+	font-size: 11px;
+	background: var(--elements-row-alt);
+	color: var(--elements-text);
+	padding: 2px 5px;
+	margin: 0 2px;
+	border: solid 1px var(--elements-border);
+	border-radius: 5px;
+}
+
+.key:first-child {
+	margin-left: 0;
+}
+
+#elements_current_elm {
+	box-sizing: border-box;
+	font-family: ui-monospace, "SF Mono", Menlo, monospace;
+	font-size: 11px;
+	background: var(--elements-row-alt);
+	border: solid 1px var(--elements-border);
+	border-radius: 10px;
+	padding: 10px 12px;
+	margin: 18px 0 16px;
+	/* fixed height so the window doesn't jump while hovering elements
+	   with shorter/longer DOM paths */
+	height: 52px;
+	overflow: hidden;
+	line-height: 1.2;
+	color: var(--elements-text-muted);
+}
+
+#elements_current_elm .pathSeparator,
+#elements_current_elm .pathNode {
+	display: inline-block;
+	color: #cbd5e1;
+	border-bottom: solid 2px rgba(0, 0, 0, 0);
+	margin: 0 4px;
+	overflow: hidden;
+}
+
+#elements_current_elm .pathNode {
+	max-width: 180px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+#elements_current_elm .pathNode.active {
+	color: var(--elements-accent-hover);
+	font-weight: 600;
+	background: var(--elements-accent-soft);
+	border-radius: 5px;
+	padding: 1px 5px;
+	margin: 0 2px;
+}
+
+#elements_elm_list {
+	position: relative;
+	margin: 0 -22px;
+	border-top: solid 1px transparent;
+	border-bottom: solid 1px transparent;
+	max-height: 0;
+	overflow-x: hidden;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	transition: max-height .3s cubic-bezier(.22, 1, .36, 1), border-color .3s ease;
+}
+
+#elements_elm_list.hasContent {
+	max-height: 150px;
+	border-top-color: var(--elements-border);
+	border-bottom-color: var(--elements-border);
+}
+
+#elements_elm_list table {
+	border: 0;
+	width: 100%;
+	border-spacing: 0;
+}
+
+#elements_elm_list tr.elements_heading td {
+	position: sticky;
+	top: 0;
+	color: var(--elements-text-muted);
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: .03em;
+	padding-top: 7px;
+	padding-bottom: 7px;
+	background: var(--elements-row-alt);
+}
+
+#elements_elm_list td {
+	padding: 7px 0;
+	border: 0;
+	background: var(--elements-bg);
+	border-bottom: solid 1px var(--elements-border);
+	transition: background .15s ease;
+}
+
+#elements_elm_list tr:last-child td {
+	border-bottom: 0;
+}
+
+#elements_elm_list tr:not(.elements_heading):hover td {
+	background: var(--elements-row-alt);
+}
+
+#elements_elm_list td:nth-child(1) {
+	padding-left: 22px;
+}
+
+#elements_elm_list td:nth-child(2) {
+	text-align: center;
+	width: 80px;
+}
+
+#elements_elm_list td:nth-child(3) {
+	white-space: nowrap;
+	padding-right: 12px;
+}
+
+#elements_elm_list tr:not(.elements_heading) td:nth-child(1) {
+	font-family: ui-monospace, "SF Mono", Menlo, monospace;
+	font-size: 11px;
+}
+
+#elements_elm_list .elements_edit_selector {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	float: right;
+	opacity: 0;
+	color: var(--elements-accent-hover);
+	text-decoration: none;
+	font-size: 11px;
+	font-weight: 600;
+	transition: opacity .15s ease;
+}
+
+#elements_elm_list .elements_edit_selector:hover {
+	color: #e5e7eb;
+}
+
+#elements_elm_list tr:hover .elements_edit_selector {
+	opacity: 1;
+}
+
+#elements_elm_list a.elements_delete,
+#elements_elm_list .elements_preview {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	border-radius: 7px;
+	text-decoration: none;
+	vertical-align: -6px;
+	transition: color .15s ease, background .15s ease;
+}
+
+#elements_elm_list a.elements_delete svg,
+#elements_elm_list .elements_preview svg {
+	width: 14px;
+	height: 14px;
+}
+
+#elements_elm_list a.elements_delete {
+	color: var(--elements-danger);
+}
+
+#elements_elm_list a.elements_delete:hover {
+	color: #0f1013;
+	background: var(--elements-danger);
+}
+
+#elements_elm_list .elements_preview {
+	cursor: zoom-in;
+	color: var(--elements-accent-hover);
+}
+
+#elements_elm_list .elements_preview:hover {
+	background: var(--elements-accent);
+	color: #0f1013;
+}
+
+.elements_selector {
+	word-break: break-all;
+}
+
+/* the edit-kind mark in front of each list entry: an eye-off for hidden
+   elements, a corner for rounded ones */
+.elements_action {
+	display: inline-block;
+	vertical-align: -1px;
+	margin-right: 5px;
+	color: var(--elements-accent);
+}
+
+.elements_action svg {
+	width: 11px;
+	height: 11px;
+}
+
+.mainWindow.minimized {
+	width: 178px;
+	min-height: 0;
+	height: 44px;
+}
+
+/* content fades out and is clipped by the shrinking window instead of
+   popping away with display: none */
+.mainWindow.minimized > *:not(.header):not(.topButtons) {
+	opacity: 0;
+	pointer-events: none;
+}
+
+.mainWindow.minimized .topButton_settings {
+	display: none;
+}
+
+.mainWindow.minimized .topButton_minimize i {
+	display: flex;
+	transform: rotate(-135deg);
+}
+
+.mainWindow.minimized .header {
+	display: flex;
+	align-items: center;
+	height: 40px;
+	/* clear the minimize + close buttons pinned to the top-right */
+	padding: 0 48px 0 0;
+}
+
+.mainWindow.minimized .header > * {
+	display: none;
+}
+
+.mainWindow.minimized .header > .header__logo_small {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+	font-size: 12px;
+	font-weight: 700;
+	color: var(--elements-accent);
+	margin: 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.mainWindow.minimized .header > .header__logo_small svg {
+	flex: none;
+}
+
+.mainWindow.minimized #elements_elm_list.hasContent {
+	display: none;
+}
+
+@media (prefers-reduced-motion) {
+	.mainWindow.mainWindow_animated,
+	.mainWindow > *:not(.header):not(.topButtons),
+	.topButton,
+	.topButton_minimize i,
+	.mainWindow_animated .toggle,
+	.mainWindow_animated .toggle__knob,
+	.settingsItem,
+	#elements_elm_list,
+	#elements_elm_list td {
+		transition: none;
+	}
+}

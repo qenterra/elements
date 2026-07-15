@@ -1,0 +1,82 @@
+{
+  "extensionName": {
+    "message": "Elements",
+    "description": "Name of the extension."
+  },
+  "extensionDescription": {
+    "message": "Remove annoying page elements with a click, edit their text, and round sharp corners.",
+    "description": "Description of the extension, referenced from the manifest."
+  },
+  "optionsBackupTitle": {
+    "message": "Backup",
+    "description": "Title for the export/import section on the options page."
+  },
+  "optionsSitesTitle": {
+    "message": "Edited Sites",
+    "description": "Title of the per-site edited elements list on the options page."
+  },
+  "optionsSitesDescription": {
+    "message": "Websites with permanently removed or restyled elements. Deleting a website restores its default look (tabs that are already open keep the current look until reloaded).",
+    "description": "Description of the edited sites list."
+  },
+  "optionsSitesSortName": {
+    "message": "A–Z",
+    "description": "Sort button: alphabetical order."
+  },
+  "optionsSitesSortDate": {
+    "message": "Recent",
+    "description": "Sort button: most recently changed first."
+  },
+  "optionsSitesEmpty": {
+    "message": "Nothing here yet. Activate «Elements» on a website to start editing its elements.",
+    "description": "Shown when no websites have edited elements."
+  },
+  "optionsSitesCount": {
+    "message": "$COUNT$ edited",
+    "description": "Badge with the number of edited elements on a website.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "optionsSiteDeleteTitle": {
+    "message": "Delete and restore the default look",
+    "description": "Tooltip of the delete button in the site list."
+  },
+  "optionsSiteDeleted": {
+    "message": "$DOMAIN$ restored to its default look.",
+    "description": "Toast after deleting a website from the list.",
+    "placeholders": {
+      "domain": {
+        "content": "$1",
+        "example": "example.com"
+      }
+    }
+  },
+  "optionsBackupHint": {
+    "message": "Saves all extension data to a single <code>JSON</code> file: permanently edited elements from every website and extension settings.",
+    "description": "Explanation of what the export/import buttons do. May contain simple HTML markup."
+  },
+  "optionsExportButton": {
+    "message": "Export",
+    "description": "Button that downloads a backup of all settings."
+  },
+  "optionsImportButton": {
+    "message": "Import",
+    "description": "Button that restores settings from a backup file."
+  },
+  "optionsImportSuccess": {
+    "message": "Import successful.",
+    "description": "Message shown after a successful import."
+  },
+  "optionsAboutTitle": {
+    "message": "About",
+    "description": "Title of the about/credits section on the options page."
+  },
+  "optionsTagline": {
+    "message": "Removes annoying page elements, edits their text, and smooths sharp corners.",
+    "description": "Short tagline under the extension name on the options page."
+  }
+}

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- Elements — vector source of the toolbar/branding icon -->
+  <rect x="0" y="0" width="128" height="128" rx="36" ry="36" fill="#17181c"/>
+  <rect x="0.75" y="0.75" width="126.5" height="126.5" rx="35.25" ry="35.25" fill="none" stroke="#ffffff" stroke-opacity="0.14" stroke-width="1.5"/>
+  <g fill="none" stroke="#22d3ee" stroke-width="8.4" stroke-linecap="round" stroke-linejoin="round" transform="translate(24.32 24.32) scale(3.3067)">
+    <path d="m18 16 4-4-4-4"/>
+    <path d="m6 8-4 4 4 4"/>
+    <path d="m14.5 4-5 16"/>
+  </g>
+</svg>
