@@ -7,15 +7,23 @@
   "scripts": {
     "dev": "wxt",
     "build": "wxt build",
+    "build:chrome": "wxt build --browser chrome",
+    "build:firefox": "wxt build --browser firefox",
+    "build:safari": "wxt build --browser safari",
+    "icons": "swift scripts/render-icons.swift",
+    "zip:chrome": "wxt zip --browser chrome",
+    "zip:firefox": "wxt zip --browser firefox",
+    "zip:safari": "wxt zip --browser safari",
+    "release:archives": "npm run zip:chrome && npm run zip:firefox && npm run zip:safari",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
-    "@wxt-dev/module-react": "1.2.2",
     "react": "19.2.7",
     "react-dom": "19.2.7"
   },
   "devDependencies": {
+    "@wxt-dev/module-react": "1.2.2",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "typescript": "7.0.2",

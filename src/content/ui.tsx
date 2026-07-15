@@ -1,11 +1,12 @@
 import { createRoot, type Root } from 'react-dom/client'
 import { useEffect, useState, type ReactNode } from 'react'
 import contentCss from '../../content.css?raw'
+import { BrandMark } from '../components/BrandMark'
 import type { RuntimeEdit } from '../core/model'
 import { ElementController } from './controller'
 
-function Icon({ children, className, width, height }: { children: ReactNode; className?: string; width?: string; height?: string }) {
-  return <svg className={className} width={width} height={height} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{children}</svg>
+function Icon({ children }: { children: ReactNode }) {
+  return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{children}</svg>
 }
 
 function SettingsIcon() {
@@ -37,56 +38,61 @@ function PickerPanel({ controller }: { controller: ElementController }) {
       : [<span key={`${token.label}-separator`} className="pathSeparator">&gt;</span>, <span key={token.label} className={`pathNode${token.active ? ' active' : ''}`}>{token.label}</span>])
     : 'Hover over an element to select it.'
 
-  return <div className={`mainWindow${snapshot.minimized ? ' minimized' : ''}`}>
+  return <div className={`mainWindow mainWindow_animated${snapshot.minimized ? ' minimized' : ''}`} role="region" aria-label="Elements picker">
     <div className="header">
       <span className="header__logo">
-        <Icon width="15" height="15"><path d="m18 16-4-4 4-4" /><path d="m6 8 4 4-4 4" /><path d="m14.5 4-5 16" /></Icon>
+        <BrandMark width="17" height="17" />
         Elements
       </span>
-      <span className="header__logo header__logo_small">
-        <Icon width="13" height="13"><path d="m18 16-4-4 4-4" /><path d="m6 8 4 4-4 4" /><path d="m14.5 4-5 16" /></Icon>
+      <span className="header__logo header__logo_small" aria-hidden="true">
+        <BrandMark width="14" height="14" />
         Elements
       </span>
     </div>
-
-    <hr />
 
     <div className="topButtons">
       <button type="button" className="topButton topButton_settings" title="Settings" aria-label="Settings" onClick={() => controller.openOptions()}><SettingsIcon /></button>
-      <button type="button" className="topButton topButton_minimize" title="Minimize" aria-label="Minimize" onClick={() => controller.toggleMinimize()}><i><Icon><line x1="7" y1="7" x2="17" y2="17" /><polyline points="17 7 17 17 7 17" /></Icon></i></button>
+      <button type="button" className="topButton topButton_minimize" title={snapshot.minimized ? 'Expand' : 'Minimize'} aria-label={snapshot.minimized ? 'Expand' : 'Minimize'} onClick={() => controller.toggleMinimize()}><i><Icon><line x1="7" y1="7" x2="17" y2="17" /><polyline points="17 7 17 17 7 17" /></Icon></i></button>
       <button type="button" className="topButton topButton_close" title="Close" aria-label="Close" onClick={() => controller.deactivate()}><Icon><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></Icon></button>
     </div>
 
-    <div className="settingsGrid">
-      <button type="button" className="settingsItem activationKeys activationKeys_changeable" title="Click to change" onClick={() => controller.openHotkeySettings()}>
-        {snapshot.hotkey.split('+').map((key) => <span className="key" key={key}>{key}</span>)}: Toggle overlay;
-      </button>
-      <div className="settingsItem"><span className="key">Q</span>/<span className="key">W</span>: Move the selection one level up or down;</div>
-      <button type="button" className="settingsItem rememberRow" onClick={() => controller.toggleRemember()}>
-        <span className={`toggle${snapshot.settings.remember ? ' toggle_on' : ''}`}><span className="toggle__knob" /></span>
-        Remember by default;
-      </button>
-      <button type="button" className="settingsItem compareRow" onClick={() => controller.toggleCompare()}>
-        <span className={`toggle${snapshot.previewOriginal ? ' toggle_on' : ''}`}><span className="toggle__knob" /></span>
-        Show the original page;
-      </button>
-      <div className="settingsItem"><span className="key">C</span>: Round the element's corners;</div>
-      <div className="settingsItem"><span className="key">E</span>: Edit the element's text;</div>
-      <div className="settingsItem"><span className="key">Space</span>/<span className="key">Left Click</span>: Remove the element.</div>
-    </div>
+    <div className="mainWindow__body" aria-hidden={snapshot.minimized} inert={snapshot.minimized ? true : undefined}>
+      <hr />
 
-    <div id="elements_current_elm">{path}</div>
-    <div id="elements_elm_list" className={snapshot.edits.length ? 'hasContent' : ''}>
-      {snapshot.edits.length > 0 && <table><tbody>
-        <tr className="elements_heading"><td>Edited element</td><td>Remember?</td><td /></tr>
-        {snapshot.edits.map((edit) => <EditRow key={`${edit.action ?? 'hide'}:${edit.selector}`} edit={edit} controller={controller} />)}
-      </tbody></table>}
+      <div className="settingsGrid">
+        <button type="button" className="settingsItem activationKeys activationKeys_changeable" title="Click to change" onClick={() => controller.openHotkeySettings()}>
+          {snapshot.hotkey.split('+').map((key) => <span className="key" key={key}>{key}</span>)}: Toggle overlay;
+        </button>
+        <div className="settingsItem"><span className="key">Q</span>/<span className="key">W</span>: Move the selection one level up or down;</div>
+        <button type="button" className="settingsItem rememberRow" role="switch" aria-checked={snapshot.settings.remember} onClick={() => controller.toggleRemember()}>
+          <span className={`toggle${snapshot.settings.remember ? ' toggle_on' : ''}`}><span className="toggle__knob" /></span>
+          Remember by default;
+        </button>
+        <button type="button" className="settingsItem compareRow" role="switch" aria-checked={snapshot.previewOriginal} onClick={() => controller.toggleCompare()}>
+          <span className={`toggle${snapshot.previewOriginal ? ' toggle_on' : ''}`}><span className="toggle__knob" /></span>
+          Show the original page;
+        </button>
+        <div className="settingsItem"><span className="key">C</span>: Round the element's corners;</div>
+        <div className="settingsItem"><span className="key">E</span>: Edit the element's text;</div>
+        <div className="settingsItem"><span className="key">Space</span>/<span className="key">Left Click</span>: Remove the element.</div>
+      </div>
+
+      <div id="elements_current_elm">{path}</div>
+      <div id="elements_elm_list" className={snapshot.edits.length ? 'hasContent' : ''}>
+        {snapshot.edits.length > 0 && <table><tbody>
+          <tr className="elements_heading"><td>Edited element</td><td>Remember?</td><td /></tr>
+          {snapshot.edits.map((edit) => <EditRow key={`${edit.action ?? 'hide'}:${edit.selector}`} edit={edit} controller={controller} />)}
+        </tbody></table>}
+      </div>
     </div>
   </div>
 }
 
 function EditRow({ edit, controller }: { edit: RuntimeEdit; controller: ElementController }) {
   const preview = (showOriginal: boolean) => controller.previewEdit(edit, showOriginal)
+  const previewOnTouch = (showOriginal: boolean) => {
+    if (matchMedia('(hover: none)').matches) preview(showOriginal)
+  }
 
   return <tr>
     <td className="elements_selector">
@@ -96,7 +102,7 @@ function EditRow({ edit, controller }: { edit: RuntimeEdit; controller: ElementC
     </td>
     <td><input type="checkbox" checked={edit.permanent} onChange={(event) => controller.setEditPermanent(edit, event.target.checked)} aria-label="Remember this edit" /></td>
     <td>
-      <span className="elements_preview" title="Preview" role="button" tabIndex={0} onMouseEnter={() => preview(true)} onMouseLeave={() => preview(false)} onFocus={() => preview(true)} onBlur={() => preview(false)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); preview(true) } }}><EyeIcon /></span>
+      <button type="button" className="elements_preview" title="Hold to preview the original" aria-label="Hold to preview the original" onMouseEnter={() => preview(true)} onMouseLeave={() => preview(false)} onBlur={() => preview(false)} onPointerDown={() => previewOnTouch(true)} onPointerUp={() => previewOnTouch(false)} onPointerCancel={() => previewOnTouch(false)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); preview(true) } }} onKeyUp={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); preview(false) } }}><EyeIcon /></button>
       <a href="#delete" className="elements_delete" title="Remove from list" onClick={(event) => { event.preventDefault(); controller.deleteEdit(edit) }}><TrashIcon /></a>
     </td>
   </tr>

@@ -1,7 +1,7 @@
 .mainWindow {
 	--elements-bg: #17181c;
 	--elements-text: #a7adba;
-	--elements-text-muted: #6b7280;
+	--elements-text-muted: #8991a1;
 	--elements-border: #2a2c33;
 	--elements-accent: #22d3ee;
 	--elements-accent-hover: #67e3f5;
@@ -10,6 +10,8 @@
 	--elements-danger-hover: #fca5a5;
 	--elements-danger-soft: rgba(248, 113, 113, 0.12);
 	--elements-row-alt: #1e2025;
+	--elements-ease-out: cubic-bezier(.23, 1, .32, 1);
+	--elements-ease-drawer: cubic-bezier(.32, .72, 0, 1);
 
 	position: relative;
 	box-sizing: border-box;
@@ -20,6 +22,7 @@
 	background: var(--elements-bg);
 	min-height: 200px;
 	border-radius: 16px;
+	transform-origin: bottom right;
 	/* clip the full-bleed element list so it doesn't poke out of the rounded
 	   corners; "clip" instead of "hidden" so the box can't be scrolled
 	   programmatically (scrollIntoView on a descendant used to scroll the
@@ -27,17 +30,27 @@
 	overflow: clip;
 }
 
-/* the width transition is enabled only after the window has fully appeared -
-   otherwise it fires while the stylesheet is first applied and the window
-   visibly "morphs" into place from its unstyled dimensions. Height can't
-   transition from its auto value, so the minimize handler animates it with
-   the Web Animations API between pixel endpoints instead */
-.mainWindow.mainWindow_animated {
-	transition: width .35s cubic-bezier(.22, 1, .36, 1);
+.mainWindow__body {
+	opacity: 1;
+	transform: translateY(0) scale(1);
+	filter: blur(0);
+	transform-origin: top right;
 }
 
-.mainWindow > *:not(.header):not(.topButtons) {
-	transition: opacity .25s ease;
+.mainWindow.mainWindow_animated .mainWindow__body {
+	transition:
+		opacity .16s ease,
+		transform .24s var(--elements-ease-drawer),
+		filter .16s ease;
+}
+
+.mainWindow.mainWindow_animated:not(.minimized) .mainWindow__body {
+	transition-delay: 70ms, 45ms, 70ms;
+}
+
+:where(button, a, input, [role="button"]):focus-visible {
+	outline: solid 2px var(--elements-accent);
+	outline-offset: 2px;
 }
 
 input[type="checkbox"] {
@@ -48,23 +61,21 @@ input[type="checkbox"] {
 hr {
 	border: none;
 	border-top: solid 1px var(--elements-border);
-	margin: 10px -22px;
+	margin: 0 -22px 14px;
 }
 
 .header {
+	position: relative;
 	box-sizing: border-box;
 	display: flex;
 	align-items: center;
-	padding-top: 14px;
-	height: 34px;
-}
-
-.header + hr {
-	margin-top: 8px;
-	margin-bottom: 14px;
+	height: 44px;
+	padding: 0 72px 0 0;
 }
 
 .header__logo {
+	position: absolute;
+	left: 0;
 	display: flex;
 	align-items: center;
 	gap: 8px;
@@ -72,10 +83,33 @@ hr {
 	font-weight: 600;
 	letter-spacing: -0.01em;
 	color: #e5e7eb;
+	opacity: 1;
+	transform: translateY(0) scale(1);
+	filter: blur(0);
+	transform-origin: left center;
 }
 
 .header__logo_small {
-	display: none;
+	display: flex;
+	gap: 6px;
+	font-size: 12px;
+	font-weight: 700;
+	color: var(--elements-accent);
+	opacity: 0;
+	transform: translateY(3px) scale(.97);
+	filter: blur(1px);
+	pointer-events: none;
+}
+
+.mainWindow.mainWindow_animated .header__logo {
+	transition:
+		opacity .14s ease,
+		transform .22s var(--elements-ease-drawer),
+		filter .14s ease;
+}
+
+.mainWindow.mainWindow_animated:not(.minimized) .header__logo:not(.header__logo_small) {
+	transition-delay: 70ms, 55ms, 70ms;
 }
 
 .header__logo svg {
@@ -105,11 +139,16 @@ hr {
 	border: 0;
 	background: transparent;
 	font: inherit;
-	transition: color 0.15s ease, background 0.15s ease, transform .15s ease;
+	transition:
+		color .15s ease,
+		background-color .15s ease,
+		transform .14s var(--elements-ease-out),
+		opacity .12s ease,
+		visibility 0s linear;
 }
 
 .topButton:active {
-	transform: scale(0.92);
+	transform: scale(0.96);
 }
 
 .topButton svg {
@@ -117,12 +156,12 @@ hr {
 	height: 15px;
 }
 
-.topButton_settings:hover {
+.topButton_settings:focus-visible {
 	background: var(--elements-row-alt);
 	color: #e5e7eb;
 }
 
-.topButton_minimize:hover {
+.topButton_minimize:focus-visible {
 	background: var(--elements-accent-soft);
 	color: var(--elements-accent-hover);
 }
@@ -131,12 +170,16 @@ hr {
 	display: flex;
 	cursor: pointer;
 	transform: rotate(45deg);
-	transition: transform 0.4s cubic-bezier(.22, 1, .36, 1);
+	transition: transform .26s var(--elements-ease-drawer);
 }
 
-.topButton_close:hover {
+.topButton_close:focus-visible {
 	background: var(--elements-danger-soft);
 	color: var(--elements-danger);
+}
+
+.mainWindow.mainWindow_animated:not(.minimized) .topButton_settings {
+	transition-delay: 90ms, 90ms, 70ms, 90ms, 0s;
 }
 
 .settingsGrid {
@@ -163,11 +206,19 @@ hr {
 	font: inherit;
 	color: inherit;
 	text-align: left;
-	transition: color .2s ease;
+	transition: color .15s ease, transform .12s var(--elements-ease-out);
 }
 
-.settingsItem:hover {
+button.settingsItem:active {
+	transform: scale(.98);
+}
+
+.settingsItem:focus-visible {
 	color: var(--elements-text);
+}
+
+.settingsItem[aria-checked="true"] {
+	color: #cbd5e1;
 }
 
 .rememberRow,
@@ -183,43 +234,60 @@ hr {
 	display: inline-flex;
 	align-items: center;
 	box-sizing: border-box;
+	position: relative;
 	width: 30px;
 	height: 17px;
 	padding: 2px;
 	border-radius: 99px;
-	background: var(--elements-border);
+	background-color: var(--elements-border);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .025);
 	flex: none;
+	transition:
+		background-color .22s ease,
+		box-shadow .22s ease,
+		transform .14s var(--elements-ease-out);
 }
 
 .toggle__knob {
 	width: 13px;
 	height: 13px;
 	border-radius: 50%;
-	background: #e5e7eb;
-}
-
-.mainWindow_animated .toggle {
-	transition: background .2s ease;
-}
-
-.mainWindow_animated .toggle__knob {
-	transition: transform .2s ease;
+	background-color: #e5e7eb;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, .42);
+	transform: translateX(0);
+	transition:
+		transform .24s var(--elements-ease-drawer),
+		background-color .18s ease,
+		box-shadow .18s ease;
 }
 
 .toggle.toggle_on {
-	background: var(--elements-accent);
+	background-color: var(--elements-accent);
+	box-shadow:
+		inset 0 0 0 1px rgba(255, 255, 255, .12),
+		0 0 0 3px rgba(34, 211, 238, .08);
 }
 
 .toggle.toggle_on .toggle__knob {
-	background: #0f1013;
+	background-color: #0f1013;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, .3);
 	transform: translateX(13px);
+}
+
+button.settingsItem:active .toggle {
+	transform: scale(.96);
+}
+
+button.settingsItem:focus-visible .toggle,
+button.settingsItem:focus-visible .toggle__knob {
+	transition-duration: 0ms;
 }
 
 .activationKeys_changeable {
 	cursor: pointer;
 }
 
-.activationKeys_changeable:hover .key {
+.activationKeys_changeable:focus-visible .key {
 	background: var(--elements-accent-soft);
 	color: var(--elements-accent-hover);
 	border-color: var(--elements-accent);
@@ -291,7 +359,7 @@ hr {
 	overflow-x: hidden;
 	overflow-y: auto;
 	overscroll-behavior: contain;
-	transition: max-height .3s cubic-bezier(.22, 1, .36, 1), border-color .3s ease;
+	transition: max-height .22s var(--elements-ease-out), border-color .18s ease;
 }
 
 #elements_elm_list.hasContent {
@@ -331,7 +399,7 @@ hr {
 	border-bottom: 0;
 }
 
-#elements_elm_list tr:not(.elements_heading):hover td {
+#elements_elm_list tr:not(.elements_heading):focus-within td {
 	background: var(--elements-row-alt);
 }
 
@@ -362,15 +430,16 @@ hr {
 	text-decoration: none;
 	font-size: 11px;
 	font-weight: 600;
-	transition: opacity .15s ease;
+	transition: opacity .15s ease, color .15s ease;
 }
 
-#elements_elm_list .elements_edit_selector:hover {
-	color: #e5e7eb;
-}
-
-#elements_elm_list tr:hover .elements_edit_selector {
+#elements_elm_list tr:focus-within .elements_edit_selector,
+#elements_elm_list .elements_edit_selector:focus-visible {
 	opacity: 1;
+}
+
+#elements_elm_list .elements_edit_selector:focus-visible {
+	color: #e5e7eb;
 }
 
 #elements_elm_list a.elements_delete,
@@ -383,7 +452,12 @@ hr {
 	border-radius: 7px;
 	text-decoration: none;
 	vertical-align: -6px;
-	transition: color .15s ease, background .15s ease;
+	transition: color .15s ease, background-color .15s ease, transform .12s var(--elements-ease-out);
+}
+
+#elements_elm_list a.elements_delete:active,
+#elements_elm_list .elements_preview:active {
+	transform: scale(.96);
 }
 
 #elements_elm_list a.elements_delete svg,
@@ -396,7 +470,7 @@ hr {
 	color: var(--elements-danger);
 }
 
-#elements_elm_list a.elements_delete:hover {
+#elements_elm_list a.elements_delete:focus-visible {
 	color: #0f1013;
 	background: var(--elements-danger);
 }
@@ -404,9 +478,13 @@ hr {
 #elements_elm_list .elements_preview {
 	cursor: zoom-in;
 	color: var(--elements-accent-hover);
+	padding: 0;
+	border: 0;
+	background: transparent;
+	font: inherit;
 }
 
-#elements_elm_list .elements_preview:hover {
+#elements_elm_list .elements_preview:focus-visible {
 	background: var(--elements-accent);
 	color: #0f1013;
 }
@@ -435,66 +513,108 @@ hr {
 	height: 44px;
 }
 
-/* content fades out and is clipped by the shrinking window instead of
-   popping away with display: none */
-.mainWindow.minimized > *:not(.header):not(.topButtons) {
+.mainWindow.minimized .mainWindow__body {
 	opacity: 0;
+	transform: translateY(7px) scale(.985);
+	filter: blur(1.5px);
 	pointer-events: none;
 }
 
 .mainWindow.minimized .topButton_settings {
-	display: none;
+	opacity: 0;
+	transform: scale(.88);
+	visibility: hidden;
+	pointer-events: none;
+	transition-delay: 0s, 0s, 0s, 0s, .12s;
 }
 
 .mainWindow.minimized .topButton_minimize i {
-	display: flex;
 	transform: rotate(-135deg);
 }
 
 .mainWindow.minimized .header {
-	display: flex;
-	align-items: center;
-	height: 40px;
-	/* clear the minimize + close buttons pinned to the top-right */
 	padding: 0 48px 0 0;
 }
 
-.mainWindow.minimized .header > * {
-	display: none;
+.mainWindow.minimized .header__logo:not(.header__logo_small) {
+	opacity: 0;
+	transform: translateY(-3px) scale(.98);
+	filter: blur(1px);
+	pointer-events: none;
 }
 
-.mainWindow.minimized .header > .header__logo_small {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	min-width: 0;
-	font-size: 12px;
-	font-weight: 700;
-	color: var(--elements-accent);
-	margin: 0;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+.mainWindow.minimized .header__logo_small {
+	opacity: 1;
+	transform: translateY(0) scale(1);
+	filter: blur(0);
 }
 
-.mainWindow.minimized .header > .header__logo_small svg {
-	flex: none;
+.mainWindow.mainWindow_animated.minimized .header__logo_small {
+	transition-delay: 70ms, 55ms, 70ms;
 }
 
-.mainWindow.minimized #elements_elm_list.hasContent {
-	display: none;
+@media (hover: hover) and (pointer: fine) {
+	.topButton_settings:hover {
+		background: var(--elements-row-alt);
+		color: #e5e7eb;
+	}
+
+	.topButton_minimize:hover {
+		background: var(--elements-accent-soft);
+		color: var(--elements-accent-hover);
+	}
+
+	.topButton_close:hover {
+		background: var(--elements-danger-soft);
+		color: var(--elements-danger);
+	}
+
+	.settingsItem:hover {
+		color: var(--elements-text);
+	}
+
+	.activationKeys_changeable:hover .key {
+		background: var(--elements-accent-soft);
+		color: var(--elements-accent-hover);
+		border-color: var(--elements-accent);
+	}
+
+	#elements_elm_list tr:not(.elements_heading):hover td {
+		background: var(--elements-row-alt);
+	}
+
+	#elements_elm_list .elements_edit_selector:hover {
+		color: #e5e7eb;
+	}
+
+	#elements_elm_list tr:hover .elements_edit_selector {
+		opacity: 1;
+	}
+
+	#elements_elm_list a.elements_delete:hover {
+		color: #0f1013;
+		background: var(--elements-danger);
+	}
+
+	#elements_elm_list .elements_preview:hover {
+		background: var(--elements-accent);
+		color: #0f1013;
+	}
 }
 
-@media (prefers-reduced-motion) {
-	.mainWindow.mainWindow_animated,
-	.mainWindow > *:not(.header):not(.topButtons),
+@media (prefers-reduced-motion: reduce) {
+	.mainWindow__body,
+	.header__logo,
 	.topButton,
 	.topButton_minimize i,
-	.mainWindow_animated .toggle,
-	.mainWindow_animated .toggle__knob,
+	.toggle,
+	.toggle__knob,
 	.settingsItem,
 	#elements_elm_list,
-	#elements_elm_list td {
+	#elements_elm_list td,
+	#elements_elm_list .elements_edit_selector,
+	#elements_elm_list a.elements_delete,
+	#elements_elm_list .elements_preview {
 		transition: none;
 	}
 }

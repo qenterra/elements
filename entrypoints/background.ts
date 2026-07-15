@@ -4,10 +4,16 @@ import { hybridStorage } from '../src/core/storage'
 
 const BACKUP_KEY_PATTERN = /^settings$|^web:|^webMeta$/
 
+const ACTION_ICONS = {
+  active: { 16: 'icons/action_active_16.png', 32: 'icons/action_active.png' },
+  inactive: { 16: 'icons/action_inactive_16.png', 32: 'icons/action_inactive.png' },
+  unavailable: { 16: 'icons/action_unavailable_16.png', 32: 'icons/action_unavailable.png' },
+} as const
+
 function setIcon(tabId: number, active: boolean): Promise<void> {
   return Promise.all([
     browser.action.setIcon({
-      path: active ? 'icons/action_active.png' : 'icons/action_inactive.png',
+      path: active ? ACTION_ICONS.active : ACTION_ICONS.inactive,
       tabId,
     }),
     browser.action.setTitle({ title: 'Elements', tabId }),
@@ -16,7 +22,7 @@ function setIcon(tabId: number, active: boolean): Promise<void> {
 
 async function setUnavailable(tabId: number): Promise<void> {
   await Promise.all([
-    browser.action.setIcon({ path: 'icons/action_unavailable.png', tabId }),
+    browser.action.setIcon({ path: ACTION_ICONS.unavailable, tabId }),
     browser.action.setTitle({ title: 'Elements [unavailable for this tab]', tabId }),
   ])
 }

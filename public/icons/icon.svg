@@ -1,10 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
-  <!-- Elements — vector source of the toolbar/branding icon -->
-  <rect x="0" y="0" width="128" height="128" rx="36" ry="36" fill="#17181c"/>
-  <rect x="0.75" y="0.75" width="126.5" height="126.5" rx="35.25" ry="35.25" fill="none" stroke="#ffffff" stroke-opacity="0.14" stroke-width="1.5"/>
-  <g fill="none" stroke="#22d3ee" stroke-width="8.4" stroke-linecap="round" stroke-linejoin="round" transform="translate(24.32 24.32) scale(3.3067)">
-    <path d="m18 16 4-4-4-4"/>
-    <path d="m6 8-4 4 4 4"/>
-    <path d="m14.5 4-5 16"/>
+  <defs>
+    <radialGradient id="surfaceGlow" cx="82%" cy="12%" r="92%">
+      <stop offset="0" stop-color="#22d3ee" stop-opacity=".1"/>
+      <stop offset=".58" stop-color="#22d3ee" stop-opacity=".025"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="128" height="128" rx="36" fill="#17181c"/>
+  <rect width="128" height="128" rx="36" fill="url(#surfaceGlow)"/>
+  <rect x=".75" y=".75" width="126.5" height="126.5" rx="35.25" fill="none" stroke="#ffffff" stroke-opacity=".14" stroke-width="1.5"/>
+  <g transform="translate(18.5 18.5) scale(3.79)">
+    <path d="M9 4.5H6.5a2 2 0 0 0-2 2V9m10.5-4.5h2.5a2 2 0 0 1 2 2V9m0 6v2.5a2 2 0 0 1-2 2H15m-6 0H6.5a2 2 0 0 1-2-2V15" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" opacity=".78"/>
+    <path d="M9 8.25v8.5l2.24-2.14 1.75 3.28 1.84-.98-1.75-3.27 3.05-.51L9 8.25Z" fill="#67e3f5"/>
   </g>
 </svg>

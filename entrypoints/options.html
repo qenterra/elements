@@ -13,7 +13,7 @@
         --card-bg: #17181c;
         --text: #a7adba;
         --text-strong: #e5e7eb;
-        --text-muted: #6b7280;
+        --text-muted: #8991a1;
         --border: #2a2c33;
         --accent: #22d3ee;
         --accent-hover: #67e3f5;
@@ -22,6 +22,7 @@
         --success: #4ade80;
         --danger: #f87171;
         --shadow: 0 1px 2px rgba(0, 0, 0, .2), 0 12px 32px rgba(0, 0, 0, .45);
+        --ease-out: cubic-bezier(.23, 1, .32, 1);
       }
 
       * {
@@ -51,40 +52,27 @@
         z-index: 1;
         max-width: 640px;
         margin: 0 auto;
-        animation: pageIn .35s ease both;
-        perspective: 1200px;
       }
 
-      .bgFx {
-        position: fixed;
-        inset: 0;
-        overflow: hidden;
-        z-index: 0;
-        pointer-events: none;
-      }
-
-      .bgFx__glow {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 440px;
-        height: 440px;
-        margin: -220px 0 0 -220px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(34, 211, 238, 0.07), transparent 70%);
-        opacity: 0;
-        transition: opacity .5s ease;
-        will-change: transform;
-      }
-
-      @keyframes pageIn {
+      @keyframes cardIn {
         from {
           opacity: 0;
-          transform: translateY(8px);
+          transform: translateY(6px) scale(.99);
         }
         to {
           opacity: 1;
-          transform: none;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      @keyframes rowIn {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
         }
       }
 
@@ -125,21 +113,40 @@
 
       .card {
         position: relative;
+        isolation: isolate;
         background: var(--card-bg);
         border: 1px solid var(--border);
         border-radius: 16px;
         box-shadow: var(--shadow);
         padding: 24px 28px 28px;
-        transition: border-color .2s ease, transform .25s ease-out;
-        will-change: transform;
+        animation: cardIn .24s var(--ease-out) backwards;
+        transform-style: preserve-3d;
+        backface-visibility: hidden;
       }
+
+      .card::after {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        border: 1px solid rgba(34, 211, 238, .8);
+        border-radius: inherit;
+        opacity: 0;
+        transform: scale(.996);
+        pointer-events: none;
+        transition: opacity .2s ease, transform .24s var(--ease-out);
+      }
+
+      .card:focus-within::after {
+        opacity: .45;
+        transform: scale(1);
+      }
+
+      .card:nth-child(2) { animation-delay: 40ms; }
+      .card:nth-child(3) { animation-delay: 80ms; }
+      .card:nth-child(4) { animation-delay: 120ms; }
 
       .card + .card {
         margin-top: 20px;
-      }
-
-      .card:hover {
-        border-color: var(--accent);
       }
 
       .cardTitle {
@@ -191,11 +198,7 @@
         border: none;
         padding: 11px 18px;
         border-radius: 9px;
-        transition: background .15s ease, transform .1s ease, border-color .15s ease;
-      }
-
-      input[type="button"]:hover {
-        background: var(--accent-hover);
+        transition: background-color .15s ease, transform .12s var(--ease-out), border-color .15s ease;
       }
 
       input[type="button"]:active {
@@ -206,11 +209,6 @@
         color: var(--text-strong);
         background: var(--row-alt);
         border: 1px solid var(--border);
-      }
-
-      input[type="button"].secondary:hover {
-        background: var(--accent-soft);
-        border-color: var(--accent);
       }
 
       .toast {
@@ -231,7 +229,7 @@
         color: var(--text-strong);
         opacity: 0;
         pointer-events: none;
-        transition: opacity .25s ease, transform .25s ease;
+        transition: opacity .16s var(--ease-out), transform .18s var(--ease-out);
         z-index: 10;
       }
 
@@ -243,6 +241,14 @@
       .toast__icon {
         flex: none;
         color: var(--success);
+      }
+
+      .toast.isError {
+        border-color: rgba(248, 113, 113, .45);
+      }
+
+      .toast.isError .toast__icon {
+        color: var(--danger);
       }
 
       .sortSwitch {
@@ -265,11 +271,11 @@
         border-radius: 6px;
         padding: 5px 11px;
         cursor: pointer;
-        transition: color .15s ease, background .15s ease;
+        transition: color .15s ease, background-color .15s ease, transform .12s var(--ease-out);
       }
 
-      .sortSwitch__btn:hover {
-        color: var(--text-strong);
+      .sortSwitch__btn:active {
+        transform: scale(.97);
       }
 
       .sortSwitch__btn.isActive {
@@ -303,11 +309,9 @@
         gap: 10px;
         padding: 7px 10px;
         border-radius: 5px;
-        transition: background .15s ease;
-      }
-
-      .siteRow:hover {
-        background: var(--card-bg);
+        transition: background-color .15s ease;
+        animation: rowIn .18s var(--ease-out) both;
+        animation-delay: calc(var(--row-index, 0) * 30ms);
       }
 
       .siteRow__domain {
@@ -320,11 +324,6 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-      }
-
-      .siteRow__domain:hover {
-        color: var(--accent);
-        text-decoration: underline;
       }
 
       .siteRow__count {
@@ -357,16 +356,11 @@
         background: none;
         border: none;
         cursor: pointer;
-        transition: color .15s ease, background .15s ease, transform .1s ease;
-      }
-
-      .siteRow__delete:hover {
-        color: var(--danger);
-        background: rgba(248, 113, 113, 0.12);
+        transition: color .15s ease, background-color .15s ease, transform .12s var(--ease-out);
       }
 
       .siteRow__delete:active {
-        transform: scale(0.92);
+        transform: scale(0.96);
       }
 
       .about {
@@ -391,10 +385,6 @@
         transition: border-color .15s ease;
       }
 
-      .about a:hover {
-        border-bottom-color: var(--accent-hover);
-      }
-
       .about .version {
         display: inline-block;
         font-size: 11.5px;
@@ -409,8 +399,81 @@
         vertical-align: 1px;
       }
 
-      @media (prefers-reduced-motion) {
-        .page {
+      @media (hover: hover) and (pointer: fine) {
+        .card:hover::after {
+          opacity: .72;
+          transform: scale(1);
+        }
+
+        input[type="button"]:hover {
+          background: var(--accent-hover);
+        }
+
+        input[type="button"].secondary:hover {
+          background: var(--accent-soft);
+          border-color: var(--accent);
+        }
+
+        .sortSwitch__btn:hover {
+          color: var(--text-strong);
+        }
+
+        .siteRow:hover {
+          background: var(--card-bg);
+        }
+
+        .siteRow__domain:hover {
+          color: var(--accent);
+          text-decoration: underline;
+        }
+
+        .siteRow__delete:hover {
+          color: var(--danger);
+          background: rgba(248, 113, 113, 0.12);
+        }
+
+        .about a:hover {
+          border-bottom-color: var(--accent-hover);
+        }
+      }
+
+      @media (max-width: 520px) {
+        body {
+          padding: 24px 12px 40px;
+        }
+
+        .card,
+        .card.pageHeader {
+          padding-left: 18px;
+          padding-right: 18px;
+        }
+
+        .cardTitle {
+          flex-wrap: wrap;
+        }
+
+        .sortSwitch {
+          width: 100%;
+          margin: 8px 0 0;
+        }
+
+        .sortSwitch__btn {
+          flex: 1;
+        }
+
+        .siteRow__date {
+          display: none;
+        }
+
+        .actions {
+          align-items: stretch;
+          flex-direction: column;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .card,
+        .siteRow {
           animation: none;
         }
 
@@ -424,8 +487,9 @@
           transition: none;
         }
 
-        .bgFx__glow {
-          display: none;
+        .card::after {
+          transform: none;
+          transition: opacity .12s ease;
         }
       }
     </style>

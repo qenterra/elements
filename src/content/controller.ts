@@ -46,6 +46,8 @@ export class ElementController {
   private settings: ExtensionSettings = { ...DEFAULT_SETTINGS }
   private hotkey = 'No key set'
   private minimized = false
+  private minimizeAnimation: Animation | null = null
+  private minimizeRevision = 0
   private textEditObserverTimer = 0
 
   hoveredElement: Element | null = null
@@ -173,23 +175,21 @@ export class ElementController {
     Object.assign(highlighter.style, {
       pointerEvents: 'none',
       position: 'fixed',
-      background: 'rgba(34,211,238,0.18)',
-      outline: 'solid 2px rgba(34,211,238,0.85)',
+      background: 'rgba(34,211,238,0.14)',
+      outline: 'solid 2px rgba(103,227,245,0.9)',
       outlineOffset: '-2px',
       borderRadius: '8px',
+      boxShadow: '0 0 0 1px rgba(34,211,238,0.12), 0 8px 28px rgba(34,211,238,0.14)',
+      transformOrigin: 'center',
       zIndex: String(this.maxZIndex - 1),
     })
-
-    if (!matchMedia(REDUCED_MOTION).matches) {
-      highlighter.style.transition = 'left .22s cubic-bezier(.45, 0, .25, 1), top .22s cubic-bezier(.45, 0, .25, 1), width .22s cubic-bezier(.45, 0, .25, 1), height .22s cubic-bezier(.45, 0, .25, 1)'
-    }
 
     document.body.appendChild(highlighter)
     this.highlighter = highlighter
     return highlighter
   }
 
-  private highlightElement(): void {
+  private highlightElement(animateGeometry = false): void {
     if (!this.hoveredElement) return
 
     let marked = this.hoveredElement
@@ -205,13 +205,23 @@ export class ElementController {
     this.transpose = level
 
     if (marked === this.markedElement) {
-      this.updateHighlighterPosition()
+      this.positionHighlighter(animateGeometry)
       return
     }
 
     this.markedElement = marked
+    const isNew = !this.highlighter
     this.ensureHighlighter()
-    this.updateHighlighterPosition()
+    this.positionHighlighter(animateGeometry)
+    if (isNew && animateGeometry && !matchMedia(REDUCED_MOTION).matches) {
+      this.highlighter?.animate([
+        { opacity: 0, transform: 'scale(.985)' },
+        { opacity: 1, transform: 'scale(1)' },
+      ], {
+        duration: 140,
+        easing: 'cubic-bezier(.23, 1, .32, 1)',
+      })
+    }
     this.notify()
   }
 
@@ -224,14 +234,19 @@ export class ElementController {
     this.notify()
   }
 
-  private updateHighlighterPosition = (): void => {
+  private positionHighlighter(animateGeometry: boolean): void {
     const rect = this.markedElement?.getBoundingClientRect()
     if (!rect || !this.highlighter) return
+    this.highlighter.style.transition = animateGeometry && !matchMedia(REDUCED_MOTION).matches
+      ? 'left .11s cubic-bezier(.23,1,.32,1), top .11s cubic-bezier(.23,1,.32,1), width .15s cubic-bezier(.23,1,.32,1), height .15s cubic-bezier(.23,1,.32,1)'
+      : 'none'
     this.highlighter.style.left = `${rect.x}px`
     this.highlighter.style.top = `${rect.y}px`
     this.highlighter.style.width = `${rect.width}px`
     this.highlighter.style.height = `${rect.height}px`
   }
+
+  private updateHighlighterPosition = (): void => this.positionHighlighter(false)
 
   private handleMouseover = (event: MouseEvent): void => {
     if (!this.targetingMode || Date.now() < this.preventHighlightingUntil) return
@@ -246,7 +261,7 @@ export class ElementController {
     if (!(event.target instanceof Element) || event.target === this.hoveredElement) return
     this.transpose = 0
     this.hoveredElement = event.target
-    this.highlightElement()
+    this.highlightElement(true)
     this.notify()
   }
 
@@ -495,8 +510,33 @@ export class ElementController {
   }
 
   toggleMinimize(): void {
+    const revision = ++this.minimizeRevision
+    const panel = this.host?.shadowRoot?.querySelector<HTMLElement>('.mainWindow') ?? null
+    const startRect = panel?.getBoundingClientRect() ?? null
+    this.minimizeAnimation?.cancel()
+    this.minimizeAnimation = null
     this.minimized = !this.minimized
     this.notify()
+
+    if (!panel || !startRect || matchMedia(REDUCED_MOTION).matches) return
+    requestAnimationFrame(() => {
+      if (!panel.isConnected || revision !== this.minimizeRevision) return
+      const endRect = panel.getBoundingClientRect()
+      if (Math.abs(startRect.width - endRect.width) < 1 && Math.abs(startRect.height - endRect.height) < 1) return
+      const animation = panel.animate([
+        { width: `${startRect.width}px`, height: `${startRect.height}px` },
+        { width: `${endRect.width}px`, height: `${endRect.height}px` },
+      ], {
+        duration: this.minimized ? 260 : 280,
+        easing: 'cubic-bezier(.32, .72, 0, 1)',
+      })
+      this.minimizeAnimation = animation
+      const clearAnimation = () => {
+        if (this.minimizeAnimation === animation) this.minimizeAnimation = null
+      }
+      animation.onfinish = clearAnimation
+      animation.oncancel = clearAnimation
+    })
   }
 
   openOptions(): void {
@@ -515,22 +555,10 @@ export class ElementController {
 
     const host = document.createElement('div')
     host.id = 'elements_wnd'
-    host.className = 'elements_wnd_hidden'
-    host.style.visibility = 'hidden'
     const shadowRoot = host.attachShadow({ mode: 'open' })
     document.body.appendChild(host)
     this.host = host
     this.overlayUi = this.renderer.mount(shadowRoot, this)
-
-    requestAnimationFrame(() => {
-      if (!this.host) return
-      this.host.style.visibility = 'visible'
-      requestAnimationFrame(() => {
-        this.host?.classList.remove('elements_wnd_hidden')
-        this.overlayUi && this.notify()
-        requestAnimationFrame(() => shadowRoot.querySelector('.mainWindow')?.classList.add('mainWindow_animated'))
-      })
-    })
 
     document.addEventListener('mouseover', this.handleMouseover, true)
     document.addEventListener('mousedown', this.hideTarget, true)
@@ -554,13 +582,11 @@ export class ElementController {
     const ui = this.overlayUi
     this.host = null
     this.overlayUi = null
-    if (host) {
-      host.classList.add('elements_wnd_hidden')
-      window.setTimeout(() => {
-        ui?.unmount()
-        host.remove()
-      }, 300)
-    }
+    this.minimizeRevision += 1
+    this.minimizeAnimation?.cancel()
+    this.minimizeAnimation = null
+    ui?.unmount()
+    host?.remove()
 
     document.removeEventListener('mouseover', this.handleMouseover, true)
     document.removeEventListener('mousedown', this.hideTarget, true)
@@ -619,8 +645,7 @@ export class ElementController {
 
   private updateCSS(): void {
     const cssLines = [
-      `#elements_wnd { position: fixed; bottom: 16px; right: 16px; background: #17181c; box-shadow: 0 2px 6px rgba(0,0,0,.25), 0 20px 45px rgba(0,0,0,.5); border-radius: 16px; z-index: ${this.maxZIndex}; transition: opacity .3s cubic-bezier(.22,1,.36,1), transform .3s cubic-bezier(.22,1,.36,1); }`,
-      `#elements_wnd.elements_wnd_hidden { opacity: 0; transform: translateY(28px); }`,
+      `#elements_wnd { position: fixed; bottom: 16px; right: 16px; background: #17181c; box-shadow: 0 2px 6px rgba(0,0,0,.25), 0 20px 45px rgba(0,0,0,.5); border-radius: 16px; z-index: ${this.maxZIndex}; }`,
     ]
 
     if (!this.previewOriginal) {

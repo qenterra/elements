@@ -63,6 +63,10 @@
     "message": "Export",
     "description": "Button that downloads a backup of all settings."
   },
+  "optionsExportSuccess": {
+    "message": "Backup exported.",
+    "description": "Toast shown after exporting a backup file."
+  },
   "optionsImportButton": {
     "message": "Import",
     "description": "Button that restores settings from a backup file."

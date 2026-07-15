@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { browser } from 'wxt/browser'
+import { BrandMark } from '../../src/components/BrandMark'
 import { hybridStorage } from '../../src/core/storage'
 
 type Site = { domain: string; count: number; modified: number }
 type SortMode = 'name' | 'date'
+type ToastMessage = { id: number; message: string; error: boolean }
 
 const SORT_KEY = 'siteListSort'
 
@@ -27,6 +29,35 @@ function BackupIcon() {
 
 function InfoIcon() {
   return <Icon><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></Icon>
+}
+
+function ToastNotice({ notice, onDismiss }: { notice: ToastMessage; onDismiss: (id: number) => void }) {
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const enterFrame = requestAnimationFrame(() => setVisible(true))
+    let exitTimer = 0
+    const visibleTimer = window.setTimeout(() => {
+      setVisible(false)
+      exitTimer = window.setTimeout(() => onDismiss(notice.id), reduceMotion ? 0 : 180)
+    }, notice.error ? 5000 : 2500)
+
+    return () => {
+      cancelAnimationFrame(enterFrame)
+      window.clearTimeout(visibleTimer)
+      window.clearTimeout(exitTimer)
+    }
+  }, [notice.error, notice.id, onDismiss])
+
+  return <div
+    className={`toast${visible ? ' isVisible' : ''}${notice.error ? ' isError' : ''}`}
+    role={notice.error ? 'alert' : 'status'}
+    aria-live={notice.error ? 'assertive' : 'polite'}
+  >
+    <span className="toast__icon">{notice.error ? '!' : '✓'}</span>
+    <span className="toast__text">{notice.message}</span>
+  </div>
 }
 
 function CodeHint() {
@@ -71,94 +102,204 @@ async function readSites(): Promise<Site[]> {
   })
 }
 
-function usePageFx(): void {
+function useCardHoverMotion(): void {
+  const [motionEnabled, setMotionEnabled] = useState(false)
+
   useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const glow = document.getElementById('cursor_glow')
-    if (!glow) return
-
-    let targetX = innerWidth / 2
-    let targetY = innerHeight / 2
-    let glowX = targetX
-    let glowY = targetY
-    let frame: number | null = null
-
-    const tick = () => {
-      glowX += (targetX - glowX) * 0.07
-      glowY += (targetY - glowY) * 0.07
-      glow.style.transform = `translate(${glowX.toFixed(1)}px, ${glowY.toFixed(1)}px)`
-      if (Math.abs(targetX - glowX) > 0.5 || Math.abs(targetY - glowY) > 0.5) frame = requestAnimationFrame(tick)
-      else frame = null
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const precisePointer = window.matchMedia('(hover: hover) and (pointer: fine)')
+    const updateMotionPreference = () => {
+      setMotionEnabled(!reducedMotion.matches && precisePointer.matches)
     }
-    const onMove = (event: MouseEvent) => {
-      targetX = event.clientX
-      targetY = event.clientY
-      glow.style.opacity = '1'
-      if (!frame) frame = requestAnimationFrame(tick)
-    }
-    const onLeave = () => { glow.style.opacity = '0' }
 
-    document.addEventListener('mousemove', onMove)
-    document.documentElement.addEventListener('mouseleave', onLeave)
+    updateMotionPreference()
+    reducedMotion.addEventListener('change', updateMotionPreference)
+    precisePointer.addEventListener('change', updateMotionPreference)
+
+    return () => {
+      reducedMotion.removeEventListener('change', updateMotionPreference)
+      precisePointer.removeEventListener('change', updateMotionPreference)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!motionEnabled) return
 
     const cards = Array.from(document.querySelectorAll<HTMLElement>('.card'))
-    const cleanups = cards.map((card) => {
-      const onCardMove = (event: MouseEvent) => {
-        const rect = card.getBoundingClientRect()
-        const dx = (event.clientX - rect.left) / rect.width - 0.5
-        const dy = (event.clientY - rect.top) / rect.height - 0.5
-        card.style.transform = `rotateX(${(-dy * 1.4).toFixed(2)}deg) rotateY(${(dx * 1.4).toFixed(2)}deg)`
+
+    const cardCleanups = cards.map((card) => {
+      let rotateX = 0
+      let rotateY = 0
+      let targetRotateX = 0
+      let targetRotateY = 0
+      let velocityX = 0
+      let velocityY = 0
+      let scale = 1
+      let targetScale = 1
+      let scaleVelocity = 0
+      let frame: number | null = null
+
+      const tickCard = () => {
+        const deltaX = targetRotateX - rotateX
+        const deltaY = targetRotateY - rotateY
+        const deltaScale = targetScale - scale
+
+        velocityX = (velocityX + deltaX * 0.12) * 0.68
+        velocityY = (velocityY + deltaY * 0.12) * 0.68
+        scaleVelocity = (scaleVelocity + deltaScale * 0.14) * 0.7
+        rotateX += velocityX
+        rotateY += velocityY
+        scale += scaleVelocity
+
+        card.style.transform = `perspective(1400px) rotateX(${rotateX.toFixed(3)}deg) rotateY(${rotateY.toFixed(3)}deg) scale(${scale.toFixed(4)}) translateZ(0)`
+
+        const isMoving =
+          Math.abs(deltaX) > 0.005 ||
+          Math.abs(deltaY) > 0.005 ||
+          Math.abs(deltaScale) > 0.00005 ||
+          Math.abs(velocityX) > 0.003 ||
+          Math.abs(velocityY) > 0.003 ||
+          Math.abs(scaleVelocity) > 0.00003
+
+        if (isMoving) {
+          frame = window.requestAnimationFrame(tickCard)
+        } else {
+          rotateX = targetRotateX
+          rotateY = targetRotateY
+          scale = targetScale
+          velocityX = 0
+          velocityY = 0
+          scaleVelocity = 0
+          frame = null
+
+          if (targetRotateX === 0 && targetRotateY === 0 && targetScale === 1) {
+            card.style.removeProperty('transform')
+            card.style.removeProperty('will-change')
+          }
+        }
       }
-      const onCardLeave = () => { card.style.transform = '' }
-      card.addEventListener('mousemove', onCardMove)
-      card.addEventListener('mouseleave', onCardLeave)
+
+      const requestCardFrame = () => {
+        if (frame === null) frame = window.requestAnimationFrame(tickCard)
+      }
+
+      const onCardPointerEnter = (event: PointerEvent) => {
+        if (event.pointerType === 'touch') return
+
+        targetScale = 1.008
+        card.style.willChange = 'transform'
+        requestCardFrame()
+      }
+
+      const onCardPointerMove = (event: PointerEvent) => {
+        if (event.pointerType === 'touch') return
+
+        const rect = card.getBoundingClientRect()
+        const normalizedX = (event.clientX - rect.left) / rect.width - 0.5
+        const normalizedY = (event.clientY - rect.top) / rect.height - 0.5
+
+        targetRotateX = normalizedY * -1.2
+        targetRotateY = normalizedX * 1.2
+        targetScale = 1.008
+        card.style.willChange = 'transform'
+        requestCardFrame()
+      }
+
+      const onCardPointerLeave = () => {
+        targetRotateX = 0
+        targetRotateY = 0
+        targetScale = 1
+        requestCardFrame()
+      }
+
+      card.addEventListener('pointerenter', onCardPointerEnter)
+      card.addEventListener('pointermove', onCardPointerMove, { passive: true })
+      card.addEventListener('pointerleave', onCardPointerLeave)
+
       return () => {
-        card.removeEventListener('mousemove', onCardMove)
-        card.removeEventListener('mouseleave', onCardLeave)
+        if (frame !== null) window.cancelAnimationFrame(frame)
+        card.removeEventListener('pointerenter', onCardPointerEnter)
+        card.removeEventListener('pointermove', onCardPointerMove)
+        card.removeEventListener('pointerleave', onCardPointerLeave)
+        card.style.removeProperty('transform')
+        card.style.removeProperty('will-change')
       }
     })
 
     return () => {
-      document.removeEventListener('mousemove', onMove)
-      document.documentElement.removeEventListener('mouseleave', onLeave)
-      if (frame) cancelAnimationFrame(frame)
-      cleanups.forEach((cleanup) => cleanup())
+      cardCleanups.forEach((cleanup) => cleanup())
     }
-  }, [])
+  }, [motionEnabled])
 }
 
 function OptionsApp() {
+  useCardHoverMotion()
+
   const [sites, setSites] = useState<Site[]>([])
   const [sortMode, setSortMode] = useState<SortMode>(() => {
     const saved = localStorage.getItem(SORT_KEY)
     return saved === 'date' ? 'date' : 'name'
   })
-  const [toast, setToast] = useState<{ message: string; error: boolean } | null>(null)
+  const [toast, setToast] = useState<ToastMessage | null>(null)
+  const toastId = useRef(0)
   const importInput = useRef<HTMLInputElement>(null)
 
-  usePageFx()
+  const showToast = useCallback((message: string, error = false) => {
+    toastId.current += 1
+    setToast({ id: toastId.current, message, error })
+  }, [])
+  const dismissToast = useCallback((id: number) => {
+    setToast((current) => current?.id === id ? null : current)
+  }, [])
 
   const reloadSites = useCallback(async () => setSites(await readSites()), [])
   useEffect(() => { void reloadSites() }, [reloadSites])
   useEffect(() => {
     document.title = t('extensionName')
   }, [])
-  useEffect(() => {
-    if (!toast) return
-    const timer = window.setTimeout(() => setToast(null), toast.error ? 5000 : 2500)
-    return () => window.clearTimeout(timer)
-  }, [toast])
-
   const sortedSites = useMemo(() => [...sites].sort((left, right) => sortMode === 'date'
     ? right.modified - left.modified || left.domain.localeCompare(right.domain)
     : left.domain.localeCompare(right.domain)), [sites, sortMode])
+  const siteAnimationOrder = useMemo(() => new Map(sites.map((site, index) => [site.domain, index])), [sites])
+
+  const changeSortMode = (nextMode: SortMode, animate: boolean) => {
+    if (nextMode === sortMode) return
+    const previousPositions = new Map<string, number>()
+    if (animate && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.querySelectorAll<HTMLElement>('.siteRow[data-domain]').forEach((row) => {
+        if (row.dataset.domain) previousPositions.set(row.dataset.domain, row.getBoundingClientRect().top)
+      })
+    }
+
+    setSortMode(nextMode)
+    localStorage.setItem(SORT_KEY, nextMode)
+    if (!previousPositions.size) return
+
+    requestAnimationFrame(() => {
+      document.querySelectorAll<HTMLElement>('.siteRow[data-domain]').forEach((row) => {
+        if (!row.dataset.domain) return
+        const previousTop = previousPositions.get(row.dataset.domain)
+        if (previousTop === undefined) return
+        const offset = previousTop - row.getBoundingClientRect().top
+        if (Math.abs(offset) < 1) return
+        row.getAnimations().forEach((animation) => animation.cancel())
+        row.animate([
+          { transform: `translateY(${offset}px)` },
+          { transform: 'translateY(0)' },
+        ], {
+          duration: 180,
+          easing: 'cubic-bezier(.23, 1, .32, 1)',
+        })
+      })
+    })
+  }
 
   const deleteSite = async (domain: string) => {
     await hybridStorage.remove(`web:${domain}`)
     const meta = await hybridStorage.get<Record<string, number>>('webMeta', {})
     delete meta[domain]
     await hybridStorage.set('webMeta', meta)
-    setToast({ message: t('optionsSiteDeleted', [domain]), error: false })
+    showToast(t('optionsSiteDeleted', [domain]))
     await reloadSites()
   }
 
@@ -170,6 +311,7 @@ function OptionsApp() {
     link.href = url
     link.download = `Elements export ${new Date().toLocaleString('sv-SE').replace(/[^0-9\- ]/g, '-')}.json`
     link.click()
+    showToast(t('optionsExportSuccess'))
     window.setTimeout(() => URL.revokeObjectURL(url), 30_000)
   }
 
@@ -183,21 +325,20 @@ function OptionsApp() {
   }
 
   return <>
-    <div className="bgFx" aria-hidden="true"><div className="bgFx__glow" id="cursor_glow" /></div>
     <main className="page">
       <section className="card pageHeader">
-        <div className="pageHeader__icon"><Icon><path d="m18 16-4-4 4-4" /><path d="m6 8 4 4-4 4" /><path d="m14.5 4-5 16" /></Icon></div>
+        <div className="pageHeader__icon"><BrandMark width="24" height="24" /></div>
         <div><h1>{t('extensionName')}</h1><p className="pageHeader__tagline">{t('optionsTagline')}</p></div>
       </section>
 
       <section className="card">
         <p className="cardTitle"><SiteIcon /><span>{t('optionsSitesTitle')}</span><span className="sortSwitch" role="group" aria-label="Site sort order">
-          <button type="button" className={`sortSwitch__btn${sortMode === 'name' ? ' isActive' : ''}`} onClick={() => { setSortMode('name'); localStorage.setItem(SORT_KEY, 'name') }} aria-pressed={sortMode === 'name'}>{t('optionsSitesSortName')}</button>
-          <button type="button" className={`sortSwitch__btn${sortMode === 'date' ? ' isActive' : ''}`} onClick={() => { setSortMode('date'); localStorage.setItem(SORT_KEY, 'date') }} aria-pressed={sortMode === 'date'}>{t('optionsSitesSortDate')}</button>
+          <button type="button" className={`sortSwitch__btn${sortMode === 'name' ? ' isActive' : ''}`} onClick={(event) => changeSortMode('name', event.detail > 0)} aria-pressed={sortMode === 'name'}>{t('optionsSitesSortName')}</button>
+          <button type="button" className={`sortSwitch__btn${sortMode === 'date' ? ' isActive' : ''}`} onClick={(event) => changeSortMode('date', event.detail > 0)} aria-pressed={sortMode === 'date'}>{t('optionsSitesSortDate')}</button>
         </span></p>
         <p className="cardDescription">{t('optionsSitesDescription')}</p>
         <div className="siteList"><div className="siteList__rows">
-          {sortedSites.map((site) => <div className="siteRow" key={site.domain}>
+          {sortedSites.map((site) => <div className="siteRow" data-domain={site.domain} style={{ '--row-index': Math.min(siteAnimationOrder.get(site.domain) ?? 0, 6) } as CSSProperties} key={site.domain}>
             <a className="siteRow__domain" href={`https://${site.domain}`} target="_blank" rel="noopener nofollow">{site.domain}</a>
             <span className="siteRow__count">{t('optionsSitesCount', [String(site.count || '?')])}</span>
             <span className="siteRow__date">{formatDate(site.modified)}</span>
@@ -218,9 +359,9 @@ function OptionsApp() {
             event.target.value = ''
             if (!file) return
             void importSettings(file).then(async () => {
-              setToast({ message: t('optionsImportSuccess'), error: false })
+              showToast(t('optionsImportSuccess'))
               await reloadSites()
-            }).catch((error: unknown) => setToast({ message: error instanceof Error ? error.message : 'Error', error: true }))
+            }).catch((error: unknown) => showToast(error instanceof Error ? error.message : 'Error', true))
           }} />
         </div>
       </section>
@@ -230,7 +371,7 @@ function OptionsApp() {
         <div className="about"><p><b>Elements</b><span className="version">v{browser.runtime.getManifest().version}</span><br />Made by Nikita Melnychenko (QenTerra).</p></div>
       </section>
     </main>
-    {toast && <div className={`toast isVisible${toast.error ? ' isError' : ''}`} role="status"><span className="toast__icon">{toast.error ? '!' : '✓'}</span><span className="toast__text">{toast.message}</span></div>}
+    {toast && <ToastNotice key={toast.id} notice={toast} onDismiss={dismissToast} />}
   </>
 }
 
