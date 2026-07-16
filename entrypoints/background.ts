@@ -10,20 +10,25 @@ const ACTION_ICONS = {
   unavailable: { 16: 'icons/action_unavailable_16.png', 32: 'icons/action_unavailable.png' },
 } as const
 
+function getLocalizedMessage(key: string, fallback: string): string {
+  const i18n = browser.i18n as unknown as { getMessage: (name: string) => string }
+  return i18n.getMessage(key) || fallback
+}
+
 function setIcon(tabId: number, active: boolean): Promise<void> {
   return Promise.all([
     browser.action.setIcon({
       path: active ? ACTION_ICONS.active : ACTION_ICONS.inactive,
       tabId,
     }),
-    browser.action.setTitle({ title: 'Elements', tabId }),
+    browser.action.setTitle({ title: getLocalizedMessage('extensionName', 'Elements'), tabId }),
   ]).then(() => undefined)
 }
 
 async function setUnavailable(tabId: number): Promise<void> {
   await Promise.all([
     browser.action.setIcon({ path: ACTION_ICONS.unavailable, tabId }),
-    browser.action.setTitle({ title: 'Elements [unavailable for this tab]', tabId }),
+    browser.action.setTitle({ title: getLocalizedMessage('backgroundUnavailable', 'Elements — unavailable on this tab'), tabId }),
   ])
 }
 
@@ -86,11 +91,6 @@ function updateSiteMetadata(website: string, data: string): Promise<void> {
   return metadataWrite
 }
 
-async function exportSettings(): Promise<string> {
-  const entries = (await hybridStorage.entries()).filter(([, value]) => value !== '[]')
-  return JSON.stringify({ ...Object.fromEntries(entries), version: 1 }, null, 2)
-}
-
 async function importSettings(data: string): Promise<'SUCCESS' | string> {
   try {
     const parsed: unknown = JSON.parse(data)
@@ -109,7 +109,7 @@ async function importSettings(data: string): Promise<'SUCCESS' | string> {
     await hybridStorage.setMany(entries)
     return 'SUCCESS'
   } catch (error) {
-    return error instanceof Error ? error.message : 'Unknown import error'
+    return error instanceof Error ? error.message : 'IMPORT_FAILED'
   }
 }
 
@@ -149,7 +149,7 @@ export default defineBackground(() => {
         return true
       case 'get_hotkey': {
         const commands = await browser.commands.getAll()
-        return commands[0]?.shortcut || 'No key set'
+        return commands[0]?.shortcut || getLocalizedMessage('pickerNoShortcut', 'No shortcut set')
       }
       case 'goto_hotkey_settings':
         await browser.tabs.create({
@@ -157,8 +157,6 @@ export default defineBackground(() => {
           url: /Firefox/i.test(navigator.userAgent) ? 'about:addons' : 'chrome://extensions/shortcuts',
         })
         return undefined
-      case 'export_settings':
-        return exportSettings()
       case 'import_settings':
         return importSettings(message.data ?? '')
       default:

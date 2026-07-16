@@ -9,6 +9,11 @@ type SortMode = 'name' | 'date'
 type ToastMessage = { id: number; message: string; error: boolean }
 
 const SORT_KEY = 'siteListSort'
+const DOCUMENTS_URL = 'https://github.com/QenTerra/elements/blob/master/'
+
+function documentUrl(path: string): string {
+  return `${DOCUMENTS_URL}${path}`
+}
 
 function t(key: string, substitutions?: string | string[]): string {
   const getMessage = (browser.i18n as unknown as { getMessage: (name: string, substitutions?: string | string[]) => string }).getMessage
@@ -102,139 +107,7 @@ async function readSites(): Promise<Site[]> {
   })
 }
 
-function useCardHoverMotion(): void {
-  const [motionEnabled, setMotionEnabled] = useState(false)
-
-  useEffect(() => {
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const precisePointer = window.matchMedia('(hover: hover) and (pointer: fine)')
-    const updateMotionPreference = () => {
-      setMotionEnabled(!reducedMotion.matches && precisePointer.matches)
-    }
-
-    updateMotionPreference()
-    reducedMotion.addEventListener('change', updateMotionPreference)
-    precisePointer.addEventListener('change', updateMotionPreference)
-
-    return () => {
-      reducedMotion.removeEventListener('change', updateMotionPreference)
-      precisePointer.removeEventListener('change', updateMotionPreference)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!motionEnabled) return
-
-    const cards = Array.from(document.querySelectorAll<HTMLElement>('.card'))
-
-    const cardCleanups = cards.map((card) => {
-      let rotateX = 0
-      let rotateY = 0
-      let targetRotateX = 0
-      let targetRotateY = 0
-      let velocityX = 0
-      let velocityY = 0
-      let scale = 1
-      let targetScale = 1
-      let scaleVelocity = 0
-      let frame: number | null = null
-
-      const tickCard = () => {
-        const deltaX = targetRotateX - rotateX
-        const deltaY = targetRotateY - rotateY
-        const deltaScale = targetScale - scale
-
-        velocityX = (velocityX + deltaX * 0.12) * 0.68
-        velocityY = (velocityY + deltaY * 0.12) * 0.68
-        scaleVelocity = (scaleVelocity + deltaScale * 0.14) * 0.7
-        rotateX += velocityX
-        rotateY += velocityY
-        scale += scaleVelocity
-
-        card.style.transform = `perspective(1400px) rotateX(${rotateX.toFixed(3)}deg) rotateY(${rotateY.toFixed(3)}deg) scale(${scale.toFixed(4)}) translateZ(0)`
-
-        const isMoving =
-          Math.abs(deltaX) > 0.005 ||
-          Math.abs(deltaY) > 0.005 ||
-          Math.abs(deltaScale) > 0.00005 ||
-          Math.abs(velocityX) > 0.003 ||
-          Math.abs(velocityY) > 0.003 ||
-          Math.abs(scaleVelocity) > 0.00003
-
-        if (isMoving) {
-          frame = window.requestAnimationFrame(tickCard)
-        } else {
-          rotateX = targetRotateX
-          rotateY = targetRotateY
-          scale = targetScale
-          velocityX = 0
-          velocityY = 0
-          scaleVelocity = 0
-          frame = null
-
-          if (targetRotateX === 0 && targetRotateY === 0 && targetScale === 1) {
-            card.style.removeProperty('transform')
-            card.style.removeProperty('will-change')
-          }
-        }
-      }
-
-      const requestCardFrame = () => {
-        if (frame === null) frame = window.requestAnimationFrame(tickCard)
-      }
-
-      const onCardPointerEnter = (event: PointerEvent) => {
-        if (event.pointerType === 'touch') return
-
-        targetScale = 1.008
-        card.style.willChange = 'transform'
-        requestCardFrame()
-      }
-
-      const onCardPointerMove = (event: PointerEvent) => {
-        if (event.pointerType === 'touch') return
-
-        const rect = card.getBoundingClientRect()
-        const normalizedX = (event.clientX - rect.left) / rect.width - 0.5
-        const normalizedY = (event.clientY - rect.top) / rect.height - 0.5
-
-        targetRotateX = normalizedY * -1.2
-        targetRotateY = normalizedX * 1.2
-        targetScale = 1.008
-        card.style.willChange = 'transform'
-        requestCardFrame()
-      }
-
-      const onCardPointerLeave = () => {
-        targetRotateX = 0
-        targetRotateY = 0
-        targetScale = 1
-        requestCardFrame()
-      }
-
-      card.addEventListener('pointerenter', onCardPointerEnter)
-      card.addEventListener('pointermove', onCardPointerMove, { passive: true })
-      card.addEventListener('pointerleave', onCardPointerLeave)
-
-      return () => {
-        if (frame !== null) window.cancelAnimationFrame(frame)
-        card.removeEventListener('pointerenter', onCardPointerEnter)
-        card.removeEventListener('pointermove', onCardPointerMove)
-        card.removeEventListener('pointerleave', onCardPointerLeave)
-        card.style.removeProperty('transform')
-        card.style.removeProperty('will-change')
-      }
-    })
-
-    return () => {
-      cardCleanups.forEach((cleanup) => cleanup())
-    }
-  }, [motionEnabled])
-}
-
 function OptionsApp() {
-  useCardHoverMotion()
-
   const [sites, setSites] = useState<Site[]>([])
   const [sortMode, setSortMode] = useState<SortMode>(() => {
     const saved = localStorage.getItem(SORT_KEY)
@@ -316,12 +189,12 @@ function OptionsApp() {
   }
 
   const importSettings = async (file: File) => {
-    if (file.type && file.type !== 'application/json') throw new Error('Invalid file type')
+    if (file.type && file.type !== 'application/json') throw new Error(t('optionsImportInvalidType'))
     const text = await file.text()
     const parsed: unknown = JSON.parse(text)
-    if (!parsed || typeof parsed !== 'object' || (parsed as { version?: unknown }).version !== 1) throw new Error('Incorrect version number in imported data')
+    if (!parsed || typeof parsed !== 'object' || (parsed as { version?: unknown }).version !== 1) throw new Error(t('optionsImportInvalidVersion'))
     const result = await browser.runtime.sendMessage({ action: 'import_settings', data: text })
-    if (result !== 'SUCCESS') throw new Error(String(result))
+    if (result !== 'SUCCESS') throw new Error(t('optionsImportFailed'))
   }
 
   return <>
@@ -332,14 +205,14 @@ function OptionsApp() {
       </section>
 
       <section className="card">
-        <p className="cardTitle"><SiteIcon /><span>{t('optionsSitesTitle')}</span><span className="sortSwitch" role="group" aria-label="Site sort order">
+        <p className="cardTitle"><SiteIcon /><span>{t('optionsSitesTitle')}</span><span className="sortSwitch" role="group" aria-label={t('optionsSortOrder')}>
           <button type="button" className={`sortSwitch__btn${sortMode === 'name' ? ' isActive' : ''}`} onClick={(event) => changeSortMode('name', event.detail > 0)} aria-pressed={sortMode === 'name'}>{t('optionsSitesSortName')}</button>
           <button type="button" className={`sortSwitch__btn${sortMode === 'date' ? ' isActive' : ''}`} onClick={(event) => changeSortMode('date', event.detail > 0)} aria-pressed={sortMode === 'date'}>{t('optionsSitesSortDate')}</button>
         </span></p>
         <p className="cardDescription">{t('optionsSitesDescription')}</p>
         <div className="siteList"><div className="siteList__rows">
           {sortedSites.map((site) => <div className="siteRow" data-domain={site.domain} style={{ '--row-index': Math.min(siteAnimationOrder.get(site.domain) ?? 0, 6) } as CSSProperties} key={site.domain}>
-            <a className="siteRow__domain" href={`https://${site.domain}`} target="_blank" rel="noopener nofollow">{site.domain}</a>
+            <a className="siteRow__domain" href={`https://${site.domain}`} target="_blank" rel="noopener noreferrer nofollow">{site.domain}</a>
             <span className="siteRow__count">{t('optionsSitesCount', [String(site.count || '?')])}</span>
             <span className="siteRow__date">{formatDate(site.modified)}</span>
             <button type="button" className="siteRow__delete" title={t('optionsSiteDeleteTitle')} onClick={() => void deleteSite(site.domain)}><Icon><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /></Icon></button>
@@ -361,14 +234,25 @@ function OptionsApp() {
             void importSettings(file).then(async () => {
               showToast(t('optionsImportSuccess'))
               await reloadSites()
-            }).catch((error: unknown) => showToast(error instanceof Error ? error.message : 'Error', true))
+            }).catch((error: unknown) => showToast(error instanceof Error ? error.message : t('optionsErrorGeneric'), true))
           }} />
         </div>
       </section>
 
       <section className="card">
         <p className="cardTitle"><InfoIcon /><span>{t('optionsAboutTitle')}</span></p>
-        <div className="about"><p><b>Elements</b><span className="version">v{browser.runtime.getManifest().version}</span><br />Made by Nikita Melnychenko (QenTerra).</p></div>
+        <div className="about">
+          <p><b>Elements</b><span className="version">v{browser.runtime.getManifest().version}</span><br />Made by <a href="https://github.com/QenTerra" target="_blank" rel="noopener noreferrer">Nikita Melnychenko (QenTerra)</a>.</p>
+          <div className="about__documents">
+            <nav className="about__links" aria-label={t('optionsLegalDocuments')}>
+              <a href={documentUrl('LICENSE')} target="_blank" rel="noopener noreferrer">{t('optionsLicense')}</a>
+              <a href={documentUrl('PRIVACY.md')} target="_blank" rel="noopener noreferrer">{t('optionsPrivacy')}</a>
+              <a href={documentUrl('TERMS_OF_USE.md')} target="_blank" rel="noopener noreferrer">{t('optionsTerms')}</a>
+              <a href={documentUrl('SECURITY.md')} target="_blank" rel="noopener noreferrer">{t('optionsSecurity')}</a>
+              <a href={documentUrl('THIRD_PARTY_NOTICES.md')} target="_blank" rel="noopener noreferrer">{t('optionsNotices')}</a>
+            </nav>
+          </div>
+        </div>
       </section>
     </main>
     {toast && <ToastNotice key={toast.id} notice={toast} onDismiss={dismissToast} />}

@@ -9,6 +9,12 @@ export interface OverlayRenderer {
 type Listener = () => void
 
 type OverlayElement = HTMLDivElement & { relatedElement?: Element }
+type I18nApi = { getMessage: (name: string) => string }
+
+function localizedMessage(key: string, fallback: string): string {
+  const i18n = browser.i18n as unknown as I18nApi
+  return i18n.getMessage(key) || fallback
+}
 
 const REDUCED_MOTION = '(prefers-reduced-motion: reduce)'
 
@@ -44,7 +50,7 @@ export class ElementController {
   private textEditOriginal = ''
   private previewedHiddenSelector: string | null = null
   private settings: ExtensionSettings = { ...DEFAULT_SETTINGS }
-  private hotkey = 'No key set'
+  private hotkey = 'No shortcut set'
   private minimized = false
   private minimizeAnimation: Animation | null = null
   private minimizeRevision = 0
@@ -127,7 +133,7 @@ export class ElementController {
   }
 
   private async loadHotkey(): Promise<void> {
-    this.hotkey = await this.sendMessage<string>({ action: 'get_hotkey' }) ?? this.hotkey
+    this.hotkey = await this.sendMessage<string>({ action: 'get_hotkey' }) ?? localizedMessage('pickerNoShortcut', this.hotkey)
     this.notify()
   }
 
@@ -480,10 +486,10 @@ export class ElementController {
   editSelector(edit: RuntimeEdit): void {
     const liveEdit = this.findLiveEdit(edit)
     if (!liveEdit) return
-    const next = window.prompt('Customize CSS selector', liveEdit.selector)?.trim()
+    const next = window.prompt(localizedMessage('pickerSelectorPrompt', 'Customize CSS selector'), liveEdit.selector)?.trim()
     if (!next || next === liveEdit.selector) return
     if (!isValidSelector(next) || /[{}]/.test(next)) {
-      window.alert('This is not a valid CSS selector.')
+      window.alert(localizedMessage('pickerSelectorInvalid', 'This is not a valid CSS selector.'))
       return
     }
     liveEdit.selector = next
@@ -645,7 +651,7 @@ export class ElementController {
 
   private updateCSS(): void {
     const cssLines = [
-      `#elements_wnd { position: fixed; bottom: 16px; right: 16px; background: #17181c; box-shadow: 0 2px 6px rgba(0,0,0,.25), 0 20px 45px rgba(0,0,0,.5); border-radius: 16px; z-index: ${this.maxZIndex}; }`,
+      `#elements_wnd { --elements-surface: #17181c; --elements-panel-radius: 16px; --elements-panel-shadow: 0 2px 6px rgba(0,0,0,.25), 0 20px 45px rgba(0,0,0,.5); position: fixed; bottom: 16px; right: 16px; background: var(--elements-surface); box-shadow: var(--elements-panel-shadow); border-radius: var(--elements-panel-radius); z-index: ${this.maxZIndex}; }`,
     ]
 
     if (!this.previewOriginal) {

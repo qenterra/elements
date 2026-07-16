@@ -1,9 +1,17 @@
 import { createRoot, type Root } from 'react-dom/client'
 import { useEffect, useState, type ReactNode } from 'react'
+import { browser } from 'wxt/browser'
 import contentCss from '../../content.css?raw'
 import { BrandMark } from '../components/BrandMark'
 import type { RuntimeEdit } from '../core/model'
 import { ElementController } from './controller'
+
+type I18nApi = { getMessage: (name: string) => string }
+
+function t(key: string): string {
+  const i18n = browser.i18n as unknown as I18nApi
+  return i18n.getMessage(key) || key
+}
 
 function Icon({ children }: { children: ReactNode }) {
   return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{children}</svg>
@@ -27,6 +35,12 @@ function ActionIcon({ action }: { action?: RuntimeEdit['action'] }) {
   return <Icon><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22" /></Icon>
 }
 
+function actionLabel(action: RuntimeEdit['action']): string {
+  if (action === 'round') return t('pickerRoundedCorners')
+  if (action === 'text') return t('pickerTextEdited')
+  return t('pickerHidden')
+}
+
 function PickerPanel({ controller }: { controller: ElementController }) {
   const [snapshot, setSnapshot] = useState(controller.getSnapshot())
 
@@ -36,9 +50,9 @@ function PickerPanel({ controller }: { controller: ElementController }) {
     ? snapshot.path.flatMap((token, index) => index === 0
       ? [<span key={token.label} className={`pathNode${token.active ? ' active' : ''}`}>{token.label}</span>]
       : [<span key={`${token.label}-separator`} className="pathSeparator">&gt;</span>, <span key={token.label} className={`pathNode${token.active ? ' active' : ''}`}>{token.label}</span>])
-    : 'Hover over an element to select it.'
+    : t('pickerHoverHint')
 
-  return <div className={`mainWindow mainWindow_animated${snapshot.minimized ? ' minimized' : ''}`} role="region" aria-label="Elements picker">
+  return <div className={`mainWindow mainWindow_animated${snapshot.minimized ? ' minimized' : ''}`} role="region" aria-label={t('pickerAriaLabel')}>
     <div className="header">
       <span className="header__logo">
         <BrandMark width="17" height="17" />
@@ -51,36 +65,36 @@ function PickerPanel({ controller }: { controller: ElementController }) {
     </div>
 
     <div className="topButtons">
-      <button type="button" className="topButton topButton_settings" title="Settings" aria-label="Settings" onClick={() => controller.openOptions()}><SettingsIcon /></button>
-      <button type="button" className="topButton topButton_minimize" title={snapshot.minimized ? 'Expand' : 'Minimize'} aria-label={snapshot.minimized ? 'Expand' : 'Minimize'} onClick={() => controller.toggleMinimize()}><i><Icon><line x1="7" y1="7" x2="17" y2="17" /><polyline points="17 7 17 17 7 17" /></Icon></i></button>
-      <button type="button" className="topButton topButton_close" title="Close" aria-label="Close" onClick={() => controller.deactivate()}><Icon><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></Icon></button>
+      <button type="button" className="topButton topButton_settings" title={t('pickerSettings')} aria-label={t('pickerSettings')} onClick={() => controller.openOptions()}><SettingsIcon /></button>
+      <button type="button" className="topButton topButton_minimize" title={t(snapshot.minimized ? 'pickerExpand' : 'pickerMinimize')} aria-label={t(snapshot.minimized ? 'pickerExpand' : 'pickerMinimize')} onClick={() => controller.toggleMinimize()}><i><Icon><line x1="7" y1="7" x2="17" y2="17" /><polyline points="17 7 17 17 7 17" /></Icon></i></button>
+      <button type="button" className="topButton topButton_close" title={t('pickerClose')} aria-label={t('pickerClose')} onClick={() => controller.deactivate()}><Icon><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></Icon></button>
     </div>
 
     <div className="mainWindow__body" aria-hidden={snapshot.minimized} inert={snapshot.minimized ? true : undefined}>
       <hr />
 
       <div className="settingsGrid">
-        <button type="button" className="settingsItem activationKeys activationKeys_changeable" title="Click to change" onClick={() => controller.openHotkeySettings()}>
-          {snapshot.hotkey.split('+').map((key) => <span className="key" key={key}>{key}</span>)}: Toggle overlay;
+        <button type="button" className="settingsItem activationKeys activationKeys_changeable" title={t('pickerChangeShortcut')} onClick={() => controller.openHotkeySettings()}>
+          {snapshot.hotkey.split('+').map((key) => <span className="key" key={key}>{key}</span>)}: {t('pickerToggleOverlay')};
         </button>
-        <div className="settingsItem"><span className="key">Q</span>/<span className="key">W</span>: Move the selection one level up or down;</div>
+        <div className="settingsItem"><span className="key">Q</span>/<span className="key">W</span>: {t('pickerMoveSelection')};</div>
         <button type="button" className="settingsItem rememberRow" role="switch" aria-checked={snapshot.settings.remember} onClick={() => controller.toggleRemember()}>
           <span className={`toggle${snapshot.settings.remember ? ' toggle_on' : ''}`}><span className="toggle__knob" /></span>
-          Remember by default;
+          {t('pickerRememberDefault')};
         </button>
         <button type="button" className="settingsItem compareRow" role="switch" aria-checked={snapshot.previewOriginal} onClick={() => controller.toggleCompare()}>
           <span className={`toggle${snapshot.previewOriginal ? ' toggle_on' : ''}`}><span className="toggle__knob" /></span>
-          Show the original page;
+          {t('pickerShowOriginal')};
         </button>
-        <div className="settingsItem"><span className="key">C</span>: Round the element's corners;</div>
-        <div className="settingsItem"><span className="key">E</span>: Edit the element's text;</div>
-        <div className="settingsItem"><span className="key">Space</span>/<span className="key">Left Click</span>: Remove the element.</div>
+        <div className="settingsItem"><span className="key">C</span>: {t('pickerRoundCorners')};</div>
+        <div className="settingsItem"><span className="key">E</span>: {t('pickerEditText')};</div>
+        <div className="settingsItem"><span className="key">Space</span>/<span className="key">Left Click</span>: {t('pickerHideElement')}.</div>
       </div>
 
       <div id="elements_current_elm">{path}</div>
       <div id="elements_elm_list" className={snapshot.edits.length ? 'hasContent' : ''}>
         {snapshot.edits.length > 0 && <table><tbody>
-          <tr className="elements_heading"><td>Edited element</td><td>Remember?</td><td /></tr>
+          <tr className="elements_heading"><td>{t('pickerEditedElement')}</td><td>{t('pickerRemember')}</td><td /></tr>
           {snapshot.edits.map((edit) => <EditRow key={`${edit.action ?? 'hide'}:${edit.selector}`} edit={edit} controller={controller} />)}
         </tbody></table>}
       </div>
@@ -96,14 +110,14 @@ function EditRow({ edit, controller }: { edit: RuntimeEdit; controller: ElementC
 
   return <tr>
     <td className="elements_selector">
-      <a href="#selector" className="elements_edit_selector" onClick={(event) => { event.preventDefault(); controller.editSelector(edit) }}>edit</a>
-      <span className="elements_action" title={edit.action === 'round' ? 'Rounded corners' : edit.action === 'text' ? 'Text edited' : 'Hidden'}><ActionIcon action={edit.action} /></span>
-      {edit.selector}
+      <a href="#selector" className="elements_edit_selector" onClick={(event) => { event.preventDefault(); controller.editSelector(edit) }}>{t('pickerEdit')}</a>
+      <span className="elements_action" title={actionLabel(edit.action)}><ActionIcon action={edit.action} /></span>
+      <span className="elements_selectorValue" title={edit.selector}>{edit.selector}</span>
     </td>
-    <td><input type="checkbox" checked={edit.permanent} onChange={(event) => controller.setEditPermanent(edit, event.target.checked)} aria-label="Remember this edit" /></td>
+    <td><input type="checkbox" checked={edit.permanent} onChange={(event) => controller.setEditPermanent(edit, event.target.checked)} aria-label={t('pickerRememberEdit')} /></td>
     <td>
-      <button type="button" className="elements_preview" title="Hold to preview the original" aria-label="Hold to preview the original" onMouseEnter={() => preview(true)} onMouseLeave={() => preview(false)} onBlur={() => preview(false)} onPointerDown={() => previewOnTouch(true)} onPointerUp={() => previewOnTouch(false)} onPointerCancel={() => previewOnTouch(false)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); preview(true) } }} onKeyUp={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); preview(false) } }}><EyeIcon /></button>
-      <a href="#delete" className="elements_delete" title="Remove from list" onClick={(event) => { event.preventDefault(); controller.deleteEdit(edit) }}><TrashIcon /></a>
+      <button type="button" className="elements_preview" title={t('pickerPreviewOriginal')} aria-label={t('pickerPreviewOriginal')} onMouseEnter={() => preview(true)} onMouseLeave={() => preview(false)} onBlur={() => preview(false)} onPointerDown={() => previewOnTouch(true)} onPointerUp={() => previewOnTouch(false)} onPointerCancel={() => previewOnTouch(false)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); preview(true) } }} onKeyUp={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); preview(false) } }}><EyeIcon /></button>
+      <a href="#delete" className="elements_delete" title={t('pickerDeleteRule')} onClick={(event) => { event.preventDefault(); controller.deleteEdit(edit) }}><TrashIcon /></a>
     </td>
   </tr>
 }

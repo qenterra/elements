@@ -5,17 +5,19 @@
 <h1 align="center">Elements</h1>
 
 <p align="center">
-  A polished, local-first browser extension for hiding, editing, and restyling webpage elements.
+  A local-first browser extension for hiding elements, editing visible text, and rounding corners.
 </p>
 
 <p align="center">
   <a href="https://github.com/QenTerra/elements/releases">Releases</a> ·
   <a href="PRIVACY.md">Privacy</a> ·
+  <a href="TERMS_OF_USE.md">Terms</a> ·
   <a href="LICENSE">MIT License</a>
 </p>
 
-Elements is a cross-browser Manifest V3 extension for cleaning up webpages by
-hand. Hide distracting elements, edit visible text, or round sharp corners.
+Elements is a cross-browser Manifest V3 extension for making precise, per-site
+changes to webpages. Hide distracting elements, edit visible text, or round
+corners.
 Changes can be kept per site and synchronized across devices when browser
 storage allows it. Elements has no analytics, advertising, remote code, or
 developer-operated backend.
@@ -24,7 +26,7 @@ developer-operated backend.
 
 - Activate the picker from the toolbar or `Ctrl/Cmd+Shift+X`.
 - Hover and select elements; `Q`/`W` move through their ancestor chain.
-- Hide an element with a click or `Space`.
+- Select an element and press `Space` or click it to hide it.
 - Edit visible text with `E`; `Enter` saves and `Escape` cancels.
 - Round corners with `C` and undo the latest change with `Ctrl/Cmd+Z`.
 - Preview an edit, change its CSS selector, and choose whether it is remembered.
@@ -94,8 +96,8 @@ src/
 
 The content controller keeps hide/round rules in one stylesheet and applies
 text edits directly. A mutation observer reapplies text edits after SPA
-navigation replaces page nodes. Stored data remains compatible with the v1
-JSON shape, including implicit hide actions.
+navigation replaces page nodes. Stored data remains compatible with the version
+1 JSON shape, including implicit hide actions.
 
 ## Development
 
@@ -125,17 +127,23 @@ Generate production ZIP archives for every target with:
 npm run release:archives
 ```
 
-WXT writes the archives to `.output/`. The SVG and PNG branding sources can be
-regenerated on macOS with `npm run icons`.
+WXT writes the archives to `.output/`. SVG branding sources live in
+`scripts/icons`; generated PNGs are written to `public/icons` on macOS with
+`npm run icons`.
 
 ## Documentation
 
 - [Privacy policy](PRIVACY.md)
+- [Terms of use](TERMS_OF_USE.md)
 - [Security policy](SECURITY.md)
 - [Changelog](CHANGELOG.md)
 - [UX/UI and motion audit](docs/UX_UI_AUDIT.md) (Russian)
 - [Third-party notices](THIRD_PARTY_NOTICES.md)
 
+## Author
+
+[Nikita Melnychenko (QenTerra)](https://github.com/QenTerra)
+
 ## License
 
-MIT © 2026 Nikita Melnychenko (QenTerra).
+[MIT License](LICENSE) © 2026 Nikita Melnychenko (QenTerra).

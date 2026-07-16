@@ -2,6 +2,17 @@
 
 All notable changes to Elements are documented in this file.
 
+## Unreleased
+
+### Added
+
+- Terms of Use and direct links to the project's legal and third-party documents
+  from the Options page.
+- A new selected-element mark with editable text rows and a flat toolbar icon set.
+- Responsive picker spacing, bounded breadcrumbs, and readable long selectors.
+- Leaner production bundles without unused SVG source assets or an orphaned export
+  message handler.
+
 ## [1.0.0] — 2026-07-15
 
 ### Added

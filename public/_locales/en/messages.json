@@ -4,7 +4,7 @@
     "description": "Name of the extension."
   },
   "extensionDescription": {
-    "message": "Remove annoying page elements with a click, edit their text, and round sharp corners.",
+    "message": "Hide page elements, edit their visible text, or round their corners.",
     "description": "Description of the extension, referenced from the manifest."
   },
   "optionsBackupTitle": {
@@ -12,12 +12,12 @@
     "description": "Title for the export/import section on the options page."
   },
   "optionsSitesTitle": {
-    "message": "Edited Sites",
-    "description": "Title of the per-site edited elements list on the options page."
+    "message": "Edited sites",
+    "description": "Title of the per-site saved rules list on the options page."
   },
   "optionsSitesDescription": {
-    "message": "Websites with permanently removed or restyled elements. Deleting a website restores its default look (tabs that are already open keep the current look until reloaded).",
-    "description": "Description of the edited sites list."
+    "message": "Sites with saved rules for hidden elements, text edits, or rounded corners. Deleting a site removes its saved rules; open tabs update after reload.",
+    "description": "Description of the saved rules list."
   },
   "optionsSitesSortName": {
     "message": "A–Z",
@@ -28,12 +28,12 @@
     "description": "Sort button: most recently changed first."
   },
   "optionsSitesEmpty": {
-    "message": "Nothing here yet. Activate «Elements» on a website to start editing its elements.",
-    "description": "Shown when no websites have edited elements."
+    "message": "Nothing here yet. Activate Elements on a website to start editing elements.",
+    "description": "Shown when no websites have saved rules."
   },
   "optionsSitesCount": {
-    "message": "$COUNT$ edited",
-    "description": "Badge with the number of edited elements on a website.",
+    "message": "$COUNT$ saved",
+    "description": "Badge with the number of saved rules for a website.",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -42,7 +42,7 @@
     }
   },
   "optionsSiteDeleteTitle": {
-    "message": "Delete and restore the default look",
+    "message": "Delete saved rules and restore the default look",
     "description": "Tooltip of the delete button in the site list."
   },
   "optionsSiteDeleted": {
@@ -56,7 +56,7 @@
     }
   },
   "optionsBackupHint": {
-    "message": "Saves all extension data to a single <code>JSON</code> file: permanently edited elements from every website and extension settings.",
+    "message": "Exports or restores all saved rules and extension settings as one <code>JSON</code> file.",
     "description": "Explanation of what the export/import buttons do. May contain simple HTML markup."
   },
   "optionsExportButton": {
@@ -79,8 +79,160 @@
     "message": "About",
     "description": "Title of the about/credits section on the options page."
   },
+  "optionsLegalDocuments": {
+    "message": "Legal and project documents",
+    "description": "Accessible label for the links to license, privacy, terms, security, and notices."
+  },
+  "optionsLicense": {
+    "message": "MIT License",
+    "description": "Link label for the project's MIT license."
+  },
+  "optionsPrivacy": {
+    "message": "Privacy Policy",
+    "description": "Link label for the privacy policy."
+  },
+  "optionsTerms": {
+    "message": "Terms of Use",
+    "description": "Link label for the terms of use."
+  },
+  "optionsSecurity": {
+    "message": "Security",
+    "description": "Link label for the security policy."
+  },
+  "optionsNotices": {
+    "message": "Third-party notices",
+    "description": "Link label for third-party license notices."
+  },
   "optionsTagline": {
-    "message": "Removes annoying page elements, edits their text, and smooths sharp corners.",
+    "message": "Hide page elements, edit their visible text, or round their corners.",
     "description": "Short tagline under the extension name on the options page."
+  },
+  "optionsSortOrder": {
+    "message": "Site sort order",
+    "description": "Accessible label for the site list sorting controls."
+  },
+  "optionsErrorGeneric": {
+    "message": "Something went wrong.",
+    "description": "Fallback error shown when an operation fails without a known reason."
+  },
+  "optionsImportInvalidType": {
+    "message": "Choose a JSON backup file.",
+    "description": "Error shown when the selected import file is not JSON."
+  },
+  "optionsImportInvalidVersion": {
+    "message": "This backup is not compatible with this version of Elements.",
+    "description": "Error shown when an imported backup has an unsupported version."
+  },
+  "optionsImportFailed": {
+    "message": "The backup could not be imported.",
+    "description": "Error shown when the background import operation fails."
+  },
+  "backgroundUnavailable": {
+    "message": "Elements — unavailable on this tab",
+    "description": "Toolbar title shown for browser pages where the extension cannot run."
+  },
+  "pickerNoShortcut": {
+    "message": "No shortcut set",
+    "description": "Fallback shown when no keyboard shortcut is assigned."
+  },
+  "pickerHoverHint": {
+    "message": "Hover over an element to select it.",
+    "description": "Hint shown before the user selects an element."
+  },
+  "pickerAriaLabel": {
+    "message": "Elements picker",
+    "description": "Accessible label for the picker overlay."
+  },
+  "pickerSettings": {
+    "message": "Settings",
+    "description": "Tooltip and accessible label for the settings button."
+  },
+  "pickerExpand": {
+    "message": "Expand",
+    "description": "Tooltip and accessible label for the expand button."
+  },
+  "pickerMinimize": {
+    "message": "Minimize",
+    "description": "Tooltip and accessible label for the minimize button."
+  },
+  "pickerClose": {
+    "message": "Close",
+    "description": "Tooltip and accessible label for the close button."
+  },
+  "pickerChangeShortcut": {
+    "message": "Change shortcut",
+    "description": "Tooltip for the shortcut setting."
+  },
+  "pickerToggleOverlay": {
+    "message": "Toggle picker",
+    "description": "Description of the keyboard shortcut that toggles the picker."
+  },
+  "pickerMoveSelection": {
+    "message": "Move the selection one level up or down",
+    "description": "Description of the Q and W selection shortcuts."
+  },
+  "pickerRememberDefault": {
+    "message": "Remember by default",
+    "description": "Label for the default remember setting."
+  },
+  "pickerShowOriginal": {
+    "message": "Show the original page",
+    "description": "Label for the original-page preview switch."
+  },
+  "pickerRoundCorners": {
+    "message": "Round the element's corners",
+    "description": "Description of the corner-rounding shortcut."
+  },
+  "pickerEditText": {
+    "message": "Edit the element's text",
+    "description": "Description of the text-edit shortcut."
+  },
+  "pickerHideElement": {
+    "message": "Hide the element",
+    "description": "Description of the hide shortcut."
+  },
+  "pickerEditedElement": {
+    "message": "Edited element",
+    "description": "Table heading for the selector column."
+  },
+  "pickerRemember": {
+    "message": "Remember?",
+    "description": "Table heading for the persistence column."
+  },
+  "pickerEdit": {
+    "message": "Edit",
+    "description": "Link label for editing a saved selector."
+  },
+  "pickerRoundedCorners": {
+    "message": "Rounded corners",
+    "description": "Accessible label for a corner-rounding rule."
+  },
+  "pickerTextEdited": {
+    "message": "Text edited",
+    "description": "Accessible label for a text-edit rule."
+  },
+  "pickerHidden": {
+    "message": "Hidden",
+    "description": "Accessible label for a hide rule."
+  },
+  "pickerRememberEdit": {
+    "message": "Remember this edit",
+    "description": "Accessible label for a rule persistence checkbox."
+  },
+  "pickerPreviewOriginal": {
+    "message": "Hold to preview the original",
+    "description": "Tooltip and accessible label for the original preview control."
+  },
+  "pickerDeleteRule": {
+    "message": "Delete this rule",
+    "description": "Tooltip for deleting a saved rule from the picker."
+  },
+  "pickerSelectorPrompt": {
+    "message": "Customize CSS selector",
+    "description": "Prompt title shown when editing a saved selector."
+  },
+  "pickerSelectorInvalid": {
+    "message": "This is not a valid CSS selector.",
+    "description": "Alert shown when a custom selector cannot be parsed."
   }
 }

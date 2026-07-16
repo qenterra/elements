@@ -1,6 +1,6 @@
 import type { SVGProps } from 'react'
 
-/** Elements brand mark: a selected page element with an active pointer. */
+/** Elements brand mark: a selected page element with editable text rows. */
 export function BrandMark({ width = 24, height = 24, ...props }: SVGProps<SVGSVGElement>) {
   return <svg
     {...props}
@@ -13,12 +13,12 @@ export function BrandMark({ width = 24, height = 24, ...props }: SVGProps<SVGSVG
     focusable="false"
   >
     <path
-      d="M9 4.5H6.5a2 2 0 0 0-2 2V9m10.5-4.5h2.5a2 2 0 0 1 2 2V9m0 6v2.5a2 2 0 0 1-2 2H15m-6 0H6.5a2 2 0 0 1-2-2V15"
+      d="M9 4H6.5A2.5 2.5 0 0 0 4 6.5V9m11-5h2.5A2.5 2.5 0 0 1 20 6.5V9m0 6v2.5a2.5 2.5 0 0 1-2.5 2.5H15m-6 0H6.5A2.5 2.5 0 0 1 4 17.5V15"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.9"
       strokeLinecap="round"
-      opacity=".78"
+      strokeLinejoin="round"
     />
-    <path d="M9 8.25v8.5l2.24-2.14 1.75 3.28 1.84-.98-1.75-3.27 3.05-.51L9 8.25Z" fill="currentColor" />
+    <path d="M8 8.75h8m-8 3.25h5.5m-5.5 3.25h6.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
   </svg>
 }

@@ -2,7 +2,7 @@
   "name": "elements",
   "version": "1.0.0",
   "private": true,
-  "description": "A cross-browser extension for removing, editing, and restyling page elements.",
+  "description": "A cross-browser extension for hiding elements, editing visible text, and rounding corners.",
   "type": "module",
   "scripts": {
     "dev": "wxt",

@@ -1,6 +1,6 @@
 # Elements — аудит анимаций, UI и UX
 
-Дата: 15 июля 2026. Методика: принципы design engineering Эмиля Ковальски, статический аудит исходников, проверка TypeScript/Vitest и production-сборки Chrome, Firefox и Safari MV3.
+Дата: 16 июля 2026. Методика: принципы design engineering Эмиля Ковальски, статический аудит исходников, проверка TypeScript/Vitest и production-сборки Chrome, Firefox и Safari MV3.
 
 ## Резюме
 
@@ -21,13 +21,15 @@
 | Экспорт не давал подтверждения | После скачивания показывается локализованный toast | Пользователь получает завершённый feedback loop |
 | Сортировка списка мгновенно переставляла строки | Pointer-сортировка использует FLIP на `transform` за `180ms`; keyboard остаётся мгновенным | Сохраняется пространственный контекст без замедления клавиатуры |
 | Cursor-follow подсветка отвлекала от содержимого и создавала постоянное движение | Подсветка и глобальный `pointermove` удалены; возвращён спокойный однотонный фон | Карточки снова формируют всю визуальную иерархию без декоративной конкуренции |
-| Универсальный знак `</>` выглядел как иконка любого code-инструмента | Единый знак «выбранный элемент + курсор», отдельные active/inactive/unavailable toolbar-состояния и нативные размеры `16/32/48/128px` | Бренд отражает основную функцию Elements и остаётся различимым в панели браузера |
+| Универсальный знак `</>` выглядел как иконка любого code-инструмента | Единый знак «выбранный элемент + редактируемые строки», отдельные active/inactive/unavailable toolbar-состояния и нативные размеры `16/32/48/128px` | Бренд отражает основную функцию Elements и остаётся различимым в панели браузера |
 | Hover-состояния срабатывали на любом pointer | Hover ограничен `(hover: hover) and (pointer: fine)` | Нет «залипшего hover» на touch-устройствах |
 | Мелкий muted-текст имел контраст `3.37–3.67:1` | Цвет `#8991a1`, контраст `5.14–5.60:1` | Мелкий текст проходит WCAG AA |
 | Скрытая ссылка редактирования была доступна только мышью | `focus-within`, focus-visible и явные outlines | Keyboard navigation больше не скрывает действие |
 | Preview включался от одного keyboard keydown и мог остаться активным до blur | Семантическая button, hold-to-preview на keydown/keyup и touch pointer | Предпросмотр всегда возвращается в исходное состояние |
 | Switch-строки не сообщали состояние assistive tech | `role="switch"` + `aria-checked` | Состояние Remember/Compare читается скринридером |
 | Узкое окно ломало композицию title/sort/actions | Адаптивная раскладка до `520px` | Options остаётся читаемой в узком окне |
+| Глубокий DOM-путь занимал фиксированную область и обрезался случайно | Breadcrumb ограничен двумя строками с ellipsis; полный путь доступен в DOM | Контекст сохраняется без скачков высоты панели |
+| Длинный selector разбивался по каждому символу | Значение отображается одной строкой с ellipsis и `title` | Список остаётся компактным и читаемым |
 
 ## Инвентаризация motion после исправлений
 
@@ -39,7 +41,7 @@
 | Remember / Original | Click | Knob `transform`, track/background/glow, `180–240ms` | Непрерывная индикация состояния вместо телепортации; keyboard остаётся мгновенным |
 | Список edits | Добавление/удаление | Контейнер `max-height`, `220ms` | Приемлемо для малого списка; exit строки ещё не проработан |
 | Options cards | Первое открытие страницы | `translateY + scale + opacity`, `240ms`, stagger `40ms` | Редкий декоративный вход, interaction не блокируется |
-| Options cards | Движение fine-pointer над карточкой | Spring-сглаживание `rotateX/rotateY` до `0.6deg` + `scale(1.008)` | Лёгкий параллакс и заметный hover-lift без резких скачков и layout-анимации |
+| Options cards | Движение fine-pointer над карточкой | Без pointer-driven transform; остаётся border/focus feedback | Карточки не создают дополнительный scrollable overflow и не отвлекают от содержимого |
 | Options background | Статично | Однотонный `var(--bg)` | Чистая нейтральная основа без cursor tracking и декоративного шума |
 | Sites list | Первая загрузка/import | `translateY + opacity`, `180ms`, stagger `30ms` | Умеренный cascade, задержка ограничена шестью шагами |
 | Sites sort | Pointer click | FLIP `translateY`, `180ms` | Полезная spatial consistency; keyboard не анимируется |
@@ -71,16 +73,15 @@
 2. Проверить tab order после появления списка edits и возврат focus после удаления строки.
 3. Добавить `aria-label` для edit/delete actions с контекстом селектора, а не общий `Remove from list`.
 4. Не полагаться только на cyan/red: добавить текст/иконографику для активного, error и preview состояний.
-5. Локализовать весь picker: сейчас Options использует i18n, а основная панель захардкожена на английском.
+5. Проверить расширение локализации перед добавлением новых языков. Все текущие строки picker и Options уже проходят через `_locales/en/messages.json`; особенно важно сохранить переносы для длинных переводов.
 
 ### P2 — визуальная система и polish
 
 1. Вынести motion tokens (`120/180/220ms`, ease-out) и color tokens в общий слой, чтобы Options и Shadow UI не расходились.
 2. Упростить тень панели на светлых страницах и добавить тонкий neutral outline: сейчас тяжёлая тень может выглядеть грязно поверх насыщенного контента.
 3. Добавить типографическую иерархию в settings grid: action label 12–13px, shortcut secondary, пояснение максимум в одну строку.
-4. Для длинного selector использовать middle truncation и полное значение в tooltip/copy action вместо `word-break: break-all`.
-5. Добавить count/empty-state в список текущих правок: `3 changes on this page` делает состояние понятнее.
-6. В Options заменить `input[type=button]` на семантические `<button>` и добавить иконки только там, где они ускоряют распознавание.
+4. Добавить count/empty-state в список текущих правок: `3 changes on this page` делает состояние понятнее.
+5. В Options заменить `input[type=button]` на семантические `<button>` и добавить иконки только там, где они ускоряют распознавание.
 
 ## План реализации
 
@@ -100,14 +101,14 @@
 
 ### Этап 3 — Accessibility & localization (P1, 1–2 дня)
 
-- Вынести строки picker в `_locales`.
+- Добавить регрессионную проверку строк picker при добавлении новых языков.
 - Пройти keyboard-only сценарии, focus return и contextual aria-labels.
 - Добавить touch hit-target media rules.
 - Критерии: все действия доступны Tab/Enter/Space/Escape; reduced motion не содержит пространственных переходов; контраст WCAG AA.
 
 ### Этап 4 — Visual system & regression QA (P2, 1–2 дня)
 
-- Общие color/motion tokens, selector truncation, count/empty states.
+- Общие color/motion tokens, count/empty states.
 - Снять slow-motion запись каждого перехода и проверить Chrome/Firefox/Safari.
 - Критерии: UI motion не длиннее `300ms`, нет `transition: all`, hover только для fine pointer, быстрые повторные действия не вызывают скачков.
 

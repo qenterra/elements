@@ -120,8 +120,6 @@
         box-shadow: var(--shadow);
         padding: 24px 28px 28px;
         animation: cardIn .24s var(--ease-out) backwards;
-        transform-style: preserve-3d;
-        backface-visibility: hidden;
       }
 
       .card::after {
@@ -375,6 +373,21 @@
 
       .about p:last-child {
         margin-bottom: 0;
+      }
+
+      .about__documents {
+        margin-top: 14px;
+        padding: 13px 16px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--row-alt);
+      }
+
+      .about__links {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 7px 12px;
       }
 
       .about a {

@@ -22,12 +22,13 @@ let jobs = [
   RenderJob(source: "action_unavailable.svg", output: "action_unavailable.png", size: 32),
 ]
 
-let iconsDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-  .appendingPathComponent("public/icons", isDirectory: true)
+let projectDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+let sourceDirectory = projectDirectory.appendingPathComponent("scripts/icons", isDirectory: true)
+let outputDirectory = projectDirectory.appendingPathComponent("public/icons", isDirectory: true)
 
 func render(_ job: RenderJob) throws {
-  let sourceURL = iconsDirectory.appendingPathComponent(job.source)
-  let outputURL = iconsDirectory.appendingPathComponent(job.output)
+  let sourceURL = sourceDirectory.appendingPathComponent(job.source)
+  let outputURL = outputDirectory.appendingPathComponent(job.output)
 
   guard let image = NSImage(contentsOf: sourceURL) else {
     throw NSError(domain: "ElementsIconRenderer", code: 1, userInfo: [

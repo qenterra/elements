@@ -1,7 +1,7 @@
 # Third-party notices
 
-Elements uses open-source npm packages. The versions below are pinned in
-`package.json` and `package-lock.json`.
+Elements uses open-source npm packages. Direct dependency versions are pinned
+in `package.json`; `package-lock.json` records the exact transitive versions.
 
 ## Included in the extension bundle
 

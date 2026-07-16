@@ -1,5 +1,5 @@
 .mainWindow {
-	--elements-bg: #17181c;
+	--elements-bg: var(--elements-surface, #17181c);
 	--elements-text: #a7adba;
 	--elements-text-muted: #8991a1;
 	--elements-border: #2a2c33;
@@ -16,12 +16,13 @@
 	position: relative;
 	box-sizing: border-box;
 	padding: 0 22px;
-	width: 420px;
+	width: min(420px, calc(100vw - 32px));
+	max-width: calc(100vw - 32px);
 	font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 	color: var(--elements-text);
 	background: var(--elements-bg);
 	min-height: 200px;
-	border-radius: 16px;
+	border-radius: var(--elements-panel-radius, 16px);
 	transform-origin: bottom right;
 	/* clip the full-bleed element list so it doesn't poke out of the rounded
 	   corners; "clip" instead of "hidden" so the box can't be scrolled
@@ -186,7 +187,7 @@ hr {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	column-gap: 24px;
+	column-gap: 16px;
 	row-gap: 10px;
 	margin: 14px 0 16px;
 	font-size: 12px;
@@ -196,10 +197,12 @@ hr {
 .settingsGrid .rememberRow,
 .settingsGrid .compareRow {
 	flex: 1 1 40%;
+	min-width: 0;
 }
 
 .settingsItem {
-	white-space: nowrap;
+	min-width: 0;
+	white-space: normal;
 	padding: 0;
 	border: 0;
 	background: transparent;
@@ -303,6 +306,7 @@ button.settingsItem:focus-visible .toggle__knob {
 	margin: 0 2px;
 	border: solid 1px var(--elements-border);
 	border-radius: 5px;
+	white-space: nowrap;
 }
 
 .key:first-child {
@@ -324,6 +328,10 @@ button.settingsItem:focus-visible .toggle__knob {
 	overflow: hidden;
 	line-height: 1.2;
 	color: var(--elements-text-muted);
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
 }
 
 #elements_current_elm .pathSeparator,
@@ -422,6 +430,15 @@ button.settingsItem:focus-visible .toggle__knob {
 	font-size: 11px;
 }
 
+.elements_selectorValue {
+	display: inline-block;
+	max-width: calc(100% - 24px);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	vertical-align: middle;
+}
+
 #elements_elm_list .elements_edit_selector {
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 	float: right;
@@ -490,7 +507,7 @@ button.settingsItem:focus-visible .toggle__knob {
 }
 
 .elements_selector {
-	word-break: break-all;
+	min-width: 0;
 }
 
 /* the edit-kind mark in front of each list entry: an eye-off for hidden
@@ -508,7 +525,8 @@ button.settingsItem:focus-visible .toggle__knob {
 }
 
 .mainWindow.minimized {
-	width: 178px;
+	width: min(178px, calc(100vw - 32px));
+	max-width: calc(100vw - 32px);
 	min-height: 0;
 	height: 44px;
 }

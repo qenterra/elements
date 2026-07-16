@@ -1,8 +1,8 @@
 # Privacy Policy
 
-**Elements** is developed by Nikita Melnychenko (QenTerra).
+**Elements** is developed by [Nikita Melnychenko (QenTerra)](https://github.com/QenTerra).
 
-**Effective date:** 2026-07-15
+**Effective date:** 2026-07-16
 
 This policy describes how Elements handles information when it is installed in
 Chrome, Firefox, Safari, or another compatible browser. Elements has no
@@ -72,4 +72,10 @@ version.
 ## Contact
 
 For privacy questions, use the support contact published with the Elements
-listing or the contact channel provided by QenTerra.
+listing or the contact channel provided by [QenTerra](https://github.com/QenTerra).
+
+## Related documents
+
+- [Terms of Use](TERMS_OF_USE.md)
+- [Security Policy](SECURITY.md)
+- [Third-party notices](THIRD_PARTY_NOTICES.md)
