@@ -1,5 +1,5 @@
 import { createRoot, type Root } from 'react-dom/client'
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { browser } from 'wxt/browser'
 import contentCss from '../../content.css?raw'
 import { BrandMark } from '../components/BrandMark'
@@ -43,8 +43,14 @@ function actionLabel(action: RuntimeEdit['action']): string {
 
 function PickerPanel({ controller }: { controller: ElementController }) {
   const [snapshot, setSnapshot] = useState(controller.getSnapshot())
+  const pathRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => controller.subscribe(() => setSnapshot(controller.getSnapshot())), [controller])
+  useEffect(() => {
+    const pathContainer = pathRef.current
+    if (!pathContainer) return
+    pathContainer.scrollLeft = pathContainer.scrollWidth
+  }, [snapshot.path])
 
   const path = snapshot.path.length
     ? snapshot.path.flatMap((token, index) => index === 0
@@ -91,7 +97,7 @@ function PickerPanel({ controller }: { controller: ElementController }) {
         <div className="settingsItem"><span className="key">Space</span>/<span className="key">Left Click</span>: {t('pickerHideElement')}.</div>
       </div>
 
-      <div id="elements_current_elm">{path}</div>
+      <div id="elements_current_elm" ref={pathRef}>{path}</div>
       <div id="elements_elm_list" className={snapshot.edits.length ? 'hasContent' : ''}>
         {snapshot.edits.length > 0 && <table><tbody>
           <tr className="elements_heading"><td>{t('pickerEditedElement')}</td><td>{t('pickerRemember')}</td><td /></tr>

@@ -322,16 +322,25 @@ button.settingsItem:focus-visible .toggle__knob {
 	border-radius: 10px;
 	padding: 10px 12px;
 	margin: 18px 0 16px;
-	/* fixed height so the window doesn't jump while hovering elements
-	   with shorter/longer DOM paths */
+	/* Keep the panel stable while following the selected element, but reveal
+	   the terminal selector instead of clipping the beginning of the path. */
 	height: 52px;
-	overflow: hidden;
+	display: flex;
+	align-items: center;
+	overflow-x: auto;
+	overflow-y: hidden;
+	scrollbar-width: none;
+	overscroll-behavior-x: contain;
 	line-height: 1.2;
 	color: var(--elements-text-muted);
-	display: -webkit-box;
-	-webkit-box-orient: vertical;
-	-webkit-line-clamp: 2;
-	line-clamp: 2;
+}
+
+#elements_current_elm::-webkit-scrollbar {
+	display: none;
+}
+
+#elements_current_elm > * {
+	flex: 0 0 auto;
 }
 
 #elements_current_elm .pathSeparator,
@@ -379,6 +388,7 @@ button.settingsItem:focus-visible .toggle__knob {
 #elements_elm_list table {
 	border: 0;
 	width: 100%;
+	table-layout: fixed;
 	border-spacing: 0;
 }
 
@@ -412,7 +422,9 @@ button.settingsItem:focus-visible .toggle__knob {
 }
 
 #elements_elm_list td:nth-child(1) {
+	min-width: 0;
 	padding-left: 22px;
+	overflow: hidden;
 }
 
 #elements_elm_list td:nth-child(2) {
@@ -422,6 +434,7 @@ button.settingsItem:focus-visible .toggle__knob {
 
 #elements_elm_list td:nth-child(3) {
 	white-space: nowrap;
+	width: 64px;
 	padding-right: 12px;
 }
 
@@ -432,6 +445,7 @@ button.settingsItem:focus-visible .toggle__knob {
 
 .elements_selectorValue {
 	display: inline-block;
+	width: calc(100% - 24px);
 	max-width: calc(100% - 24px);
 	overflow: hidden;
 	text-overflow: ellipsis;

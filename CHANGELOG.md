@@ -10,6 +10,7 @@ All notable changes to Elements are documented in this file.
   from the Options page.
 - A new selected-element mark with editable text rows and a flat toolbar icon set.
 - Responsive picker spacing, bounded breadcrumbs, and readable long selectors.
+- Terminal breadcrumb focus and fixed edit-list columns keep action buttons in view.
 - Leaner production bundles without unused SVG source assets or an orphaned export
   message handler.
 
