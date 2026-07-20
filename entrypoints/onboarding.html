@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Elements</title>
+    <link rel="stylesheet" href="../src/theme/tokens.css" />
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      body {
+        margin: 0;
+        padding: 56px 20px 72px;
+        background: var(--el-bg);
+        color: var(--el-text);
+        font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+
+      :where(a, button, [tabindex]):focus-visible {
+        outline: 2px solid var(--el-accent);
+        outline-offset: 2px;
+      }
+
+      .page {
+        max-width: 560px;
+        margin: 0 auto;
+      }
+
+      @keyframes heroIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px) scale(.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      @keyframes bracketIn {
+        from {
+          opacity: 0;
+          transform: scale(1.5);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      .hero {
+        text-align: center;
+        margin-bottom: 40px;
+        animation: heroIn .4s var(--el-ease-out) backwards;
+      }
+
+      .hero__mark {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 88px;
+        height: 88px;
+        margin-bottom: 20px;
+        color: var(--el-accent);
+      }
+
+      .hero__bracket {
+        position: absolute;
+        width: 22px;
+        height: 22px;
+        animation: bracketIn .5s var(--el-ease-out) backwards;
+      }
+
+      .hero__bracket_tl { top: 0; left: 0; border-top: solid 3.5px currentColor; border-left: solid 3.5px currentColor; border-top-left-radius: 10px; animation-delay: .1s; }
+      .hero__bracket_tr { top: 0; right: 0; border-top: solid 3.5px currentColor; border-right: solid 3.5px currentColor; border-top-right-radius: 10px; animation-delay: .18s; }
+      .hero__bracket_bl { bottom: 0; left: 0; border-bottom: solid 3.5px currentColor; border-left: solid 3.5px currentColor; border-bottom-left-radius: 10px; animation-delay: .26s; }
+      .hero__bracket_br { bottom: 0; right: 0; border-bottom: solid 3.5px currentColor; border-right: solid 3.5px currentColor; border-bottom-right-radius: 10px; animation-delay: .34s; }
+
+      .hero__lines {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .hero__line {
+        height: 6px;
+        border-radius: 3px;
+        background: var(--el-accent);
+        animation: heroIn .4s var(--el-ease-out) backwards;
+      }
+
+      .hero__line:nth-child(1) { width: 44px; animation-delay: .2s; }
+      .hero__line:nth-child(2) { width: 30px; opacity: .75; animation-delay: .28s; }
+      .hero__line:nth-child(3) { width: 37px; opacity: .55; animation-delay: .36s; }
+
+      h1 {
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--el-text-strong);
+        margin: 0 0 10px;
+        text-wrap: balance;
+      }
+
+      .hero__tagline {
+        font-size: 15px;
+        color: var(--el-text-muted);
+        margin: 0 auto;
+        max-width: 430px;
+        text-wrap: pretty;
+      }
+
+      .step {
+        display: flex;
+        gap: 16px;
+        background: var(--el-surface);
+        border: 1px solid var(--el-border);
+        border-radius: 16px;
+        box-shadow: var(--el-shadow-card);
+        padding: 20px 22px;
+        animation: heroIn .3s var(--el-ease-out) backwards;
+      }
+
+      .step + .step {
+        margin-top: 14px;
+      }
+
+      .step:nth-of-type(1) { animation-delay: .12s; }
+      .step:nth-of-type(2) { animation-delay: .2s; }
+      .step:nth-of-type(3) { animation-delay: .28s; }
+
+      .step__number {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        flex: none;
+        border-radius: 11px;
+        background: var(--el-accent-soft);
+        color: var(--el-accent);
+        font-size: 15px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .step__title {
+        margin: 4px 0 3px;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--el-text-strong);
+      }
+
+      .step__body {
+        margin: 0;
+        font-size: 13.5px;
+        color: var(--el-text-muted);
+        text-wrap: pretty;
+      }
+
+      .step__body kbd {
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 12px;
+        color: var(--el-text);
+        background: var(--el-surface-alt);
+        border: 1px solid var(--el-border);
+        border-radius: 5px;
+        padding: 1px 6px;
+      }
+
+      .privacy {
+        margin-top: 26px;
+        padding: 18px 22px;
+        border: 1px solid var(--el-accent);
+        background: var(--el-accent-soft);
+        border-radius: 16px;
+        animation: heroIn .3s var(--el-ease-out) .36s backwards;
+      }
+
+      .privacy__title {
+        margin: 0 0 4px;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--el-text-strong);
+      }
+
+      .privacy__body {
+        margin: 0;
+        font-size: 13.5px;
+        color: var(--el-text);
+        text-wrap: pretty;
+      }
+
+      .actions {
+        display: flex;
+        justify-content: center;
+        margin-top: 30px;
+        animation: heroIn .3s var(--el-ease-out) .44s backwards;
+      }
+
+      button.primary {
+        font: inherit;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--el-accent-contrast);
+        background: var(--el-accent);
+        border: none;
+        padding: 12px 26px;
+        border-radius: 10px;
+        transition: background-color .15s ease, transform .12s var(--el-ease-out);
+      }
+
+      button.primary:active {
+        transform: scale(.97);
+      }
+
+      @media (hover: hover) and (pointer: fine) {
+        button.primary:hover {
+          background: var(--el-accent-hover);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .hero,
+        .hero__bracket,
+        .hero__line,
+        .step,
+        .privacy,
+        .actions {
+          animation: none;
+        }
+
+        button.primary {
+          transition: none;
+        }
+      }
+    </style>
+    <script type="module" src="./onboarding/main.tsx"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
