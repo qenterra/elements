@@ -1,5 +1,21 @@
 import { browser } from 'wxt/browser'
-import { DEFAULT_SETTINGS, type ExtensionSettings, type OverlaySnapshot, type PathToken, type RuntimeEdit, normalizePersistedEdits } from '../core/model'
+import {
+  DEFAULT_SETTINGS,
+  editDeclarations,
+  normalizePersistedEdits,
+  normalizeSettings,
+  sanitizeCssDeclarations,
+  type EditAction,
+  type ExtensionSettings,
+  type MarkedInfo,
+  type OverlaySnapshot,
+  type PathToken,
+  type ResolvedTheme,
+  type RuntimeEdit,
+  type StatusNotice,
+  type ThemePreference,
+} from '../core/model'
+import { resolveTheme, watchSystemTheme } from '../core/theme'
 import { getUniqueSelector, isValidSelector } from './selector'
 
 export interface OverlayRenderer {
@@ -7,6 +23,8 @@ export interface OverlayRenderer {
 }
 
 type Listener = () => void
+type UndoEntry = { type: 'add' | 'remove'; edit: RuntimeEdit }
+type PanelCorner = 'br' | 'bl' | 'tr' | 'tl'
 
 type OverlayElement = HTMLDivElement & { relatedElement?: Element }
 type I18nApi = { getMessage: (name: string) => string }
@@ -17,6 +35,7 @@ function localizedMessage(key: string, fallback: string): string {
 }
 
 const REDUCED_MOTION = '(prefers-reduced-motion: reduce)'
+const PANEL_MARGIN = 16
 
 function siteKey(): string {
   return location.hostname.replace(/^www\./, '')
@@ -35,11 +54,16 @@ function editKey(edit: RuntimeEdit): string {
   return `${edit.action ?? 'hide'}:${edit.selector}`
 }
 
+function toPlainRect(rect: DOMRect): MarkedInfo['rect'] {
+  return { x: rect.x, y: rect.y, width: rect.width, height: rect.height }
+}
+
 export class ElementController {
   private readonly listeners = new Set<Listener>()
   private readonly renderer: OverlayRenderer
   private readonly maxZIndex = 2147483647
-  private readonly undoStack: string[] = []
+  private undoStack: UndoEntry[] = []
+  private redoStack: UndoEntry[] = []
 
   private host: HTMLDivElement | null = null
   private overlayUi: { unmount: () => void } | null = null
@@ -55,6 +79,16 @@ export class ElementController {
   private minimizeAnimation: Animation | null = null
   private minimizeRevision = 0
   private textEditObserverTimer = 0
+  private paused = false
+  private resolvedTheme: ResolvedTheme = 'dark'
+  private stopThemeWatch: (() => void) | null = null
+  private status: StatusNotice | null = null
+  private statusId = 0
+  private statusTimer = 0
+  private modalCloseHandler: (() => void) | null = null
+  private panelCorner: PanelCorner = 'br'
+  private dragCleanup: (() => void) | null = null
+  private scrollNotifyFrame = 0
 
   hoveredElement: Element | null = null
   markedElement: Element | null = null
@@ -73,7 +107,7 @@ export class ElementController {
     document.addEventListener('keyup', this.handleKeyup, true)
     browser.runtime.onMessage.addListener(this.handleExtensionMessage)
 
-    await Promise.all([this.loadSavedElements(), this.loadSettings(), this.loadHotkey()])
+    await Promise.all([this.loadSavedElements(), this.loadSettings(), this.loadHotkey(), this.loadPaused()])
 
     this.mutationObserver = new MutationObserver(() => {
       if (this.targetingMode || this.textEditEl) return
@@ -92,10 +126,18 @@ export class ElementController {
     return {
       minimized: this.minimized,
       previewOriginal: this.previewOriginal,
+      paused: this.paused,
       hotkey: this.hotkey,
       settings: { ...this.settings },
       edits: this.hiddenElements.map((edit) => ({ ...edit })),
       path: this.getPathTokens(),
+      status: this.status,
+      marked: this.getMarkedInfo(),
+      textEditRect: this.textEditEl?.isConnected ? toPlainRect(this.textEditEl.getBoundingClientRect()) : null,
+      resolvedTheme: this.resolvedTheme,
+      showCoachmark: this.targetingMode && !this.settings.coachmarkSeen,
+      canUndo: this.undoStack.length > 0,
+      canRedo: this.redoStack.length > 0,
     }
   }
 
@@ -127,14 +169,80 @@ export class ElementController {
 
   private async loadSettings(): Promise<void> {
     const value = await this.sendMessage<string>({ action: 'get_settings' })
-    const parsed = parseJson<Partial<ExtensionSettings>>(value, {})
-    this.settings = { remember: parsed.remember !== false }
+    this.settings = normalizeSettings(parseJson<unknown>(value, {}))
+    this.applyThemePreference()
     this.notify()
   }
 
   private async loadHotkey(): Promise<void> {
     this.hotkey = await this.sendMessage<string>({ action: 'get_hotkey' }) ?? localizedMessage('pickerNoShortcut', this.hotkey)
     this.notify()
+  }
+
+  private async loadPaused(): Promise<void> {
+    this.paused = Boolean(await this.sendMessage<boolean>({ action: 'get_paused', website: siteKey() }))
+    this.updateCSS()
+    this.notify()
+  }
+
+  private saveSettings(): void {
+    void this.sendMessage({ action: 'set_settings', data: JSON.stringify(this.settings) })
+  }
+
+  // --- Theme -------------------------------------------------------------
+
+  private applyThemePreference(): void {
+    this.resolvedTheme = resolveTheme(this.settings.theme)
+    this.stopThemeWatch?.()
+    this.stopThemeWatch = this.settings.theme === 'system'
+      ? watchSystemTheme(() => {
+        this.resolvedTheme = resolveTheme(this.settings.theme)
+        this.syncThemeSurfaces()
+        this.notify()
+      })
+      : null
+    this.syncThemeSurfaces()
+  }
+
+  private syncThemeSurfaces(): void {
+    if (this.host) this.host.dataset.theme = this.resolvedTheme
+    this.styleHighlighter()
+  }
+
+  setThemePreference(theme: ThemePreference): void {
+    this.settings.theme = theme
+    this.saveSettings()
+    this.applyThemePreference()
+    this.notify()
+  }
+
+  cycleTheme(): void {
+    const order: ThemePreference[] = ['system', 'light', 'dark']
+    const next = order[(order.indexOf(this.settings.theme) + 1) % order.length]
+    this.setThemePreference(next)
+  }
+
+  // --- Status ------------------------------------------------------------
+
+  private showStatus(message: string, undoable = false): void {
+    this.statusId += 1
+    this.status = { id: this.statusId, message, undoable }
+    window.clearTimeout(this.statusTimer)
+    this.statusTimer = window.setTimeout(() => {
+      this.status = null
+      this.notify()
+    }, 2600)
+    this.notify()
+  }
+
+  // --- Selection ---------------------------------------------------------
+
+  private getMarkedInfo(): MarkedInfo | null {
+    if (!this.markedElement?.isConnected || this.textEditEl) return null
+    return {
+      rect: toPlainRect(this.markedElement.getBoundingClientRect()),
+      label: this.elementLabel(this.markedElement),
+    }
   }
 
   private getPathTokens(): PathToken[] {
@@ -181,18 +289,59 @@ export class ElementController {
     Object.assign(highlighter.style, {
       pointerEvents: 'none',
       position: 'fixed',
-      background: 'rgba(34,211,238,0.14)',
-      outline: 'solid 2px rgba(103,227,245,0.9)',
-      outlineOffset: '-2px',
       borderRadius: '8px',
-      boxShadow: '0 0 0 1px rgba(34,211,238,0.12), 0 8px 28px rgba(34,211,238,0.14)',
       transformOrigin: 'center',
       zIndex: String(this.maxZIndex - 1),
     })
 
+    // The brand signature: four corner brackets drawn on capture.
+    for (const corner of ['tl', 'tr', 'bl', 'br']) {
+      const bracket = document.createElement('div')
+      bracket.className = `elements_bracket elements_bracket_${corner}`
+      Object.assign(bracket.style, {
+        position: 'absolute',
+        width: '10px',
+        height: '10px',
+        pointerEvents: 'none',
+        ...(corner.includes('t') ? { top: '-2px', borderTop: 'solid 2.5px currentColor' } : { bottom: '-2px', borderBottom: 'solid 2.5px currentColor' }),
+        ...(corner.includes('l') ? { left: '-2px', borderLeft: 'solid 2.5px currentColor' } : { right: '-2px', borderRight: 'solid 2.5px currentColor' }),
+        ...(corner === 'tl' ? { borderTopLeftRadius: '6px' } : {}),
+        ...(corner === 'tr' ? { borderTopRightRadius: '6px' } : {}),
+        ...(corner === 'bl' ? { borderBottomLeftRadius: '6px' } : {}),
+        ...(corner === 'br' ? { borderBottomRightRadius: '6px' } : {}),
+      })
+      highlighter.appendChild(bracket)
+    }
+
     document.body.appendChild(highlighter)
     this.highlighter = highlighter
+    this.styleHighlighter()
     return highlighter
+  }
+
+  private styleHighlighter(): void {
+    if (!this.highlighter) return
+    const dark = this.resolvedTheme === 'dark'
+    Object.assign(this.highlighter.style, {
+      background: dark ? 'rgba(34,211,238,0.14)' : 'rgba(8,145,178,0.12)',
+      outline: dark ? 'solid 2px rgba(103,227,245,0.9)' : 'solid 2px rgba(8,145,178,0.85)',
+      outlineOffset: '-2px',
+      boxShadow: dark
+        ? '0 0 0 1px rgba(34,211,238,0.12), 0 8px 28px rgba(34,211,238,0.14)'
+        : '0 0 0 1px rgba(8,145,178,0.12), 0 8px 28px rgba(8,145,178,0.18)',
+      color: dark ? '#67e3f5' : '#0e7490',
+    })
+  }
+
+  private animateBrackets(): void {
+    if (!this.highlighter || matchMedia(REDUCED_MOTION).matches) return
+    for (const bracket of this.highlighter.querySelectorAll<HTMLElement>('.elements_bracket')) {
+      bracket.getAnimations().forEach((animation) => animation.cancel())
+      bracket.animate([
+        { opacity: 0, transform: 'scale(1.6)' },
+        { opacity: 1, transform: 'scale(1)' },
+      ], { duration: 130, easing: 'cubic-bezier(.23, 1, .32, 1)' })
+    }
   }
 
   private highlightElement(animateGeometry = false): void {
@@ -228,6 +377,7 @@ export class ElementController {
         easing: 'cubic-bezier(.23, 1, .32, 1)',
       })
     }
+    if (animateGeometry) this.animateBrackets()
     this.notify()
   }
 
@@ -252,15 +402,28 @@ export class ElementController {
     this.highlighter.style.height = `${rect.height}px`
   }
 
-  private updateHighlighterPosition = (): void => this.positionHighlighter(false)
+  private updateHighlighterPosition = (): void => {
+    this.positionHighlighter(false)
+    // Let the mini toolbar follow the element while scrolling.
+    if (this.markedElement && !this.scrollNotifyFrame) {
+      this.scrollNotifyFrame = requestAnimationFrame(() => {
+        this.scrollNotifyFrame = 0
+        this.notify()
+      })
+    }
+  }
 
   private handleMouseover = (event: MouseEvent): void => {
     if (!this.targetingMode || Date.now() < this.preventHighlightingUntil) return
-    if (this.textEditEl) return
+    if (this.textEditEl || this.modalCloseHandler) return
 
     if (this.isChildOfWindow(event.target)) {
-      this.unhighlightElement()
-      this.preventHighlightingUntil = Date.now() + 100
+      const path = event.composedPath()
+      const keepHighlight = path.some((node) => node instanceof HTMLElement && node.hasAttribute('data-keep-highlight'))
+      if (!keepHighlight) {
+        this.unhighlightElement()
+        this.preventHighlightingUntil = Date.now() + 100
+      }
       return
     }
 
@@ -276,16 +439,27 @@ export class ElementController {
   private handleKeydown = (event: KeyboardEvent): void => {
     if (!this.targetingMode || this.textEditEl) return
 
+    if (this.modalCloseHandler) {
+      if (event.code === 'Escape') {
+        event.stopPropagation()
+        event.preventDefault()
+        this.modalCloseHandler()
+      }
+      return
+    }
+
     if (event.code === 'Escape') this.deactivate()
-    else if (event.code === 'Space' && this.markedElement) this.hideTarget()
+    else if (event.code === 'Space' && this.markedElement) this.applyAction('hide')
     else if (event.code === 'KeyE' && this.markedElement) this.startTextEdit(this.markedElement)
-    else if (event.code === 'KeyC' && this.markedElement) this.roundTarget()
+    else if (event.code === 'KeyC' && this.markedElement) this.applyAction('round')
     else if (event.code === 'KeyW') {
       this.transpose = Math.max(0, this.transpose - 1)
       this.highlightElement()
     } else if (event.code === 'KeyQ') {
       this.transpose += 1
       this.highlightElement()
+    } else if (event.code === 'KeyZ' && (event.ctrlKey || event.metaKey) && event.shiftKey) {
+      this.redo()
     } else if (event.code === 'KeyZ' && (event.ctrlKey || event.metaKey)) {
       this.undo()
     } else return
@@ -295,12 +469,24 @@ export class ElementController {
   }
 
   private handleKeyup = (event: KeyboardEvent): void => {
-    if (!this.targetingMode || this.textEditEl) return
+    if (!this.targetingMode || this.textEditEl || this.modalCloseHandler) return
     event.stopPropagation()
     event.preventDefault()
   }
 
-  private hideTarget = (event?: MouseEvent): void => {
+  /** Called by the overlay UI while a popover/menu owns keyboard focus. */
+  setModal(open: boolean, onClose: (() => void) | null = null): void {
+    this.modalCloseHandler = open ? onClose : null
+  }
+
+  // --- Edits -------------------------------------------------------------
+
+  private pushUndo(entry: UndoEntry): void {
+    this.undoStack.push(entry)
+    this.redoStack = []
+  }
+
+  applyAction(kind: 'hide' | EditAction, event?: MouseEvent): void {
     if (!this.markedElement || (event && this.isChildOfWindow(event.target))) return
     if (event && event.button !== 0) {
       event.preventDefault()
@@ -308,34 +494,60 @@ export class ElementController {
       return
     }
 
+    if (kind === 'text') {
+      this.startTextEdit(this.markedElement)
+      return
+    }
+
     const selector = this.getSelector(this.markedElement)
     if (!selector) return
-    this.unhighlightElement()
     this.previewOriginal = false
-    this.hiddenElements.push({ selector, permanent: this.settings.remember })
-    this.undoStack.push(`hide:${selector}`)
-    this.updateCSS()
-    this.persist()
-    this.triggerResize()
-    event?.preventDefault()
-    event?.stopPropagation()
-  }
 
-  roundTarget(): void {
-    if (!this.markedElement) return
-    const selector = this.getSelector(this.markedElement)
-    if (!selector) return
+    if (kind === 'hide') {
+      const edit: RuntimeEdit = { selector, permanent: this.settings.remember }
+      this.unhighlightElement()
+      this.hiddenElements.push(edit)
+      this.pushUndo({ type: 'add', edit })
+      this.showStatus(localizedMessage('pickerStatusHidden', 'Element hidden'), true)
+      this.updateCSS()
+      this.persist()
+      this.triggerResize()
+      event?.preventDefault()
+      event?.stopPropagation()
+      return
+    }
 
-    this.previewOriginal = false
-    const existing = this.hiddenElements.findIndex((edit) => edit.action === 'round' && edit.selector === selector)
-    if (existing >= 0) this.hiddenElements.splice(existing, 1)
-    else {
-      this.hiddenElements.push({ selector, permanent: this.settings.remember, action: 'round' })
-      this.undoStack.push(`round:${selector}`)
+    // Toggleable style actions: applying twice removes the rule.
+    const existing = this.hiddenElements.findIndex((edit) => edit.action === kind && edit.selector === selector)
+    if (existing >= 0) {
+      const [removed] = this.hiddenElements.splice(existing, 1)
+      this.pushUndo({ type: 'remove', edit: removed })
+      this.showStatus(localizedMessage('pickerStatusRemoved', 'Edit removed'), true)
+    } else {
+      const edit: RuntimeEdit = {
+        selector,
+        permanent: this.settings.remember,
+        action: kind,
+        ...(kind === 'round' ? { value: String(this.settings.radius) } : {}),
+      }
+      this.hiddenElements.push(edit)
+      this.pushUndo({ type: 'add', edit })
+      const statusKey = {
+        round: 'pickerStatusRounded',
+        blur: 'pickerStatusBlurred',
+        dim: 'pickerStatusDimmed',
+        gray: 'pickerStatusGrayed',
+        css: 'pickerStatusCss',
+      }[kind]
+      this.showStatus(localizedMessage(statusKey, 'Edit applied'), true)
     }
     this.updateCSS()
     this.persist()
     this.notify()
+  }
+
+  private hideTarget = (event?: MouseEvent): void => {
+    this.applyAction('hide', event)
   }
 
   startTextEdit(element: Element): void {
@@ -349,6 +561,8 @@ export class ElementController {
     this.textEditOriginal = element.textContent ?? ''
     element.setAttribute('contenteditable', 'plaintext-only')
     element.style.setProperty('cursor', 'text', 'important')
+    element.style.setProperty('outline', `solid 2px ${this.resolvedTheme === 'dark' ? 'rgba(34,211,238,.85)' : 'rgba(8,145,178,.85)'}`, 'important')
+    element.style.setProperty('outline-offset', '2px', 'important')
     element.focus()
 
     const range = document.createRange()
@@ -358,6 +572,7 @@ export class ElementController {
     selection?.addRange(range)
     element.addEventListener('keydown', this.textEditKeydown, true)
     element.addEventListener('blur', this.textEditCommit, true)
+    this.notify()
   }
 
   private textEditKeydown = (event: KeyboardEvent): void => {
@@ -387,8 +602,9 @@ export class ElementController {
     if (existing >= 0) this.hiddenElements[existing] = entry
     else {
       this.hiddenElements.push(entry)
-      this.undoStack.push(`text:${selector}`)
+      this.pushUndo({ type: 'add', edit: entry })
     }
+    this.showStatus(localizedMessage('pickerStatusTextSaved', 'Text saved'), true)
     this.persist()
     this.notify()
   }
@@ -408,22 +624,47 @@ export class ElementController {
     element.removeEventListener('blur', this.textEditCommit, true)
     element.removeAttribute('contenteditable')
     element.style.removeProperty('cursor')
+    element.style.removeProperty('outline')
+    element.style.removeProperty('outline-offset')
     if (!element.getAttribute('style')) element.removeAttribute('style')
     this.textEditEl = null
+    this.notify()
   }
 
   undo(): void {
-    while (this.undoStack.length) {
-      const key = this.undoStack.pop() as string
-      const next = this.hiddenElements.filter((edit) => editKey(edit) !== key)
-      if (next.length !== this.hiddenElements.length) {
-        this.hiddenElements = next
-        this.updateCSS()
-        this.persist()
-        this.notify()
-        return
-      }
+    const entry = this.undoStack.pop()
+    if (!entry) return
+    if (entry.type === 'add') {
+      const live = this.findLiveEdit(entry.edit)
+      if (live) this.hiddenElements = this.hiddenElements.filter((edit) => edit !== live)
+      this.redoStack.push({ type: 'add', edit: live ?? entry.edit })
+    } else {
+      this.hiddenElements.push(entry.edit)
+      this.redoStack.push({ type: 'remove', edit: entry.edit })
     }
+    this.showStatus(localizedMessage('pickerStatusUndone', 'Undone'))
+    this.updateCSS()
+    this.persist()
+    this.triggerResize()
+    this.notify()
+  }
+
+  redo(): void {
+    const entry = this.redoStack.pop()
+    if (!entry) return
+    if (entry.type === 'add') {
+      this.hiddenElements.push(entry.edit)
+      this.undoStack.push({ type: 'add', edit: entry.edit })
+    } else {
+      const live = this.findLiveEdit(entry.edit)
+      if (live) this.hiddenElements = this.hiddenElements.filter((edit) => edit !== live)
+      this.undoStack.push({ type: 'remove', edit: live ?? entry.edit })
+    }
+    this.showStatus(localizedMessage('pickerStatusRedone', 'Redone'))
+    this.updateCSS()
+    this.persist()
+    this.triggerResize()
+    this.notify()
   }
 
   private getSelector(element: Element): string | null {
@@ -435,6 +676,7 @@ export class ElementController {
   }
 
   private applyTextEdits(): void {
+    if (this.paused) return
     for (const edit of this.hiddenElements) {
       if (edit.action !== 'text' || edit.text === undefined) continue
       try {
@@ -445,6 +687,16 @@ export class ElementController {
       } catch {
         // A selector can become invalid when a SPA replaces its markup.
       }
+    }
+  }
+
+  private restoreTextEdits(): void {
+    for (const edit of this.hiddenElements) {
+      if (edit.action !== 'text' || edit._original === undefined) continue
+      try {
+        const node = document.querySelector(edit.selector)
+        if (node && node.textContent === edit.text) node.textContent = edit._original
+      } catch { /* stale selector */ }
     }
   }
 
@@ -468,7 +720,9 @@ export class ElementController {
     if (!liveEdit) return
     if (liveEdit.action === 'text') this.previewEdit(liveEdit, true)
     this.hiddenElements = this.hiddenElements.filter((candidate) => candidate !== liveEdit)
+    this.pushUndo({ type: 'remove', edit: liveEdit })
     this.previewedHiddenSelector = null
+    this.showStatus(localizedMessage('pickerStatusDeleted', 'Edit deleted'), true)
     this.updateCSS()
     this.persist()
     this.triggerResize()
@@ -483,19 +737,67 @@ export class ElementController {
     this.notify()
   }
 
-  editSelector(edit: RuntimeEdit): void {
-    const liveEdit = this.findLiveEdit(edit)
-    if (!liveEdit) return
-    const next = window.prompt(localizedMessage('pickerSelectorPrompt', 'Customize CSS selector'), liveEdit.selector)?.trim()
-    if (!next || next === liveEdit.selector) return
-    if (!isValidSelector(next) || /[{}]/.test(next)) {
-      window.alert(localizedMessage('pickerSelectorInvalid', 'This is not a valid CSS selector.'))
-      return
+  /** Number of page elements matching a selector; -1 when it cannot parse. */
+  countMatches(selector: string): number {
+    const trimmed = selector.trim()
+    if (!trimmed || /[{}]/.test(trimmed) || !isValidSelector(trimmed)) return -1
+    try {
+      return document.querySelectorAll(trimmed).length
+    } catch {
+      return -1
     }
-    liveEdit.selector = next
+  }
+
+  applySelectorChange(edit: RuntimeEdit, nextSelector: string): boolean {
+    const liveEdit = this.findLiveEdit(edit)
+    const next = nextSelector.trim()
+    if (!liveEdit || !next || !isValidSelector(next) || /[{}]/.test(next)) return false
+    if (next !== liveEdit.selector) {
+      liveEdit.selector = next
+      this.updateCSS()
+      this.persist()
+    }
+    this.notify()
+    return true
+  }
+
+  updateRoundRadius(edit: RuntimeEdit, radius: number): void {
+    const liveEdit = this.findLiveEdit(edit)
+    if (!liveEdit || liveEdit.action !== 'round') return
+    liveEdit.value = String(Math.round(radius))
     this.updateCSS()
     this.persist()
     this.notify()
+  }
+
+  updateCssEdit(edit: RuntimeEdit, declarations: string): boolean {
+    const liveEdit = this.findLiveEdit(edit)
+    if (!liveEdit || liveEdit.action !== 'css') return false
+    if (!sanitizeCssDeclarations(declarations)) return false
+    liveEdit.value = declarations
+    this.updateCSS()
+    this.persist()
+    this.notify()
+    return true
+  }
+
+  addCssEdit(selector: string, declarations: string): boolean {
+    const next = selector.trim()
+    if (!next || !isValidSelector(next) || /[{}]/.test(next)) return false
+    if (!sanitizeCssDeclarations(declarations)) return false
+    const edit: RuntimeEdit = { selector: next, permanent: this.settings.remember, action: 'css', value: declarations }
+    this.hiddenElements.push(edit)
+    this.pushUndo({ type: 'add', edit })
+    this.showStatus(localizedMessage('pickerStatusCss', 'Custom CSS applied'), true)
+    this.updateCSS()
+    this.persist()
+    this.notify()
+    return true
+  }
+
+  /** Selector of the current selection, for creating a custom-CSS rule. */
+  draftSelector(): string | null {
+    return this.markedElement ? this.getSelector(this.markedElement) : null
   }
 
   private findLiveEdit(edit: RuntimeEdit): RuntimeEdit | undefined {
@@ -511,7 +813,24 @@ export class ElementController {
 
   toggleRemember(): void {
     this.settings.remember = !this.settings.remember
-    void this.sendMessage({ action: 'set_settings', data: JSON.stringify(this.settings) })
+    this.saveSettings()
+    this.notify()
+  }
+
+  togglePause(): void {
+    this.paused = !this.paused
+    void this.sendMessage({ action: 'set_paused', website: siteKey(), data: String(this.paused) })
+    if (this.paused) this.restoreTextEdits()
+    this.updateCSS()
+    this.applyTextEdits()
+    this.triggerResize()
+    this.showStatus(localizedMessage(this.paused ? 'pickerStatusPaused' : 'pickerStatusResumed', this.paused ? 'Paused on this site' : 'Rules active again'))
+    this.notify()
+  }
+
+  dismissCoachmark(): void {
+    this.settings.coachmarkSeen = true
+    this.saveSettings()
     this.notify()
   }
 
@@ -545,6 +864,71 @@ export class ElementController {
     })
   }
 
+  // --- Panel drag --------------------------------------------------------
+
+  beginPanelDrag(startX: number, startY: number): void {
+    const host = this.host
+    if (!host || this.dragCleanup) return
+    const rect = host.getBoundingClientRect()
+    const offsetX = startX - rect.x
+    const offsetY = startY - rect.y
+    let moved = false
+
+    const applyPosition = (clientX: number, clientY: number) => {
+      const x = Math.min(Math.max(clientX - offsetX, 4), window.innerWidth - rect.width - 4)
+      const y = Math.min(Math.max(clientY - offsetY, 4), window.innerHeight - rect.height - 4)
+      host.style.left = `${x}px`
+      host.style.top = `${y}px`
+      host.style.right = 'auto'
+      host.style.bottom = 'auto'
+    }
+
+    const onMove = (event: PointerEvent) => {
+      moved = true
+      applyPosition(event.clientX, event.clientY)
+    }
+    const onUp = () => {
+      cleanup()
+      if (!moved) return
+      const current = host.getBoundingClientRect()
+      const centerX = current.x + current.width / 2
+      const centerY = current.y + current.height / 2
+      const horizontal = centerX < window.innerWidth / 2 ? 'l' : 'r'
+      const vertical = centerY < window.innerHeight / 2 ? 't' : 'b'
+      this.panelCorner = `${vertical}${horizontal}` as PanelCorner
+      host.style.left = ''
+      host.style.top = ''
+      host.style.right = ''
+      host.style.bottom = ''
+      this.updateCSS()
+
+      if (!matchMedia(REDUCED_MOTION).matches) {
+        const settled = host.getBoundingClientRect()
+        const deltaX = current.x - settled.x
+        const deltaY = current.y - settled.y
+        if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
+          host.animate([
+            { transform: `translate(${deltaX}px, ${deltaY}px)` },
+            { transform: 'translate(0, 0)' },
+          ], { duration: 220, easing: 'cubic-bezier(.32, .72, 0, 1)' })
+        }
+      }
+    }
+    const cleanup = () => {
+      window.removeEventListener('pointermove', onMove, true)
+      window.removeEventListener('pointerup', onUp, true)
+      window.removeEventListener('pointercancel', onUp, true)
+      document.documentElement.style.removeProperty('user-select')
+      this.dragCleanup = null
+    }
+
+    document.documentElement.style.setProperty('user-select', 'none')
+    window.addEventListener('pointermove', onMove, true)
+    window.addEventListener('pointerup', onUp, true)
+    window.addEventListener('pointercancel', onUp, true)
+    this.dragCleanup = cleanup
+  }
+
   openOptions(): void {
     void this.sendMessage({ action: 'open_options' })
   }
@@ -561,6 +945,7 @@ export class ElementController {
 
     const host = document.createElement('div')
     host.id = 'elements_wnd'
+    host.dataset.theme = this.resolvedTheme
     const shadowRoot = host.attachShadow({ mode: 'open' })
     document.body.appendChild(host)
     this.host = host
@@ -581,6 +966,8 @@ export class ElementController {
     if (!this.targetingMode) return
     this.targetingMode = false
     this.previewOriginal = false
+    this.modalCloseHandler = null
+    this.dragCleanup?.()
     this.updateCSS()
     this.unhighlightElement()
 
@@ -650,28 +1037,32 @@ export class ElementController {
   }
 
   private updateCSS(): void {
+    const corner = this.panelCorner
+    const position = [
+      corner.includes('b') ? `bottom: ${PANEL_MARGIN}px;` : `top: ${PANEL_MARGIN}px;`,
+      corner.includes('r') ? `right: ${PANEL_MARGIN}px;` : `left: ${PANEL_MARGIN}px;`,
+    ].join(' ')
     const cssLines = [
-      `#elements_wnd { --elements-surface: #17181c; --elements-panel-radius: 16px; --elements-panel-shadow: 0 2px 6px rgba(0,0,0,.25), 0 20px 45px rgba(0,0,0,.5); position: fixed; bottom: 16px; right: 16px; background: var(--elements-surface); box-shadow: var(--elements-panel-shadow); border-radius: var(--elements-panel-radius); z-index: ${this.maxZIndex}; }`,
+      `#elements_wnd { position: fixed; ${position} z-index: ${this.maxZIndex}; }`,
     ]
 
-    if (!this.previewOriginal) {
+    if (!this.previewOriginal && !this.paused) {
       for (const edit of this.hiddenElements) {
         const selector = edit.selector.replace(/[{}]/g, '')
         if (selector === this.previewedHiddenSelector) {
           cssLines.push(`${selector} { outline: solid 3px rgba(34,211,238,.6) !important; outline-offset: -3px; }`)
-        } else if (edit.action === 'text') {
-          // Text edits are applied to the DOM because CSS cannot replace text.
-        } else if (edit.action === 'round') {
-          cssLines.push(`${selector} { border-radius: 12px !important; }`)
-        } else if (selector === 'body' || selector === 'html') {
-          cssLines.push(`${selector} { background: transparent !important; }`)
-        } else {
-          cssLines.push(`${selector} { display: none !important; }`)
+          continue
         }
+        if (!edit.action && (selector === 'body' || selector === 'html')) {
+          cssLines.push(`${selector} { background: transparent !important; }`)
+          continue
+        }
+        const declarations = editDeclarations(edit, this.settings.radius)
+        if (declarations) cssLines.push(`${selector} { ${declarations} }`)
       }
     }
 
-    if (!this.previewOriginal && this.hiddenElements.length) {
+    if (!this.previewOriginal && !this.paused && this.hiddenElements.length) {
       cssLines.push('html, html body, html body > #elements_wnd { display: block !important; }')
     }
 
@@ -683,21 +1074,31 @@ export class ElementController {
     }
     style.textContent = cssLines.join('\n')
     this.applyTextEdits()
+    void this.sendMessage({ action: 'badge', count: this.hiddenElements.length, paused: this.paused })
   }
 
   private persist(): void {
     const saved = this.hiddenElements
       .filter((edit) => edit.permanent)
-      .map(({ selector, permanent, action, text }) => ({ selector, permanent, ...(action ? { action } : {}), ...(text !== undefined ? { text } : {}) }))
+      .map(({ selector, permanent, action, text, value }) => ({
+        selector,
+        permanent,
+        ...(action ? { action } : {}),
+        ...(text !== undefined ? { text } : {}),
+        ...(value !== undefined ? { value } : {}),
+      }))
     void this.sendMessage({ action: 'set_saved_elms', website: siteKey(), data: JSON.stringify(saved) })
   }
 
-  private handleExtensionMessage = async (message: { action?: string }): Promise<boolean | undefined> => {
+  // Native Chrome ignores a Promise returned from an onMessage listener, so
+  // respond synchronously through sendResponse.
+  private handleExtensionMessage = (message: { action?: string }, _sender: unknown, sendResponse: (response?: unknown) => void): undefined => {
     if (message.action === 'toggle') {
       this.toggle()
-      return true
+      sendResponse(true)
+    } else if (message.action === 'getStatus') {
+      sendResponse(this.targetingMode)
     }
-    if (message.action === 'getStatus') return this.targetingMode
     return undefined
   }
 
@@ -706,6 +1107,9 @@ export class ElementController {
     this.isDestroyed = true
     if (this.mutationObserver) this.mutationObserver.disconnect()
     window.clearTimeout(this.textEditObserverTimer)
+    window.clearTimeout(this.statusTimer)
+    cancelAnimationFrame(this.scrollNotifyFrame)
+    this.stopThemeWatch?.()
     this.deactivate()
     document.removeEventListener('keydown', this.handleKeydown, true)
     document.removeEventListener('keyup', this.handleKeyup, true)
