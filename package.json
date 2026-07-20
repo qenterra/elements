@@ -1,8 +1,8 @@
 {
   "name": "elements",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
-  "description": "A cross-browser extension for hiding elements, editing visible text, and rounding corners.",
+  "description": "A cross-browser extension for hiding page elements, editing their visible text, and restyling them.",
   "type": "module",
   "scripts": {
     "dev": "wxt",
@@ -10,22 +10,27 @@
     "build:chrome": "wxt build --browser chrome",
     "build:firefox": "wxt build --browser firefox",
     "build:safari": "wxt build --browser safari",
-    "icons": "swift scripts/render-icons.swift",
+    "icons": "node scripts/render-icons.mjs",
     "zip:chrome": "wxt zip --browser chrome",
     "zip:firefox": "wxt zip --browser firefox",
     "zip:safari": "wxt zip --browser safari",
     "release:archives": "npm run zip:chrome && npm run zip:firefox && npm run zip:safari",
+    "screenshots": "node scripts/capture-screenshots.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "react": "19.2.7",
     "react-dom": "19.2.7"
   },
   "devDependencies": {
-    "@wxt-dev/module-react": "1.2.2",
+    "@playwright/test": "^1.61.1",
+    "@resvg/resvg-js": "^2.6.2",
+    "@types/node": "^26.1.1",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
+    "@wxt-dev/module-react": "1.2.2",
     "typescript": "7.0.2",
     "vitest": "4.1.10",
     "wxt": "0.20.27"

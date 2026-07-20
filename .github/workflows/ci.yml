@@ -44,3 +44,29 @@ jobs:
 
       - name: Build Safari
         run: npm run build:safari
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Build Chrome
+        run: npm run build:chrome
+
+      - name: End-to-end tests
+        run: npm run test:e2e
