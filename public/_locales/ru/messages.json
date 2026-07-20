@@ -1,0 +1,507 @@
+{
+  "extensionName": {
+    "message": "Elements"
+  },
+  "extensionDescription": {
+    "message": "Скрывайте элементы страниц, меняйте их текст и оформление — локально, без слежки."
+  },
+  "optionsBackupTitle": {
+    "message": "Резервная копия"
+  },
+  "optionsSitesTitle": {
+    "message": "Изменённые сайты"
+  },
+  "optionsSitesDescription": {
+    "message": "Сайты с сохранёнными правилами. Разверните сайт, чтобы посмотреть правила, поставьте на паузу, чтобы сохранить их без применения, или удалите, чтобы вернуть исходный вид."
+  },
+  "optionsSitesSortName": {
+    "message": "А–Я"
+  },
+  "optionsSitesSortDate": {
+    "message": "Недавние"
+  },
+  "optionsSitesEmpty": {
+    "message": "Пока пусто. Активируйте Elements на любом сайте, чтобы начать редактирование."
+  },
+  "optionsSearchPlaceholder": {
+    "message": "Поиск по сайтам…"
+  },
+  "optionsSearchEmpty": {
+    "message": "По запросу ничего не найдено."
+  },
+  "optionsSitesCount": {
+    "message": "Сохранено: $COUNT$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "optionsSiteRules": {
+    "message": "Показать правила для $DOMAIN$",
+    "placeholders": {
+      "domain": {
+        "content": "$1",
+        "example": "example.com"
+      }
+    }
+  },
+  "optionsSitePause": {
+    "message": "Приостановить правила на этом сайте"
+  },
+  "optionsSiteResume": {
+    "message": "Возобновить правила на этом сайте"
+  },
+  "optionsSiteDeleteTitle": {
+    "message": "Удалить сохранённые правила и вернуть исходный вид"
+  },
+  "optionsSiteDeleteFor": {
+    "message": "Удалить все правила для $DOMAIN$",
+    "placeholders": {
+      "domain": {
+        "content": "$1",
+        "example": "example.com"
+      }
+    }
+  },
+  "optionsSiteDeleted": {
+    "message": "$DOMAIN$ возвращён к исходному виду.",
+    "placeholders": {
+      "domain": {
+        "content": "$1",
+        "example": "example.com"
+      }
+    }
+  },
+  "optionsRuleDeleted": {
+    "message": "Правило удалено."
+  },
+  "optionsRuleDeleteFor": {
+    "message": "Удалить правило для $SELECTOR$",
+    "placeholders": {
+      "selector": {
+        "content": "$1",
+        "example": ".banner"
+      }
+    }
+  },
+  "optionsUndo": {
+    "message": "Отменить"
+  },
+  "optionsSettingsTitle": {
+    "message": "Настройки"
+  },
+  "optionsTheme": {
+    "message": "Тема"
+  },
+  "optionsThemeHint": {
+    "message": "Действует для панели выбора и этой страницы."
+  },
+  "themeSystem": {
+    "message": "Система"
+  },
+  "themeLight": {
+    "message": "Светлая"
+  },
+  "themeDark": {
+    "message": "Тёмная"
+  },
+  "optionsRememberHint": {
+    "message": "Новые правки сохраняются для сайта; выключите, чтобы правки действовали только до перезагрузки."
+  },
+  "optionsRadius": {
+    "message": "Радиус скругления"
+  },
+  "optionsRadiusHint": {
+    "message": "Радиус по умолчанию для действия «Скруглить углы»."
+  },
+  "optionsAdvanced": {
+    "message": "Расширенный режим"
+  },
+  "optionsAdvancedHint": {
+    "message": "Добавляет в панель действие с произвольным CSS."
+  },
+  "optionsShortcut": {
+    "message": "Горячая клавиша"
+  },
+  "optionsShortcutChange": {
+    "message": "Изменить"
+  },
+  "optionsBackupHint": {
+    "message": "Экспортирует и восстанавливает все правила и настройки одним <code>JSON</code>-файлом."
+  },
+  "optionsExportButton": {
+    "message": "Экспорт"
+  },
+  "optionsExportSuccess": {
+    "message": "Резервная копия сохранена."
+  },
+  "optionsImportButton": {
+    "message": "Импорт"
+  },
+  "optionsImportSuccess": {
+    "message": "Импорт выполнен."
+  },
+  "optionsImportReviewTitle": {
+    "message": "Импорт резервной копии"
+  },
+  "optionsImportSummary": {
+    "message": "В файле $SITES$ сайтов и $RULES$ правил. Выберите, как применить его.",
+    "placeholders": {
+      "sites": {
+        "content": "$1",
+        "example": "4"
+      },
+      "rules": {
+        "content": "$2",
+        "example": "12"
+      }
+    }
+  },
+  "optionsImportMerge": {
+    "message": "Объединить"
+  },
+  "optionsImportMergeHint": {
+    "message": "Добавит импортированные правила к текущим. Ничего не удаляется."
+  },
+  "optionsImportReplace": {
+    "message": "Заменить"
+  },
+  "optionsImportReplaceHint": {
+    "message": "Сначала удалит все текущие правила и настройки. После импорта доступна отмена."
+  },
+  "optionsImportConfirm": {
+    "message": "Импортировать"
+  },
+  "optionsImportCancel": {
+    "message": "Отмена"
+  },
+  "optionsAboutTitle": {
+    "message": "О расширении"
+  },
+  "optionsLegalDocuments": {
+    "message": "Юридические документы проекта"
+  },
+  "optionsFeedback": {
+    "message": "Обратная связь"
+  },
+  "optionsLicense": {
+    "message": "Лицензия MIT"
+  },
+  "optionsPrivacy": {
+    "message": "Конфиденциальность"
+  },
+  "optionsTerms": {
+    "message": "Условия использования"
+  },
+  "optionsSecurity": {
+    "message": "Безопасность"
+  },
+  "optionsNotices": {
+    "message": "Сторонние компоненты"
+  },
+  "optionsTagline": {
+    "message": "Скрывайте элементы страниц, меняйте их текст и оформление."
+  },
+  "optionsSortOrder": {
+    "message": "Порядок сортировки сайтов"
+  },
+  "optionsErrorGeneric": {
+    "message": "Что-то пошло не так."
+  },
+  "optionsImportInvalidType": {
+    "message": "Выберите JSON-файл резервной копии."
+  },
+  "optionsImportInvalidJson": {
+    "message": "Файл не является корректным JSON."
+  },
+  "optionsImportInvalidVersion": {
+    "message": "Эта резервная копия несовместима с текущей версией Elements."
+  },
+  "optionsImportFailed": {
+    "message": "Не удалось импортировать резервную копию."
+  },
+  "backgroundUnavailable": {
+    "message": "Elements — недоступно на этой вкладке"
+  },
+  "pickerNoShortcut": {
+    "message": "Сочетание не назначено"
+  },
+  "pickerHoverHint": {
+    "message": "Наведите курсор на элемент, чтобы выбрать его."
+  },
+  "pickerAriaLabel": {
+    "message": "Панель Elements"
+  },
+  "pickerSettings": {
+    "message": "Настройки"
+  },
+  "pickerTheme": {
+    "message": "Тема: $THEME$",
+    "placeholders": {
+      "theme": {
+        "content": "$1",
+        "example": "Система"
+      }
+    }
+  },
+  "pickerExpand": {
+    "message": "Развернуть"
+  },
+  "pickerMinimize": {
+    "message": "Свернуть"
+  },
+  "pickerClose": {
+    "message": "Закрыть"
+  },
+  "pickerChangeShortcut": {
+    "message": "Изменить сочетание клавиш"
+  },
+  "pickerToggleOverlay": {
+    "message": "открывает и закрывает панель"
+  },
+  "pickerMoveSelection": {
+    "message": "перемещают выделение по вложенности"
+  },
+  "pickerActions": {
+    "message": "Действия с элементом"
+  },
+  "pickerActionHide": {
+    "message": "Скрыть"
+  },
+  "pickerActionText": {
+    "message": "Текст"
+  },
+  "pickerActionRound": {
+    "message": "Углы"
+  },
+  "pickerMore": {
+    "message": "Ещё действия"
+  },
+  "pickerHideElement": {
+    "message": "Скрыть элемент"
+  },
+  "pickerEditText": {
+    "message": "Изменить текст элемента"
+  },
+  "pickerRoundCorners": {
+    "message": "Скруглить углы элемента"
+  },
+  "pickerBlurElement": {
+    "message": "Размыть элемент"
+  },
+  "pickerDimElement": {
+    "message": "Приглушить элемент"
+  },
+  "pickerGrayElement": {
+    "message": "Обесцветить элемент"
+  },
+  "pickerCustomCss": {
+    "message": "Произвольный CSS"
+  },
+  "pickerUndoButton": {
+    "message": "Отменить"
+  },
+  "pickerRedoButton": {
+    "message": "Вернуть"
+  },
+  "pickerChanges": {
+    "message": "Изменения на странице"
+  },
+  "pickerChangesEmpty": {
+    "message": "Пока нет изменений — выберите элемент."
+  },
+  "pickerRememberDefault": {
+    "message": "Запоминать правки"
+  },
+  "pickerRememberHint": {
+    "message": "Сохраняет новые правки для сайта на всех устройствах. Выкл.: правки действуют до перезагрузки."
+  },
+  "pickerShowOriginal": {
+    "message": "Показать оригинал"
+  },
+  "pickerPause": {
+    "message": "Пауза на сайте"
+  },
+  "pickerPauseHint": {
+    "message": "Правила сохраняются, но не применяются на этом сайте."
+  },
+  "pickerEditedElement": {
+    "message": "Изменённый элемент"
+  },
+  "pickerRemember": {
+    "message": "Запомнить?"
+  },
+  "pickerEdit": {
+    "message": "Изменить"
+  },
+  "pickerEditRule": {
+    "message": "Изменить правило для $SELECTOR$",
+    "placeholders": {
+      "selector": {
+        "content": "$1",
+        "example": ".banner"
+      }
+    }
+  },
+  "pickerRoundedCorners": {
+    "message": "Скруглённые углы"
+  },
+  "pickerTextEdited": {
+    "message": "Изменённый текст"
+  },
+  "pickerHidden": {
+    "message": "Скрыт"
+  },
+  "pickerBlurred": {
+    "message": "Размыт"
+  },
+  "pickerDimmed": {
+    "message": "Приглушён"
+  },
+  "pickerGrayed": {
+    "message": "Обесцвечен"
+  },
+  "pickerRememberEdit": {
+    "message": "Запомнить эту правку"
+  },
+  "pickerPreviewOriginal": {
+    "message": "Удерживайте, чтобы увидеть оригинал"
+  },
+  "pickerDeleteRule": {
+    "message": "Удалить это правило"
+  },
+  "pickerDeleteRuleFor": {
+    "message": "Удалить правило для $SELECTOR$",
+    "placeholders": {
+      "selector": {
+        "content": "$1",
+        "example": ".banner"
+      }
+    }
+  },
+  "pickerSelectorPrompt": {
+    "message": "Настроить CSS-селектор"
+  },
+  "pickerSelectorLabel": {
+    "message": "CSS-селектор"
+  },
+  "pickerSelectorMatches": {
+    "message": "Совпадений на странице: $COUNT$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "pickerSelectorNoMatch": {
+    "message": "Нет совпадений на странице"
+  },
+  "pickerSelectorInvalid": {
+    "message": "Это не корректный CSS-селектор."
+  },
+  "pickerRadius": {
+    "message": "Радиус"
+  },
+  "pickerCssLabel": {
+    "message": "CSS-декларации"
+  },
+  "pickerSave": {
+    "message": "Сохранить"
+  },
+  "pickerCancel": {
+    "message": "Отмена"
+  },
+  "pickerTextEditHint": {
+    "message": "Enter — сохранить · Esc — отмена"
+  },
+  "pickerStatusHidden": {
+    "message": "Элемент скрыт"
+  },
+  "pickerStatusRounded": {
+    "message": "Углы скруглены"
+  },
+  "pickerStatusBlurred": {
+    "message": "Элемент размыт"
+  },
+  "pickerStatusDimmed": {
+    "message": "Элемент приглушён"
+  },
+  "pickerStatusGrayed": {
+    "message": "Элемент обесцвечен"
+  },
+  "pickerStatusCss": {
+    "message": "CSS применён"
+  },
+  "pickerStatusTextSaved": {
+    "message": "Текст сохранён"
+  },
+  "pickerStatusRemoved": {
+    "message": "Правка снята"
+  },
+  "pickerStatusDeleted": {
+    "message": "Правка удалена"
+  },
+  "pickerStatusUndone": {
+    "message": "Отменено"
+  },
+  "pickerStatusRedone": {
+    "message": "Возвращено"
+  },
+  "pickerStatusPaused": {
+    "message": "Пауза на этом сайте"
+  },
+  "pickerStatusResumed": {
+    "message": "Правила снова активны"
+  },
+  "coachTitle": {
+    "message": "Быстрый старт"
+  },
+  "coachStep1": {
+    "message": "Наведите курсор на элемент; Q и W перемещают выделение по вложенности."
+  },
+  "coachStep2": {
+    "message": "Выберите действие: скрыть, изменить текст, скруглить углы — или откройте ⋯ для остальных."
+  },
+  "coachStep3": {
+    "message": "Ctrl/Cmd+Z отменяет; «Запоминать правки» сохраняет изменения для сайта."
+  },
+  "coachDismiss": {
+    "message": "Понятно"
+  },
+  "onboardTitle": {
+    "message": "Добро пожаловать в Elements"
+  },
+  "onboardTagline": {
+    "message": "Сделайте любой сайт своим: уберите лишнее, поправьте текст, измените оформление. Всё остаётся на вашем устройстве."
+  },
+  "onboardStep1Title": {
+    "message": "Откройте панель"
+  },
+  "onboardStep1Body": {
+    "message": "Нажмите иконку Elements на панели инструментов или Ctrl/Cmd+Shift+X на любом сайте."
+  },
+  "onboardStep2Title": {
+    "message": "Выберите и отредактируйте"
+  },
+  "onboardStep2Body": {
+    "message": "Наведите курсор на элемент и выберите действие: скрыть, изменить текст, скруглить углы, размыть или приглушить."
+  },
+  "onboardStep3Title": {
+    "message": "Сохраните результат"
+  },
+  "onboardStep3Body": {
+    "message": "Запомненные правки применяются при каждом посещении и синхронизируются между устройствами, когда это позволяет хранилище браузера."
+  },
+  "onboardPrivacyTitle": {
+    "message": "Приватность по умолчанию"
+  },
+  "onboardPrivacyBody": {
+    "message": "Без аналитики, рекламы, удалённого кода и серверов. Elements никуда не отправляет данные о вашем браузинге."
+  },
+  "onboardOpenOptions": {
+    "message": "Открыть настройки"
+  }
+}

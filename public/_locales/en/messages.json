@@ -4,7 +4,7 @@
     "description": "Name of the extension."
   },
   "extensionDescription": {
-    "message": "Hide page elements, edit their visible text, or round their corners.",
+    "message": "Hide page elements, edit their visible text, or restyle them — locally, with no tracking.",
     "description": "Description of the extension, referenced from the manifest."
   },
   "optionsBackupTitle": {
@@ -16,7 +16,7 @@
     "description": "Title of the per-site saved rules list on the options page."
   },
   "optionsSitesDescription": {
-    "message": "Sites with saved rules for hidden elements, text edits, or rounded corners. Deleting a site removes its saved rules; open tabs update after reload.",
+    "message": "Sites with saved rules. Expand a site to review individual rules, pause it to keep rules without applying them, or delete it to restore the default look.",
     "description": "Description of the saved rules list."
   },
   "optionsSitesSortName": {
@@ -31,6 +31,14 @@
     "message": "Nothing here yet. Activate Elements on a website to start editing elements.",
     "description": "Shown when no websites have saved rules."
   },
+  "optionsSearchPlaceholder": {
+    "message": "Search sites…",
+    "description": "Placeholder of the site list search field."
+  },
+  "optionsSearchEmpty": {
+    "message": "No sites match your search.",
+    "description": "Shown when the search filter matches nothing."
+  },
   "optionsSitesCount": {
     "message": "$COUNT$ saved",
     "description": "Badge with the number of saved rules for a website.",
@@ -41,9 +49,37 @@
       }
     }
   },
+  "optionsSiteRules": {
+    "message": "Show rules for $DOMAIN$",
+    "description": "Accessible label of the expand button in the site list.",
+    "placeholders": {
+      "domain": {
+        "content": "$1",
+        "example": "example.com"
+      }
+    }
+  },
+  "optionsSitePause": {
+    "message": "Pause rules on this site",
+    "description": "Tooltip of the pause button in the site list."
+  },
+  "optionsSiteResume": {
+    "message": "Resume rules on this site",
+    "description": "Tooltip of the resume button in the site list."
+  },
   "optionsSiteDeleteTitle": {
     "message": "Delete saved rules and restore the default look",
     "description": "Tooltip of the delete button in the site list."
+  },
+  "optionsSiteDeleteFor": {
+    "message": "Delete all rules for $DOMAIN$",
+    "description": "Accessible label of the site delete button.",
+    "placeholders": {
+      "domain": {
+        "content": "$1",
+        "example": "example.com"
+      }
+    }
   },
   "optionsSiteDeleted": {
     "message": "$DOMAIN$ restored to its default look.",
@@ -54,6 +90,76 @@
         "example": "example.com"
       }
     }
+  },
+  "optionsRuleDeleted": {
+    "message": "Rule deleted.",
+    "description": "Toast after deleting a single rule."
+  },
+  "optionsRuleDeleteFor": {
+    "message": "Delete the rule for $SELECTOR$",
+    "description": "Accessible label of a rule delete button.",
+    "placeholders": {
+      "selector": {
+        "content": "$1",
+        "example": ".banner"
+      }
+    }
+  },
+  "optionsUndo": {
+    "message": "Undo",
+    "description": "Undo button inside toasts."
+  },
+  "optionsSettingsTitle": {
+    "message": "Settings",
+    "description": "Title of the settings section on the options page."
+  },
+  "optionsTheme": {
+    "message": "Theme",
+    "description": "Label of the theme setting."
+  },
+  "optionsThemeHint": {
+    "message": "Applies to the picker panel and this page.",
+    "description": "Hint under the theme setting."
+  },
+  "themeSystem": {
+    "message": "System",
+    "description": "Theme option: follow the system color scheme."
+  },
+  "themeLight": {
+    "message": "Light",
+    "description": "Theme option: always light."
+  },
+  "themeDark": {
+    "message": "Dark",
+    "description": "Theme option: always dark."
+  },
+  "optionsRememberHint": {
+    "message": "New edits are kept for the site; turn off to make edits last only until reload.",
+    "description": "Hint under the remember-by-default setting."
+  },
+  "optionsRadius": {
+    "message": "Corner radius",
+    "description": "Label of the default corner radius setting."
+  },
+  "optionsRadiusHint": {
+    "message": "Default radius for the round-corners action.",
+    "description": "Hint under the corner radius setting."
+  },
+  "optionsAdvanced": {
+    "message": "Advanced mode",
+    "description": "Label of the advanced mode setting."
+  },
+  "optionsAdvancedHint": {
+    "message": "Adds a custom-CSS action to the picker.",
+    "description": "Hint under the advanced mode setting."
+  },
+  "optionsShortcut": {
+    "message": "Keyboard shortcut",
+    "description": "Label of the shortcut row in settings."
+  },
+  "optionsShortcutChange": {
+    "message": "Change",
+    "description": "Button that opens the browser shortcut settings."
   },
   "optionsBackupHint": {
     "message": "Exports or restores all saved rules and extension settings as one <code>JSON</code> file.",
@@ -75,6 +181,48 @@
     "message": "Import successful.",
     "description": "Message shown after a successful import."
   },
+  "optionsImportReviewTitle": {
+    "message": "Import backup",
+    "description": "Title of the import review dialog."
+  },
+  "optionsImportSummary": {
+    "message": "The file contains $SITES$ sites with $RULES$ rules. Choose how to apply it.",
+    "description": "Summary line in the import review dialog.",
+    "placeholders": {
+      "sites": {
+        "content": "$1",
+        "example": "4"
+      },
+      "rules": {
+        "content": "$2",
+        "example": "12"
+      }
+    }
+  },
+  "optionsImportMerge": {
+    "message": "Merge",
+    "description": "Import mode that keeps existing rules."
+  },
+  "optionsImportMergeHint": {
+    "message": "Adds the imported rules to your current ones. Nothing is deleted.",
+    "description": "Hint for the merge import mode."
+  },
+  "optionsImportReplace": {
+    "message": "Replace",
+    "description": "Import mode that overwrites everything."
+  },
+  "optionsImportReplaceHint": {
+    "message": "Deletes all current rules and settings first. Undo is available after import.",
+    "description": "Hint for the replace import mode."
+  },
+  "optionsImportConfirm": {
+    "message": "Import",
+    "description": "Confirm button of the import review dialog."
+  },
+  "optionsImportCancel": {
+    "message": "Cancel",
+    "description": "Cancel button of the import review dialog."
+  },
   "optionsAboutTitle": {
     "message": "About",
     "description": "Title of the about/credits section on the options page."
@@ -82,6 +230,10 @@
   "optionsLegalDocuments": {
     "message": "Legal and project documents",
     "description": "Accessible label for the links to license, privacy, terms, security, and notices."
+  },
+  "optionsFeedback": {
+    "message": "Feedback",
+    "description": "Link label for the GitHub issues page."
   },
   "optionsLicense": {
     "message": "MIT License",
@@ -104,7 +256,7 @@
     "description": "Link label for third-party license notices."
   },
   "optionsTagline": {
-    "message": "Hide page elements, edit their visible text, or round their corners.",
+    "message": "Hide page elements, edit their visible text, or restyle them.",
     "description": "Short tagline under the extension name on the options page."
   },
   "optionsSortOrder": {
@@ -118,6 +270,10 @@
   "optionsImportInvalidType": {
     "message": "Choose a JSON backup file.",
     "description": "Error shown when the selected import file is not JSON."
+  },
+  "optionsImportInvalidJson": {
+    "message": "The file is not valid JSON.",
+    "description": "Error shown when the import file cannot be parsed."
   },
   "optionsImportInvalidVersion": {
     "message": "This backup is not compatible with this version of Elements.",
@@ -147,6 +303,16 @@
     "message": "Settings",
     "description": "Tooltip and accessible label for the settings button."
   },
+  "pickerTheme": {
+    "message": "Theme: $THEME$",
+    "description": "Tooltip of the theme toggle button in the picker.",
+    "placeholders": {
+      "theme": {
+        "content": "$1",
+        "example": "System"
+      }
+    }
+  },
   "pickerExpand": {
     "message": "Expand",
     "description": "Tooltip and accessible label for the expand button."
@@ -164,32 +330,96 @@
     "description": "Tooltip for the shortcut setting."
   },
   "pickerToggleOverlay": {
-    "message": "Toggle picker",
-    "description": "Description of the keyboard shortcut that toggles the picker."
+    "message": "toggles the picker",
+    "description": "Text after the keyboard shortcut keys in the picker footer."
   },
   "pickerMoveSelection": {
-    "message": "Move the selection one level up or down",
-    "description": "Description of the Q and W selection shortcuts."
+    "message": "move the selection up or down",
+    "description": "Text after the Q/W keys in the picker footer."
   },
-  "pickerRememberDefault": {
-    "message": "Remember by default",
-    "description": "Label for the default remember setting."
+  "pickerActions": {
+    "message": "Element actions",
+    "description": "Accessible label of the action toolbar."
   },
-  "pickerShowOriginal": {
-    "message": "Show the original page",
-    "description": "Label for the original-page preview switch."
+  "pickerActionHide": {
+    "message": "Hide",
+    "description": "Toolbar button that hides the selected element."
   },
-  "pickerRoundCorners": {
-    "message": "Round the element's corners",
-    "description": "Description of the corner-rounding shortcut."
+  "pickerActionText": {
+    "message": "Text",
+    "description": "Toolbar button that edits the selected element's text."
   },
-  "pickerEditText": {
-    "message": "Edit the element's text",
-    "description": "Description of the text-edit shortcut."
+  "pickerActionRound": {
+    "message": "Round",
+    "description": "Toolbar button that rounds the selected element's corners."
+  },
+  "pickerMore": {
+    "message": "More actions",
+    "description": "Tooltip of the overflow menu button in the toolbar."
   },
   "pickerHideElement": {
     "message": "Hide the element",
-    "description": "Description of the hide shortcut."
+    "description": "Description of the hide action."
+  },
+  "pickerEditText": {
+    "message": "Edit the element's text",
+    "description": "Description of the text-edit action."
+  },
+  "pickerRoundCorners": {
+    "message": "Round the element's corners",
+    "description": "Description of the corner-rounding action."
+  },
+  "pickerBlurElement": {
+    "message": "Blur the element",
+    "description": "Menu item that blurs the selected element."
+  },
+  "pickerDimElement": {
+    "message": "Dim the element",
+    "description": "Menu item that lowers the selected element's opacity."
+  },
+  "pickerGrayElement": {
+    "message": "Grayscale the element",
+    "description": "Menu item that desaturates the selected element."
+  },
+  "pickerCustomCss": {
+    "message": "Custom CSS",
+    "description": "Menu item and label for the custom CSS action."
+  },
+  "pickerUndoButton": {
+    "message": "Undo",
+    "description": "Undo button label."
+  },
+  "pickerRedoButton": {
+    "message": "Redo",
+    "description": "Redo button label."
+  },
+  "pickerChanges": {
+    "message": "Changes on this page",
+    "description": "Heading of the list of edits in the picker."
+  },
+  "pickerChangesEmpty": {
+    "message": "No changes yet — select an element to start.",
+    "description": "Empty state of the list of edits."
+  },
+  "pickerRememberDefault": {
+    "message": "Remember new edits",
+    "description": "Label for the default remember setting."
+  },
+  "pickerRememberHint": {
+    "message": "Keeps new edits for this site on all your devices. Off: edits last until reload.",
+    "description": "Tooltip explaining the remember toggle scope."
+  },
+  "pickerShowOriginal": {
+    "message": "Show original",
+    "description": "Label for the original-page preview switch."
+  },
+  "pickerPause": {
+    "message": "Pause on this site",
+    "description": "Label for the per-site pause switch."
+  },
+  "pickerPauseHint": {
+    "message": "Keeps the rules but stops applying them on this site.",
+    "description": "Tooltip of the per-site pause switch."
   },
   "pickerEditedElement": {
     "message": "Edited element",
@@ -203,6 +433,16 @@
     "message": "Edit",
     "description": "Link label for editing a saved selector."
   },
+  "pickerEditRule": {
+    "message": "Edit the rule for $SELECTOR$",
+    "description": "Tooltip and accessible label of the rule edit button.",
+    "placeholders": {
+      "selector": {
+        "content": "$1",
+        "example": ".banner"
+      }
+    }
+  },
   "pickerRoundedCorners": {
     "message": "Rounded corners",
     "description": "Accessible label for a corner-rounding rule."
@@ -215,6 +455,18 @@
     "message": "Hidden",
     "description": "Accessible label for a hide rule."
   },
+  "pickerBlurred": {
+    "message": "Blurred",
+    "description": "Accessible label for a blur rule."
+  },
+  "pickerDimmed": {
+    "message": "Dimmed",
+    "description": "Accessible label for a dim rule."
+  },
+  "pickerGrayed": {
+    "message": "Grayscale",
+    "description": "Accessible label for a grayscale rule."
+  },
   "pickerRememberEdit": {
     "message": "Remember this edit",
     "description": "Accessible label for a rule persistence checkbox."
@@ -225,14 +477,178 @@
   },
   "pickerDeleteRule": {
     "message": "Delete this rule",
-    "description": "Tooltip for deleting a saved rule from the picker."
+    "description": "Tooltip for deleting a saved rule."
+  },
+  "pickerDeleteRuleFor": {
+    "message": "Delete the rule for $SELECTOR$",
+    "description": "Accessible label for deleting a specific rule.",
+    "placeholders": {
+      "selector": {
+        "content": "$1",
+        "example": ".banner"
+      }
+    }
   },
   "pickerSelectorPrompt": {
     "message": "Customize CSS selector",
-    "description": "Prompt title shown when editing a saved selector."
+    "description": "Title of the selector editing popover."
+  },
+  "pickerSelectorLabel": {
+    "message": "CSS selector",
+    "description": "Label of the selector input in the popover."
+  },
+  "pickerSelectorMatches": {
+    "message": "$COUNT$ matches on this page",
+    "description": "Live match count under the selector input.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "pickerSelectorNoMatch": {
+    "message": "No matches on this page",
+    "description": "Shown when a selector matches nothing."
   },
   "pickerSelectorInvalid": {
     "message": "This is not a valid CSS selector.",
-    "description": "Alert shown when a custom selector cannot be parsed."
+    "description": "Shown when a custom selector cannot be parsed."
+  },
+  "pickerRadius": {
+    "message": "Radius",
+    "description": "Label of the radius slider in the popover."
+  },
+  "pickerCssLabel": {
+    "message": "CSS declarations",
+    "description": "Label of the custom CSS textarea in the popover."
+  },
+  "pickerSave": {
+    "message": "Save",
+    "description": "Save button of the popover."
+  },
+  "pickerCancel": {
+    "message": "Cancel",
+    "description": "Cancel button of the popover."
+  },
+  "pickerTextEditHint": {
+    "message": "Enter to save · Esc to cancel",
+    "description": "Floating hint shown while editing text."
+  },
+  "pickerStatusHidden": {
+    "message": "Element hidden",
+    "description": "Status toast after hiding an element."
+  },
+  "pickerStatusRounded": {
+    "message": "Corners rounded",
+    "description": "Status toast after rounding corners."
+  },
+  "pickerStatusBlurred": {
+    "message": "Element blurred",
+    "description": "Status toast after blurring an element."
+  },
+  "pickerStatusDimmed": {
+    "message": "Element dimmed",
+    "description": "Status toast after dimming an element."
+  },
+  "pickerStatusGrayed": {
+    "message": "Element desaturated",
+    "description": "Status toast after graying an element."
+  },
+  "pickerStatusCss": {
+    "message": "Custom CSS applied",
+    "description": "Status toast after applying custom CSS."
+  },
+  "pickerStatusTextSaved": {
+    "message": "Text saved",
+    "description": "Status toast after saving a text edit."
+  },
+  "pickerStatusRemoved": {
+    "message": "Edit removed",
+    "description": "Status toast after toggling an edit off."
+  },
+  "pickerStatusDeleted": {
+    "message": "Edit deleted",
+    "description": "Status toast after deleting an edit from the list."
+  },
+  "pickerStatusUndone": {
+    "message": "Undone",
+    "description": "Status toast after undo."
+  },
+  "pickerStatusRedone": {
+    "message": "Redone",
+    "description": "Status toast after redo."
+  },
+  "pickerStatusPaused": {
+    "message": "Paused on this site",
+    "description": "Status toast after pausing rules."
+  },
+  "pickerStatusResumed": {
+    "message": "Rules active again",
+    "description": "Status toast after resuming rules."
+  },
+  "coachTitle": {
+    "message": "Quick start",
+    "description": "Title of the first-run coachmark."
+  },
+  "coachStep1": {
+    "message": "Hover an element; Q and W move the selection up or down.",
+    "description": "First coachmark step."
+  },
+  "coachStep2": {
+    "message": "Pick an action: hide, edit text, round corners — or open ⋯ for more.",
+    "description": "Second coachmark step."
+  },
+  "coachStep3": {
+    "message": "Ctrl/Cmd+Z undoes; “Remember new edits” keeps changes for this site.",
+    "description": "Third coachmark step."
+  },
+  "coachDismiss": {
+    "message": "Got it",
+    "description": "Dismiss button of the coachmark."
+  },
+  "onboardTitle": {
+    "message": "Welcome to Elements",
+    "description": "Onboarding page title."
+  },
+  "onboardTagline": {
+    "message": "Make any website yours: hide clutter, fix text, restyle blocks. Everything stays on your device.",
+    "description": "Onboarding page tagline."
+  },
+  "onboardStep1Title": {
+    "message": "Open the picker",
+    "description": "Onboarding step 1 title."
+  },
+  "onboardStep1Body": {
+    "message": "Click the Elements icon in the toolbar or press Ctrl/Cmd+Shift+X on any website.",
+    "description": "Onboarding step 1 body."
+  },
+  "onboardStep2Title": {
+    "message": "Select and edit",
+    "description": "Onboarding step 2 title."
+  },
+  "onboardStep2Body": {
+    "message": "Hover an element and choose an action: hide it, edit its text, round its corners, blur or dim it.",
+    "description": "Onboarding step 2 body."
+  },
+  "onboardStep3Title": {
+    "message": "Keep what you like",
+    "description": "Onboarding step 3 title."
+  },
+  "onboardStep3Body": {
+    "message": "Remembered edits re-apply on every visit and sync across devices when browser storage allows it.",
+    "description": "Onboarding step 3 body."
+  },
+  "onboardPrivacyTitle": {
+    "message": "Private by design",
+    "description": "Onboarding privacy section title."
+  },
+  "onboardPrivacyBody": {
+    "message": "No analytics, no ads, no remote code, no server. Elements never sends your browsing data anywhere.",
+    "description": "Onboarding privacy section body."
+  },
+  "onboardOpenOptions": {
+    "message": "Open settings",
+    "description": "Onboarding button that opens the options page."
   }
 }
