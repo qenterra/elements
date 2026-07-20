@@ -1,0 +1,96 @@
+/*
+ * Elements design tokens — the single source of truth for color, elevation,
+ * and motion in both the Options page (`:root`) and the Shadow DOM picker
+ * (`:host`). The dark palette is the default; `data-theme` switches themes
+ * explicitly, and an unset attribute follows the system preference.
+ */
+
+:root,
+:host {
+	--el-motion-fast: 120ms;
+	--el-motion-base: 180ms;
+	--el-motion-slow: 260ms;
+	--el-ease-out: cubic-bezier(.23, 1, .32, 1);
+	--el-ease-drawer: cubic-bezier(.32, .72, 0, 1);
+	--el-radius-panel: 16px;
+	--el-radius-control: 9px;
+}
+
+:root[data-theme='dark'],
+:host([data-theme='dark']),
+:root:not([data-theme]),
+:host(:not([data-theme])) {
+	color-scheme: dark;
+	--el-bg: #0f1013;
+	--el-surface: #17181c;
+	--el-surface-alt: #1e2025;
+	--el-border: #2a2c33;
+	--el-text-strong: #e5e7eb;
+	--el-text: #a7adba;
+	--el-text-muted: #8991a1;
+	--el-accent: #22d3ee;
+	--el-accent-hover: #67e3f5;
+	--el-accent-contrast: #0f1013;
+	--el-accent-soft: rgba(34, 211, 238, .12);
+	--el-danger: #f87171;
+	--el-danger-hover: #fca5a5;
+	--el-danger-soft: rgba(248, 113, 113, .12);
+	--el-success: #4ade80;
+	--el-knob: #e5e7eb;
+	--el-shadow-card: 0 1px 2px rgba(0, 0, 0, .2), 0 12px 32px rgba(0, 0, 0, .45);
+	--el-shadow-panel: 0 2px 6px rgba(0, 0, 0, .25), 0 20px 45px rgba(0, 0, 0, .5);
+	--el-highlight-fill: rgba(34, 211, 238, .14);
+	--el-highlight-outline: rgba(103, 227, 245, .9);
+}
+
+@media (prefers-color-scheme: light) {
+	:root:not([data-theme]),
+	:host(:not([data-theme])) {
+		color-scheme: light;
+		--el-bg: #f7f8fa;
+		--el-surface: #ffffff;
+		--el-surface-alt: #f1f3f6;
+		--el-border: #e2e5eb;
+		--el-text-strong: #111827;
+		--el-text: #3f4756;
+		--el-text-muted: #5b6472;
+		--el-accent: #0891b2;
+		--el-accent-hover: #0e7490;
+		--el-accent-contrast: #ffffff;
+		--el-accent-soft: rgba(8, 145, 178, .1);
+		--el-danger: #dc2626;
+		--el-danger-hover: #b91c1c;
+		--el-danger-soft: rgba(220, 38, 38, .1);
+		--el-success: #16a34a;
+		--el-knob: #ffffff;
+		--el-shadow-card: 0 1px 2px rgba(15, 23, 42, .06), 0 12px 32px rgba(15, 23, 42, .12);
+		--el-shadow-panel: 0 2px 6px rgba(15, 23, 42, .08), 0 20px 45px rgba(15, 23, 42, .18);
+		--el-highlight-fill: rgba(8, 145, 178, .12);
+		--el-highlight-outline: rgba(8, 145, 178, .85);
+	}
+}
+
+:root[data-theme='light'],
+:host([data-theme='light']) {
+	color-scheme: light;
+	--el-bg: #f7f8fa;
+	--el-surface: #ffffff;
+	--el-surface-alt: #f1f3f6;
+	--el-border: #e2e5eb;
+	--el-text-strong: #111827;
+	--el-text: #3f4756;
+	--el-text-muted: #5b6472;
+	--el-accent: #0891b2;
+	--el-accent-hover: #0e7490;
+	--el-accent-contrast: #ffffff;
+	--el-accent-soft: rgba(8, 145, 178, .1);
+	--el-danger: #dc2626;
+	--el-danger-hover: #b91c1c;
+	--el-danger-soft: rgba(220, 38, 38, .1);
+	--el-success: #16a34a;
+	--el-knob: #ffffff;
+	--el-shadow-card: 0 1px 2px rgba(15, 23, 42, .06), 0 12px 32px rgba(15, 23, 42, .12);
+	--el-shadow-panel: 0 2px 6px rgba(15, 23, 42, .08), 0 20px 45px rgba(15, 23, 42, .18);
+	--el-highlight-fill: rgba(8, 145, 178, .12);
+	--el-highlight-outline: rgba(8, 145, 178, .85);
+}
