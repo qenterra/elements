@@ -27,6 +27,9 @@ included in the published extension bundle.
 | `@vitejs/plugin-react` | 6.0.3 | MIT | Yuxi (Evan) You and Vite contributors | [vitejs/vite-plugin-react](https://github.com/vitejs/vite-plugin-react) |
 | `typescript` | 7.0.2 | Apache-2.0 | Microsoft Corporation | [microsoft/TypeScript](https://github.com/microsoft/TypeScript) |
 | `vitest` | 4.1.10 | MIT | VoidZero Inc. and Vitest contributors | [vitest-dev/vitest](https://github.com/vitest-dev/vitest) |
+| `@playwright/test` | 1.61.1 | Apache-2.0 | Microsoft Corporation | [microsoft/playwright](https://github.com/microsoft/playwright) |
+| `@resvg/resvg-js` | 2.6.2 | MPL-2.0 | Yisi Yu (yisibl) | [yisibl/resvg-js](https://github.com/yisibl/resvg-js) |
+| `@types/node` | 26.1.1 | MIT | DefinitelyTyped contributors | [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped) |
 | `@types/react` | 19.2.17 | MIT | Microsoft Corporation | [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped) |
 | `@types/react-dom` | 19.2.3 | MIT | Microsoft Corporation | [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped) |
 
@@ -57,6 +60,10 @@ authors. Packages marked MIT are distributed under the following license:
 > OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 > THE SOFTWARE.
 
-TypeScript is distributed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+TypeScript and Playwright are distributed under the
+[Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+`@resvg/resvg-js` is distributed under the
+[Mozilla Public License 2.0](https://www.mozilla.org/en-US/MPL/2.0/); it is a
+build-time tool used only to render icon PNGs and ships in no browser bundle.
 The package distributions contain the corresponding copyright notices and full
 license texts; the pinned versions can be audited from `package-lock.json`.

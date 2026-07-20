@@ -5,7 +5,7 @@
 <h1 align="center">Elements</h1>
 
 <p align="center">
-  A local-first browser extension for hiding elements, editing visible text, and rounding corners.
+  A local-first browser extension for hiding elements, editing visible text, and restyling any page.
 </p>
 
 <p align="center">
@@ -16,8 +16,8 @@
 </p>
 
 Elements is a cross-browser Manifest V3 extension for making precise, per-site
-changes to webpages. Hide distracting elements, edit visible text, or round
-corners.
+changes to webpages. Hide distracting elements, edit visible text, round
+corners, blur, dim, or restyle blocks.
 Changes can be kept per site and synchronized across devices when browser
 storage allows it. Elements has no analytics, advertising, remote code, or
 developer-operated backend.
@@ -25,12 +25,19 @@ developer-operated backend.
 ## Highlights
 
 - Activate the picker from the toolbar or `Ctrl/Cmd+Shift+X`.
-- Hover and select elements; `Q`/`W` move through their ancestor chain.
-- Select an element and press `Space` or click it to hide it.
-- Edit visible text with `E`; `Enter` saves and `Escape` cancels.
-- Round corners with `C` and undo the latest change with `Ctrl/Cmd+Z`.
-- Preview an edit, change its CSS selector, and choose whether it is remembered.
-- Temporarily compare the edited page with its original appearance.
+- Hover and select elements; `Q`/`W` move through their ancestor chain; a mini
+  toolbar next to the selection puts every action one click away.
+- Hide (`Space` or click), edit text in place (`E`), round corners (`C`), or
+  blur / dim / desaturate from the overflow menu.
+- Full undo/redo (`Ctrl/Cmd+Z`, `Ctrl/Cmd+Shift+Z`) with status feedback for
+  every action.
+- Light, dark, and system themes across the picker and Options.
+- Edit a rule's CSS selector in a popover with live match counts; adjust the
+  corner radius per rule; advanced mode adds sanitized custom CSS.
+- Pause rules per site without deleting them; the toolbar badge shows how many
+  rules are active.
+- Options: expandable per-site rule lists, search, undoable deletes, and
+  import with Merge/Replace review.
 - Export and import all settings as a single JSON backup.
 - Respect `prefers-reduced-motion` across picker and Options interactions.
 
@@ -40,9 +47,9 @@ Each GitHub release contains a separate build for every supported browser:
 
 | Archive | Target | Usage |
 | --- | --- | --- |
-| `elements-1.0.0-chrome.zip` | Chrome and Chromium browsers | Unzip and load as an unpacked extension |
-| `elements-1.0.0-firefox.zip` | Firefox | Load temporarily for development or submit for Mozilla signing |
-| `elements-1.0.0-safari.zip` | Safari | Use as the WebExtension input for Safari conversion and signing in Xcode |
+| `elements-1.1.0-chrome.zip` | Chrome and Chromium browsers | Unzip and load as an unpacked extension |
+| `elements-1.1.0-firefox.zip` | Firefox | Load temporarily for development or submit for Mozilla signing |
+| `elements-1.1.0-safari.zip` | Safari | Use as the WebExtension input for Safari conversion and signing in Xcode |
 
 The release archives are unsigned development/self-distribution builds. Store
 distribution still requires the signing and review process of each browser.
@@ -88,10 +95,13 @@ entrypoints/
   content.ts             content-script entrypoint
   options.html           Options document and visual design
   options/main.tsx       React Options application
+  onboarding.html        first-run welcome page
+  onboarding/main.tsx    React onboarding application
 src/
   components/            shared UI components and brand mark
-  core/                  storage and data contracts
+  core/                  storage, data contracts, theme resolution
   content/               selector engine, page controller, React overlay
+  theme/                 design tokens shared by every surface
 ```
 
 The content controller keeps hide/round rules in one stylesheet and applies
@@ -108,6 +118,17 @@ npm run typecheck
 npm test
 npm run build
 ```
+
+End-to-end tests drive a built Chrome extension with Playwright:
+
+```sh
+npm run build:chrome
+npx playwright install chromium   # once
+npm run test:e2e
+```
+
+Store screenshots regenerate with `npm run screenshots` (same
+prerequisites as the e2e suite).
 
 The source root intentionally has no runtime `manifest.json`: WXT generates it
 from `wxt.config.ts`. For local Chrome testing, load exactly:
@@ -128,8 +149,9 @@ npm run release:archives
 ```
 
 WXT writes the archives to `.output/`. SVG branding sources live in
-`scripts/icons`; generated PNGs are written to `public/icons` on macOS with
-`npm run icons`.
+`scripts/icons`; `npm run icons` renders them to `public/icons` on any
+platform (Node + resvg). Tagged pushes (`v*`) build and attach the archives
+to a draft GitHub release automatically.
 
 ## Documentation
 
@@ -137,7 +159,6 @@ WXT writes the archives to `.output/`. SVG branding sources live in
 - [Terms of use](TERMS_OF_USE.md)
 - [Security policy](SECURITY.md)
 - [Changelog](CHANGELOG.md)
-- [UX/UI and motion audit](docs/UX_UI_AUDIT.md) (Russian)
 - [Third-party notices](THIRD_PARTY_NOTICES.md)
 
 ## Author

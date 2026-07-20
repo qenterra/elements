@@ -2,7 +2,7 @@
 
 **Elements** is developed by [Nikita Melnychenko (QenTerra)](https://github.com/QenTerra).
 
-**Effective date:** 2026-07-16
+**Effective date:** 2026-07-20
 
 This policy describes how Elements handles information when it is installed in
 Chrome, Firefox, Safari, or another compatible browser. Elements has no
@@ -14,10 +14,14 @@ code endpoint.
 Elements handles only the information needed for its user-requested features:
 
 - the hostname of a website where the user creates a rule;
-- the CSS selector and action for that rule (hide, text edit, or rounded
-  corners);
-- replacement text entered by the user for a text-edit rule;
-- extension settings and the user's backup data when export or import is used.
+- the CSS selector and action for that rule (hide, text edit, rounded
+  corners, blur, dim, grayscale, or custom CSS);
+- replacement text entered by the user for a text-edit rule, and the CSS
+  declarations entered by the user for a custom-CSS rule;
+- whether the user has paused rule enforcement on a given site;
+- extension settings — theme, default remember behavior, default corner
+  radius, advanced mode — and the user's backup data when export or import
+  is used.
 
 When the user starts a text edit, Elements reads the selected element's
 current text in memory to support preview, undo, and restoring the original
