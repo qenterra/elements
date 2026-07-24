@@ -21,7 +21,14 @@
         padding: 56px 20px 72px;
         background: var(--el-bg);
         color: var(--el-text);
-        font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font:
+          15px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
       }
 
       :where(a, button, [tabindex]):focus-visible {
@@ -37,7 +44,7 @@
       @keyframes heroIn {
         from {
           opacity: 0;
-          transform: translateY(8px) scale(.98);
+          transform: translateY(8px) scale(0.98);
         }
         to {
           opacity: 1;
@@ -59,7 +66,7 @@
       .hero {
         text-align: center;
         margin-bottom: 40px;
-        animation: heroIn .4s var(--el-ease-out) backwards;
+        animation: heroIn 0.4s var(--el-ease-out) backwards;
       }
 
       .hero__mark {
@@ -77,13 +84,41 @@
         position: absolute;
         width: 22px;
         height: 22px;
-        animation: bracketIn .5s var(--el-ease-out) backwards;
+        animation: bracketIn 0.5s var(--el-ease-out) backwards;
       }
 
-      .hero__bracket_tl { top: 0; left: 0; border-top: solid 3.5px currentColor; border-left: solid 3.5px currentColor; border-top-left-radius: 10px; animation-delay: .1s; }
-      .hero__bracket_tr { top: 0; right: 0; border-top: solid 3.5px currentColor; border-right: solid 3.5px currentColor; border-top-right-radius: 10px; animation-delay: .18s; }
-      .hero__bracket_bl { bottom: 0; left: 0; border-bottom: solid 3.5px currentColor; border-left: solid 3.5px currentColor; border-bottom-left-radius: 10px; animation-delay: .26s; }
-      .hero__bracket_br { bottom: 0; right: 0; border-bottom: solid 3.5px currentColor; border-right: solid 3.5px currentColor; border-bottom-right-radius: 10px; animation-delay: .34s; }
+      .hero__bracket_tl {
+        top: 0;
+        left: 0;
+        border-top: solid 3.5px currentColor;
+        border-left: solid 3.5px currentColor;
+        border-top-left-radius: 10px;
+        animation-delay: 0.1s;
+      }
+      .hero__bracket_tr {
+        top: 0;
+        right: 0;
+        border-top: solid 3.5px currentColor;
+        border-right: solid 3.5px currentColor;
+        border-top-right-radius: 10px;
+        animation-delay: 0.18s;
+      }
+      .hero__bracket_bl {
+        bottom: 0;
+        left: 0;
+        border-bottom: solid 3.5px currentColor;
+        border-left: solid 3.5px currentColor;
+        border-bottom-left-radius: 10px;
+        animation-delay: 0.26s;
+      }
+      .hero__bracket_br {
+        bottom: 0;
+        right: 0;
+        border-bottom: solid 3.5px currentColor;
+        border-right: solid 3.5px currentColor;
+        border-bottom-right-radius: 10px;
+        animation-delay: 0.34s;
+      }
 
       .hero__lines {
         display: flex;
@@ -95,12 +130,23 @@
         height: 6px;
         border-radius: 3px;
         background: var(--el-accent);
-        animation: heroIn .4s var(--el-ease-out) backwards;
+        animation: heroIn 0.4s var(--el-ease-out) backwards;
       }
 
-      .hero__line:nth-child(1) { width: 44px; animation-delay: .2s; }
-      .hero__line:nth-child(2) { width: 30px; opacity: .75; animation-delay: .28s; }
-      .hero__line:nth-child(3) { width: 37px; opacity: .55; animation-delay: .36s; }
+      .hero__line:nth-child(1) {
+        width: 44px;
+        animation-delay: 0.2s;
+      }
+      .hero__line:nth-child(2) {
+        width: 30px;
+        opacity: 0.75;
+        animation-delay: 0.28s;
+      }
+      .hero__line:nth-child(3) {
+        width: 37px;
+        opacity: 0.55;
+        animation-delay: 0.36s;
+      }
 
       h1 {
         font-size: 28px;
@@ -127,16 +173,22 @@
         border-radius: 16px;
         box-shadow: var(--el-shadow-card);
         padding: 20px 22px;
-        animation: heroIn .3s var(--el-ease-out) backwards;
+        animation: heroIn 0.3s var(--el-ease-out) backwards;
       }
 
       .step + .step {
         margin-top: 14px;
       }
 
-      .step:nth-of-type(1) { animation-delay: .12s; }
-      .step:nth-of-type(2) { animation-delay: .2s; }
-      .step:nth-of-type(3) { animation-delay: .28s; }
+      .step:nth-of-type(1) {
+        animation-delay: 0.12s;
+      }
+      .step:nth-of-type(2) {
+        animation-delay: 0.2s;
+      }
+      .step:nth-of-type(3) {
+        animation-delay: 0.28s;
+      }
 
       .step__number {
         display: flex;
@@ -168,7 +220,7 @@
       }
 
       .step__body kbd {
-        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-family: ui-monospace, 'SF Mono', Menlo, monospace;
         font-size: 12px;
         color: var(--el-text);
         background: var(--el-surface-alt);
@@ -183,7 +235,7 @@
         border: 1px solid var(--el-accent);
         background: var(--el-accent-soft);
         border-radius: 16px;
-        animation: heroIn .3s var(--el-ease-out) .36s backwards;
+        animation: heroIn 0.3s var(--el-ease-out) 0.36s backwards;
       }
 
       .privacy__title {
@@ -204,7 +256,7 @@
         display: flex;
         justify-content: center;
         margin-top: 30px;
-        animation: heroIn .3s var(--el-ease-out) .44s backwards;
+        animation: heroIn 0.3s var(--el-ease-out) 0.44s backwards;
       }
 
       button.primary {
@@ -217,11 +269,13 @@
         border: none;
         padding: 12px 26px;
         border-radius: 10px;
-        transition: background-color .15s ease, transform .12s var(--el-ease-out);
+        transition:
+          background-color 0.15s ease,
+          transform 0.12s var(--el-ease-out);
       }
 
       button.primary:active {
-        transform: scale(.97);
+        transform: scale(0.97);
       }
 
       @media (hover: hover) and (pointer: fine) {

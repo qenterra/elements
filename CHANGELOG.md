@@ -2,7 +2,47 @@
 
 All notable changes to Elements are documented in this file.
 
-## [1.1.0] — Unreleased
+## [1.2.0] — Unreleased
+
+### Added
+
+- Versioned backup v2 with import limits, conflict review, merge/replace
+  transactions, automatic rollback, and undo of the last successful import.
+- Stable rule IDs and timestamps with automatic migration of legacy data.
+- Adaptive picker dock that becomes a safe-area-aware bottom sheet on narrow
+  viewports, plus touch-sized controls and explicit incognito behavior.
+- Component coverage for focus trapping and unit coverage for storage fallback,
+  repository transactions, protocol validation, history, text restoration, and
+  the rule engine.
+- Oxlint and Prettier checks in the local validation and CI workflow.
+
+### Changed
+
+- The background service worker now owns every persistent write behind a typed,
+  runtime-validated protocol.
+- Storage operations are serialized across sync and local areas; local route
+  markers prevent stale sync values from resurrecting deleted or oversized data.
+- Text editing now uses an external transactional editor and reversible DOM
+  wrappers, preserving original nodes and event listeners.
+- Undo/redo stores complete rule snapshots and covers edits, permanence changes,
+  custom CSS, deletions, and text replacements.
+- React picker UI is loaded only when activated; text mutation observers exist
+  only while active text rules require them.
+- Options import now provides a detailed review, atomic deletion uses restorable
+  site snapshots, and theme initialization no longer flashes the wrong theme.
+- Privacy copy now explicitly describes browser-managed sync and temporary
+  incognito behavior.
+
+### Fixed
+
+- Concurrent repository operations can no longer lose metadata or resurrect a
+  rule deleted by another operation.
+- Public hostnames no longer split saved rules by port; localhost and IP
+  development origins still remain isolated by port.
+- Extension-owned overlays, styles, and iframe shields use namespaced ownership
+  and deterministic cleanup.
+
+## [1.1.0] — 2026-07-20
 
 ### Added
 
@@ -76,3 +116,4 @@ All notable changes to Elements are documented in this file.
 - Saved rules remain in browser-managed extension storage.
 
 [1.0.0]: https://github.com/QenTerra/elements/releases/tag/v1.0.0
+[1.1.0]: https://github.com/QenTerra/elements/releases/tag/v1.1

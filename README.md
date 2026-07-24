@@ -27,7 +27,7 @@ developer-operated backend.
 - Activate the picker from the toolbar or `Ctrl/Cmd+Shift+X`.
 - Hover and select elements; `Q`/`W` move through their ancestor chain; a mini
   toolbar next to the selection puts every action one click away.
-- Hide (`Space` or click), edit text in place (`E`), round corners (`C`), or
+- Hide (`Space` or click), edit text transactionally (`E`), round corners (`C`), or
   blur / dim / desaturate from the overflow menu.
 - Full undo/redo (`Ctrl/Cmd+Z`, `Ctrl/Cmd+Shift+Z`) with status feedback for
   every action.
@@ -37,19 +37,22 @@ developer-operated backend.
 - Pause rules per site without deleting them; the toolbar badge shows how many
   rules are active.
 - Options: expandable per-site rule lists, search, undoable deletes, and
-  import with Merge/Replace review.
-- Export and import all settings as a single JSON backup.
+  import with a detailed Merge/Replace review and rollback.
+- Export and import versioned JSON backups; legacy v1 backups migrate on import.
+- Adaptive picker layout: corner dock on desktop, bottom sheet on narrow
+  viewports, and touch-sized controls.
+- Private windows keep edits temporary and never write their rules or settings.
 - Respect `prefers-reduced-motion` across picker and Options interactions.
 
 ## Release downloads
 
 Each GitHub release contains a separate build for every supported browser:
 
-| Archive | Target | Usage |
-| --- | --- | --- |
-| `elements-1.1.0-chrome.zip` | Chrome and Chromium browsers | Unzip and load as an unpacked extension |
-| `elements-1.1.0-firefox.zip` | Firefox | Load temporarily for development or submit for Mozilla signing |
-| `elements-1.1.0-safari.zip` | Safari | Use as the WebExtension input for Safari conversion and signing in Xcode |
+| Archive                      | Target                       | Usage                                                                    |
+| ---------------------------- | ---------------------------- | ------------------------------------------------------------------------ |
+| `elements-1.2.0-chrome.zip`  | Chrome and Chromium browsers | Unzip and load as an unpacked extension                                  |
+| `elements-1.2.0-firefox.zip` | Firefox                      | Load temporarily for development or submit for Mozilla signing           |
+| `elements-1.2.0-safari.zip`  | Safari                       | Use as the WebExtension input for Safari conversion and signing in Xcode |
 
 The release archives are unsigned development/self-distribution builds. Store
 distribution still requires the signing and review process of each browser.
@@ -74,20 +77,21 @@ and Xcode before installation or distribution.
 
 ## Permissions
 
-| Permission | Why |
-| --- | --- |
-| `storage` | Save remembered edits and extension settings |
-| `scripting` | Inject into compatible tabs that were open before installation |
-| `*://*/*` (host) | Reapply user-created rules on matching websites |
+| Permission       | Why                                                            |
+| ---------------- | -------------------------------------------------------------- |
+| `storage`        | Save remembered edits and extension settings                   |
+| `scripting`      | Inject into compatible tabs that were open before installation |
+| `*://*/*` (host) | Reapply user-created rules on matching websites                |
 
 Elements does not use these permissions to transmit page data to the developer.
 See [PRIVACY.md](PRIVACY.md) for the complete data-handling policy.
 
 ## Architecture
 
-The project is built with WXT, Vite, TypeScript, and React. React owns the
-extension UI (Options and the Shadow DOM picker), while the page-facing engine
-uses direct DOM APIs so it does not impose a virtual DOM over the host page.
+The project is built with WXT, Vite, TypeScript, and React. The background
+service worker is the sole owner of persistent writes and exposes a versioned,
+runtime-validated protocol. React owns Options and is loaded into the Shadow
+DOM picker only when the user activates it.
 
 ```text
 entrypoints/
@@ -104,18 +108,19 @@ src/
   theme/                 design tokens shared by every surface
 ```
 
-The content controller keeps hide/round rules in one stylesheet and applies
-text edits directly. A mutation observer reapplies text edits after SPA
-navigation replaces page nodes. Stored data remains compatible with the version
-1 JSON shape, including implicit hide actions.
+The content controller delegates page changes to a rule engine. Visual rules
+are compiled into one isolated stylesheet; text rules use reversible wrappers
+that retain the original DOM nodes and their event listeners. A mutation
+observer exists only while active text rules need it. The repository serializes
+reads and writes, migrates legacy rules to stable IDs, and routes oversized or
+failed sync writes to authoritative local storage.
 
 ## Development
 
 ```sh
 npm install
 npm run dev
-npm run typecheck
-npm test
+npm run validate
 npm run build
 ```
 
@@ -123,7 +128,7 @@ End-to-end tests drive a built Chrome extension with Playwright:
 
 ```sh
 npm run build:chrome
-npx playwright install chromium   # once
+npx playwright install --no-shell chromium   # once
 npm run test:e2e
 ```
 

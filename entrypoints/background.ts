@@ -1,8 +1,16 @@
 import { browser, type Browser } from 'wxt/browser'
 import { defineBackground } from 'wxt/utils/define-background'
+import { migratePersistedEdits, normalizeSettings } from '../src/core/model'
+import {
+  PROTOCOL_VERSION,
+  isExtensionRequest,
+  type ContentCommand,
+  type ExtensionRequest,
+  type ProtocolResult,
+} from '../src/core/protocol'
+import { RuleRepository, repositoryErrorCode } from '../src/core/repository'
+import { siteKeyFromUrl } from '../src/core/site'
 import { hybridStorage } from '../src/core/storage'
-
-const BACKUP_KEY_PATTERN = /^settings$|^web:|^webMeta$|^webPaused$/
 
 const ACTION_ICONS = {
   active: { 16: 'icons/action_active_16.png', 32: 'icons/action_active.png' },
@@ -12,48 +20,53 @@ const ACTION_ICONS = {
 
 const BADGE_COLOR = '#22d3ee'
 const BADGE_COLOR_PAUSED = '#8991a1'
+const repository = new RuleRepository(hybridStorage)
 
 function getLocalizedMessage(key: string, fallback: string): string {
   const i18n = browser.i18n as unknown as { getMessage: (name: string) => string }
   return i18n.getMessage(key) || fallback
 }
 
-function siteKeyFromUrl(url: string | undefined): string | null {
-  if (!url?.startsWith('http')) return null
+function ok<T>(data: T): ProtocolResult<T> {
+  return { ok: true, data }
+}
+
+function failure(error: string): ProtocolResult<never> {
+  return { ok: false, error }
+}
+
+type ContentCommandBody = ContentCommand extends infer Command
+  ? Command extends { v: 2 }
+    ? Omit<Command, 'v'>
+    : never
+  : never
+
+function contentCommand(command: ContentCommandBody): ContentCommand {
+  return { ...command, v: PROTOCOL_VERSION } as ContentCommand
+}
+
+async function getHotkey(): Promise<string> {
   try {
-    return new URL(url).hostname.replace(/^www\./, '')
+    const commands = await browser.commands.getAll()
+    return (
+      commands.find((command) => command.name === '_execute_action')?.shortcut ||
+      getLocalizedMessage('pickerNoShortcut', 'No shortcut set')
+    )
   } catch {
-    return null
+    return getLocalizedMessage('pickerNoShortcut', 'No shortcut set')
   }
-}
-
-function parseJson<T>(value: unknown, fallback: T): T {
-  if (typeof value !== 'string') return fallback
-  try {
-    return JSON.parse(value) as T
-  } catch {
-    return fallback
-  }
-}
-
-async function getPausedSites(): Promise<string[]> {
-  const paused = parseJson<unknown>(await hybridStorage.get('webPaused', '[]'), [])
-  return Array.isArray(paused) ? paused.filter((site): site is string => typeof site === 'string') : []
-}
-
-async function setPausedSite(website: string, paused: boolean): Promise<void> {
-  const sites = new Set(await getPausedSites())
-  if (paused) sites.add(website)
-  else sites.delete(website)
-  if (sites.size) await hybridStorage.set('webPaused', JSON.stringify([...sites]))
-  else await hybridStorage.remove('webPaused')
 }
 
 async function setBadge(tabId: number, count: number, paused: boolean): Promise<void> {
   try {
     await browser.action.setBadgeText({ tabId, text: count > 0 ? String(count) : '' })
-    await browser.action.setBadgeBackgroundColor({ tabId, color: paused ? BADGE_COLOR_PAUSED : BADGE_COLOR })
-    const action = browser.action as unknown as { setBadgeTextColor?: (details: { tabId: number; color: string }) => Promise<void> }
+    await browser.action.setBadgeBackgroundColor({
+      tabId,
+      color: paused ? BADGE_COLOR_PAUSED : BADGE_COLOR,
+    })
+    const action = browser.action as unknown as {
+      setBadgeTextColor?: (details: { tabId: number; color: string }) => Promise<void>
+    }
     await action.setBadgeTextColor?.({ tabId, color: '#0f1013' })
   } catch {
     // A tab can disappear between the event and the badge update.
@@ -61,14 +74,13 @@ async function setBadge(tabId: number, count: number, paused: boolean): Promise<
 }
 
 async function refreshBadgeFromStorage(tabId: number, url: string | undefined): Promise<void> {
-  const site = siteKeyFromUrl(url)
+  const site = url ? siteKeyFromUrl(url) : null
   if (!site) {
     await setBadge(tabId, 0, false)
     return
   }
-  const rules = parseJson<unknown[]>(await hybridStorage.get(`web:${site}`, '[]'), [])
-  const paused = (await getPausedSites()).includes(site)
-  await setBadge(tabId, Array.isArray(rules) ? rules.length : 0, paused)
+  const snapshot = await repository.getSiteSnapshot(site)
+  await setBadge(tabId, snapshot.rules.length, snapshot.paused)
 }
 
 function setIcon(tabId: number, active: boolean): Promise<void> {
@@ -84,7 +96,10 @@ function setIcon(tabId: number, active: boolean): Promise<void> {
 async function setUnavailable(tabId: number): Promise<void> {
   await Promise.all([
     browser.action.setIcon({ path: ACTION_ICONS.unavailable, tabId }),
-    browser.action.setTitle({ title: getLocalizedMessage('backgroundUnavailable', 'Elements — unavailable on this tab'), tabId }),
+    browser.action.setTitle({
+      title: getLocalizedMessage('backgroundUnavailable', 'Elements — unavailable on this tab'),
+      tabId,
+    }),
   ])
 }
 
@@ -98,14 +113,17 @@ async function refreshActionState(): Promise<void> {
   const tab = await activeTab()
   if (tab?.id === undefined || tab.id < 0) return
 
-  if (!tab.url?.startsWith('http')) {
+  if (!tab.url || !siteKeyFromUrl(tab.url)) {
     await setUnavailable(tab.id)
     return
   }
 
   await refreshBadgeFromStorage(tab.id, tab.url)
   try {
-    const active = await browser.tabs.sendMessage(tab.id, { action: 'getStatus' })
+    const active = await browser.tabs.sendMessage(
+      tab.id,
+      contentCommand({ type: 'picker.getStatus' }),
+    )
     await setIcon(tab.id, Boolean(active))
   } catch {
     await setIcon(tab.id, false)
@@ -114,10 +132,10 @@ async function refreshActionState(): Promise<void> {
 
 async function toggleActiveTab(): Promise<void> {
   const tab = await activeTab()
-  if (tab?.id === undefined || tab.id < 0) return
+  if (tab?.id === undefined || tab.id < 0 || !tab.url || !siteKeyFromUrl(tab.url)) return
 
   try {
-    await browser.tabs.sendMessage(tab.id, { action: 'toggle' })
+    await browser.tabs.sendMessage(tab.id, contentCommand({ type: 'picker.toggle' }))
     return
   } catch {
     // Tabs that predate installation may not have a content script yet.
@@ -128,84 +146,120 @@ async function toggleActiveTab(): Promise<void> {
       files: ['content-scripts/content.js'],
       target: { tabId: tab.id },
     })
-    await browser.tabs.sendMessage(tab.id, { action: 'toggle' })
+    await browser.tabs.sendMessage(tab.id, contentCommand({ type: 'picker.toggle' }))
   } catch {
-    // Protected browser pages correctly remain unavailable.
+    await setUnavailable(tab.id)
   }
 }
 
-let metadataWrite: Promise<void> = Promise.resolve()
-
-function updateSiteMetadata(website: string, data: string): Promise<void> {
-  // Serializing read-modify-write operations avoids lost updates when two
-  // tabs commit edits at nearly the same time.
-  metadataWrite = metadataWrite.then(async () => {
-    const meta = await hybridStorage.get<Record<string, number>>('webMeta', {})
-    if (data === '[]') delete meta[website]
-    else meta[website] = Date.now()
-    await hybridStorage.set('webMeta', meta)
-  })
-  return metadataWrite
+async function broadcastSiteChange(site?: string, excludeTabId?: number): Promise<void> {
+  const tabs = await browser.tabs.query({})
+  await Promise.allSettled(
+    tabs.flatMap((tab): Array<Promise<unknown>> => {
+      if (tab.id === undefined || tab.id < 0 || tab.id === excludeTabId || !tab.url) return []
+      const tabSite = siteKeyFromUrl(tab.url)
+      if (!tabSite || (site && tabSite !== site)) return []
+      return [
+        browser.tabs.sendMessage(tab.id, contentCommand({ type: 'site.changed', site: tabSite })),
+        refreshBadgeFromStorage(tab.id, tab.url),
+      ]
+    }),
+  )
 }
 
-function mergeRuleLists(existingRaw: unknown, incomingRaw: unknown): string {
-  const asList = (value: unknown): Array<Record<string, unknown>> => {
-    const parsed = parseJson<unknown>(value, [])
-    return Array.isArray(parsed) ? parsed.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object') : []
-  }
-  const ruleKey = (rule: Record<string, unknown>) => `${String(rule.action ?? 'hide')}:${String(rule.selector ?? '')}`
-
-  const incoming = asList(incomingRaw)
-  const incomingKeys = new Set(incoming.map(ruleKey))
-  const kept = asList(existingRaw).filter((rule) => !incomingKeys.has(ruleKey(rule)))
-  return JSON.stringify([...kept, ...incoming])
-}
-
-async function importSettings(data: string, mode: 'replace' | 'merge'): Promise<'SUCCESS' | string> {
+async function handleRequest(
+  request: ExtensionRequest,
+  sender: Browser.runtime.MessageSender,
+): Promise<ProtocolResult<unknown>> {
+  const incognito = sender.tab?.incognito === true
   try {
-    const parsed: unknown = JSON.parse(data)
-    if (!parsed || typeof parsed !== 'object' || (parsed as { version?: unknown }).version !== 1) {
-      throw new Error('Invalid version in data')
-    }
-
-    const incoming = Object.entries(parsed as Record<string, unknown>)
-      .filter(([key]) => BACKUP_KEY_PATTERN.test(key))
-
-    if (mode === 'replace') {
-      const existingKeys = (await hybridStorage.entries())
-        .map(([key]) => key)
-        .filter((key) => BACKUP_KEY_PATTERN.test(key))
-      await hybridStorage.remove(existingKeys)
-      await hybridStorage.setMany(incoming)
-      return 'SUCCESS'
-    }
-
-    const existing = new Map((await hybridStorage.entries()).filter(([key]) => BACKUP_KEY_PATTERN.test(key)))
-    const merged: Array<[string, unknown]> = []
-    for (const [key, value] of incoming) {
-      if (key.startsWith('web:')) {
-        merged.push([key, mergeRuleLists(existing.get(key), value)])
-      } else if (key === 'webMeta') {
-        const current = existing.get('webMeta')
-        const currentMeta = current && typeof current === 'object' ? current as Record<string, unknown> : {}
-        const incomingMeta = value && typeof value === 'object' ? value as Record<string, unknown> : {}
-        merged.push([key, { ...currentMeta, ...incomingMeta }])
-      } else if (key === 'webPaused') {
-        const currentPaused = parseJson<unknown>(existing.get('webPaused'), [])
-        const incomingPaused = parseJson<unknown>(value, [])
-        const union = new Set([
-          ...(Array.isArray(currentPaused) ? currentPaused : []),
-          ...(Array.isArray(incomingPaused) ? incomingPaused : []),
-        ])
-        merged.push([key, JSON.stringify([...union])])
-      } else if (key === 'settings' && !existing.has('settings')) {
-        merged.push([key, value])
+    switch (request.type) {
+      case 'picker.status':
+        if (sender.tab?.id !== undefined) await setIcon(sender.tab.id, request.active)
+        return ok(undefined)
+      case 'picker.ui.load':
+        if (sender.tab?.id === undefined) return failure('TAB_REQUIRED')
+        await browser.scripting.executeScript({
+          files: ['elements-ui.js'],
+          target: { tabId: sender.tab.id },
+        })
+        return ok(undefined)
+      case 'badge.update':
+        if (sender.tab?.id !== undefined)
+          await setBadge(sender.tab.id, request.count, request.paused)
+        return ok(undefined)
+      case 'options.open':
+        await browser.runtime.openOptionsPage()
+        return ok(undefined)
+      case 'shortcut.get':
+        return ok(await getHotkey())
+      case 'shortcut.open':
+        await browser.tabs.create({
+          active: true,
+          url: /Firefox/i.test(navigator.userAgent)
+            ? 'about:addons'
+            : 'chrome://extensions/shortcuts',
+        })
+        return ok(undefined)
+      case 'site.snapshot': {
+        const snapshot = await repository.getSiteSnapshot(request.site)
+        return ok({ ...snapshot, hotkey: await getHotkey(), incognito })
+      }
+      case 'site.rules.save': {
+        if (incognito) {
+          return ok({ rules: migratePersistedEdits(request.rules), persisted: false })
+        }
+        const rules = await repository.saveRules(request.site, request.rules)
+        await broadcastSiteChange(request.site, sender.tab?.id)
+        return ok({ rules, persisted: true })
+      }
+      case 'settings.get':
+        return ok(await repository.getSettings())
+      case 'settings.save': {
+        if (incognito) return ok(normalizeSettings(request.settings))
+        const settings = await repository.setSettings(request.settings)
+        await broadcastSiteChange(undefined, sender.tab?.id)
+        return ok(settings)
+      }
+      case 'site.pause':
+        if (!incognito) {
+          await repository.setPaused(request.site, request.paused)
+          await broadcastSiteChange(request.site, sender.tab?.id)
+        }
+        return ok({ persisted: !incognito })
+      case 'sites.list':
+        return ok(await repository.listSites())
+      case 'site.delete': {
+        const snapshot = await repository.deleteSite(request.site)
+        await broadcastSiteChange(request.site)
+        return ok(snapshot)
+      }
+      case 'site.rule.delete': {
+        const snapshot = await repository.deleteRule(request.site, request.ruleId)
+        await broadcastSiteChange(request.site)
+        return ok(snapshot)
+      }
+      case 'site.restore':
+        await repository.restoreSite(request.snapshot)
+        await broadcastSiteChange(request.snapshot.site)
+        return ok(undefined)
+      case 'backup.export':
+        return ok(await repository.exportBackup())
+      case 'backup.review':
+        return ok(await repository.reviewImport(request.data))
+      case 'backup.import': {
+        const review = await repository.importBackup(request.data, request.mode)
+        await broadcastSiteChange()
+        return ok(review)
+      }
+      case 'backup.undo': {
+        const restored = await repository.undoLastImport()
+        if (restored) await broadcastSiteChange()
+        return ok(restored)
       }
     }
-    await hybridStorage.setMany(merged)
-    return 'SUCCESS'
   } catch (error) {
-    return error instanceof Error ? error.message : 'IMPORT_FAILED'
+    return failure(repositoryErrorCode(error))
   }
 }
 
@@ -216,76 +270,18 @@ export default defineBackground(() => {
     if (tab.active && changeInfo.status === 'complete') void refreshActionState()
   })
   browser.runtime.onInstalled.addListener((details) => {
-    if (details.reason === 'install') {
-      // A relative URL resolves against the extension origin.
-      void browser.tabs.create({ url: '/onboarding.html' })
-    }
+    if (details.reason === 'install') void browser.tabs.create({ url: '/onboarding.html' })
   })
   void refreshActionState()
 
-  async function handleMessage(message: {
-    action?: string
-    active?: boolean
-    website?: string
-    data?: string
-    mode?: string
-    count?: number
-    paused?: boolean
-  }, sender: Browser.runtime.MessageSender): Promise<unknown> {
-    switch (message.action) {
-      case 'status':
-        if (sender.tab?.id !== undefined) await setIcon(sender.tab.id, Boolean(message.active))
-        return undefined
-      case 'badge':
-        if (sender.tab?.id !== undefined) {
-          await setBadge(sender.tab.id, message.count ?? 0, Boolean(message.paused))
-        }
-        return undefined
-      case 'open_options':
-        await browser.runtime.openOptionsPage()
-        return undefined
-      case 'get_saved_elms':
-        return hybridStorage.get(`web:${message.website ?? ''}`, '[]')
-      case 'set_saved_elms':
-        if (!message.website || message.data === undefined) return false
-        if (message.data === '[]') await hybridStorage.remove(`web:${message.website}`)
-        else await hybridStorage.set(`web:${message.website}`, message.data)
-        await updateSiteMetadata(message.website, message.data)
-        return true
-      case 'get_settings':
-        return hybridStorage.get('settings', '{}')
-      case 'set_settings':
-        await hybridStorage.set('settings', message.data ?? '{}')
-        return true
-      case 'get_paused':
-        return message.website ? (await getPausedSites()).includes(message.website) : false
-      case 'set_paused':
-        if (!message.website) return false
-        await setPausedSite(message.website, message.data === 'true')
-        return true
-      case 'get_hotkey': {
-        const commands = await browser.commands.getAll()
-        return commands[0]?.shortcut || getLocalizedMessage('pickerNoShortcut', 'No shortcut set')
-      }
-      case 'goto_hotkey_settings':
-        await browser.tabs.create({
-          active: true,
-          url: /Firefox/i.test(navigator.userAgent) ? 'about:addons' : 'chrome://extensions/shortcuts',
-        })
-        return undefined
-      case 'import_settings':
-        return importSettings(message.data ?? '', message.mode === 'merge' ? 'merge' : 'replace')
-      default:
-        return undefined
-    }
-  }
-
-  // Native Chrome ignores a Promise returned from an onMessage listener, so
-  // responses must go through sendResponse with the channel kept open.
   browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    void handleMessage(message as Parameters<typeof handleMessage>[0], sender)
-      .then((result) => sendResponse(result))
-      .catch(() => sendResponse(undefined))
+    if (!isExtensionRequest(message)) {
+      sendResponse(failure('INVALID_REQUEST'))
+      return false
+    }
+    void handleRequest(message, sender)
+      .then(sendResponse)
+      .catch(() => sendResponse(failure('UNKNOWN')))
     return true
   })
 })

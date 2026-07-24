@@ -1,6 +1,6 @@
 {
   "name": "elements",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "description": "A cross-browser extension for hiding page elements, editing their visible text, and restyling them.",
   "type": "module",
@@ -16,21 +16,35 @@
     "zip:safari": "wxt zip --browser safari",
     "release:archives": "npm run zip:chrome && npm run zip:firefox && npm run zip:safari",
     "screenshots": "node scripts/capture-screenshots.mjs",
+    "lint": "oxlint --deny-warnings .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "audit:prod": "npm audit --omit=dev --audit-level=high",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "validate": "npm run typecheck && npm run lint && npm run format:check && npm test",
+    "verify:build": "node scripts/verify-build.mjs",
+    "verify:release": "node scripts/verify-release.mjs"
   },
   "dependencies": {
     "react": "19.2.7",
     "react-dom": "19.2.7"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
     "@playwright/test": "^1.61.1",
     "@resvg/resvg-js": "^2.6.2",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^26.1.1",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "@wxt-dev/module-react": "1.2.2",
+    "jsdom": "^29.1.1",
+    "oxlint": "^1.75.0",
+    "prettier": "^3.9.6",
     "typescript": "7.0.2",
     "vitest": "4.1.10",
     "wxt": "0.20.27"

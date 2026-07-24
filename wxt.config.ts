@@ -5,7 +5,6 @@ export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   manifest: {
     name: '__MSG_extensionName__',
-    version: '1.1.0',
     description: '__MSG_extensionDescription__',
     default_locale: 'en',
     icons: {

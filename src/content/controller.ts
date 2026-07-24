@@ -1,9 +1,9 @@
 import { browser } from 'wxt/browser'
 import {
+  createRuleId,
   DEFAULT_SETTINGS,
-  editDeclarations,
-  normalizePersistedEdits,
-  normalizeSettings,
+  MAX_RADIUS,
+  MIN_RADIUS,
   sanitizeCssDeclarations,
   type EditAction,
   type ExtensionSettings,
@@ -15,15 +15,29 @@ import {
   type StatusNotice,
   type ThemePreference,
 } from '../core/model'
+import {
+  PROTOCOL_VERSION,
+  isContentCommand,
+  type ExtensionRequest,
+  type ResponseFor,
+} from '../core/protocol'
+import { siteKeyFromUrl } from '../core/site'
 import { resolveTheme, watchSystemTheme } from '../core/theme'
+import { sendProtocolMessage } from '../core/transport'
+import { SnapshotHistory } from './history'
 import { getUniqueSelector, isValidSelector } from './selector'
+import { RuleEngine } from './rule-engine'
 
 export interface OverlayRenderer {
   mount(shadowRoot: ShadowRoot, controller: ElementController): { unmount: () => void }
 }
 
+export interface ElementControllerOptions {
+  loadRenderer: () => Promise<OverlayRenderer>
+  onDestroy?: () => void
+}
+
 type Listener = () => void
-type UndoEntry = { type: 'add' | 'remove'; edit: RuntimeEdit }
 type PanelCorner = 'br' | 'bl' | 'tr' | 'tl'
 
 type OverlayElement = HTMLDivElement & { relatedElement?: Element }
@@ -38,20 +52,19 @@ const REDUCED_MOTION = '(prefers-reduced-motion: reduce)'
 const PANEL_MARGIN = 16
 
 function siteKey(): string {
-  return location.hostname.replace(/^www\./, '')
-}
-
-function parseJson<T>(value: unknown, fallback: T): T {
-  if (typeof value !== 'string') return fallback
-  try {
-    return JSON.parse(value) as T
-  } catch {
-    return fallback
-  }
+  return siteKeyFromUrl(location.href) ?? location.hostname.toLowerCase().replace(/^www\./, '')
 }
 
 function editKey(edit: RuntimeEdit): string {
-  return `${edit.action ?? 'hide'}:${edit.selector}`
+  return edit.id ?? `${edit.action ?? 'hide'}:${edit.selector}`
+}
+
+function cloneEdits(edits: RuntimeEdit[]): RuntimeEdit[] {
+  return edits.map((edit) => ({ ...edit }))
+}
+
+function comparableEdits(edits: RuntimeEdit[]): string {
+  return JSON.stringify(edits.map(({ _original: _ignored, ...edit }) => edit))
 }
 
 function toPlainRect(rect: DOMRect): MarkedInfo['rect'] {
@@ -60,16 +73,27 @@ function toPlainRect(rect: DOMRect): MarkedInfo['rect'] {
 
 export class ElementController {
   private readonly listeners = new Set<Listener>()
-  private readonly renderer: OverlayRenderer
+  private readonly loadRenderer: () => Promise<OverlayRenderer>
+  private readonly onDestroy: () => void
   private readonly maxZIndex = 2147483647
-  private undoStack: UndoEntry[] = []
-  private redoStack: UndoEntry[] = []
+  private readonly history = new SnapshotHistory<RuntimeEdit[]>(
+    cloneEdits,
+    (left, right) => comparableEdits(left) === comparableEdits(right),
+  )
+  private readonly ruleEngine = new RuleEngine()
 
   private host: HTMLDivElement | null = null
   private overlayUi: { unmount: () => void } | null = null
   private highlighter: HTMLDivElement | null = null
+  private readonly iframeOverlays = new Set<OverlayElement>()
+  private frameResizeObserver: ResizeObserver | null = null
   private mutationObserver: MutationObserver | null = null
+  private rulesPersistRevision = 0
+  private rulesPersistTail: Promise<void> = Promise.resolve()
+  private settingsPersistRevision = 0
+  private settingsPersistTail: Promise<void> = Promise.resolve()
   private isDestroyed = false
+  private incognito = false
   private textEditEl: HTMLElement | null = null
   private textEditOriginal = ''
   private previewedHiddenSelector: string | null = null
@@ -89,6 +113,8 @@ export class ElementController {
   private panelCorner: PanelCorner = 'br'
   private dragCleanup: (() => void) | null = null
   private scrollNotifyFrame = 0
+  private viewportNotifyFrame = 0
+  private readonly suppressedKeyups = new Set<string>()
 
   hoveredElement: Element | null = null
   markedElement: Element | null = null
@@ -97,24 +123,39 @@ export class ElementController {
   transpose = 0
   hiddenElements: RuntimeEdit[] = []
 
-  constructor(renderer: OverlayRenderer) {
-    this.renderer = renderer
+  constructor(options: ElementControllerOptions) {
+    this.loadRenderer = options.loadRenderer
+    this.onDestroy = options.onDestroy ?? (() => undefined)
   }
 
   async init(): Promise<void> {
     // Register messaging before storage I/O so an early toolbar click is not lost.
     document.addEventListener('keydown', this.handleKeydown, true)
     document.addEventListener('keyup', this.handleKeyup, true)
+    window.addEventListener('resize', this.handleViewportResize, true)
     browser.runtime.onMessage.addListener(this.handleExtensionMessage)
 
-    await Promise.all([this.loadSavedElements(), this.loadSettings(), this.loadHotkey(), this.loadPaused()])
-
-    this.mutationObserver = new MutationObserver(() => {
-      if (this.targetingMode || this.textEditEl) return
-      window.clearTimeout(this.textEditObserverTimer)
-      this.textEditObserverTimer = window.setTimeout(() => this.applyTextEdits(), 120)
+    const snapshot = await this.request({
+      v: PROTOCOL_VERSION,
+      type: 'site.snapshot',
+      site: siteKey(),
     })
-    this.mutationObserver.observe(document.documentElement, { childList: true, subtree: true })
+    if (!snapshot) return
+
+    this.hiddenElements = snapshot.rules.map((edit) => ({ ...edit }))
+    this.settings = { ...snapshot.settings }
+    this.hotkey = snapshot.hotkey
+    this.paused = snapshot.paused
+    this.incognito = snapshot.incognito
+    if (this.incognito) {
+      this.settings.remember = false
+      this.hiddenElements.forEach((edit) => {
+        edit.permanent = false
+      })
+    }
+    this.applyThemePreference()
+    this.updateCSS()
+    this.notify()
   }
 
   subscribe(listener: Listener): () => void {
@@ -125,6 +166,7 @@ export class ElementController {
   getSnapshot(): OverlaySnapshot {
     return {
       minimized: this.minimized,
+      incognito: this.incognito,
       previewOriginal: this.previewOriginal,
       paused: this.paused,
       hotkey: this.hotkey,
@@ -133,11 +175,13 @@ export class ElementController {
       path: this.getPathTokens(),
       status: this.status,
       marked: this.getMarkedInfo(),
-      textEditRect: this.textEditEl?.isConnected ? toPlainRect(this.textEditEl.getBoundingClientRect()) : null,
+      textEditRect: this.textEditEl?.isConnected
+        ? toPlainRect(this.textEditEl.getBoundingClientRect())
+        : null,
       resolvedTheme: this.resolvedTheme,
       showCoachmark: this.targetingMode && !this.settings.coachmarkSeen,
-      canUndo: this.undoStack.length > 0,
-      canRedo: this.redoStack.length > 0,
+      canUndo: this.history.canUndo,
+      canRedo: this.history.canRedo,
     }
   }
 
@@ -145,48 +189,61 @@ export class ElementController {
     for (const listener of this.listeners) listener()
   }
 
-  private async sendMessage<T>(message: Record<string, unknown>): Promise<T | undefined> {
+  private async request<R extends ExtensionRequest>(
+    message: R,
+  ): Promise<ResponseFor<R> | undefined> {
     if (!browser.runtime?.id) {
       this.destroy()
       return undefined
     }
 
-    try {
-      return await browser.runtime.sendMessage(message) as T
-    } catch {
-      if (!browser.runtime?.id) this.destroy()
-      return undefined
+    const result = await sendProtocolMessage(message)
+    if (result.ok) return result.data
+    if (result.error === 'RUNTIME_UNAVAILABLE' || !browser.runtime?.id) this.destroy()
+    return undefined
+  }
+
+  private async reloadSnapshot(): Promise<void> {
+    const snapshot = await this.request({
+      v: PROTOCOL_VERSION,
+      type: 'site.snapshot',
+      site: siteKey(),
+    })
+    if (!snapshot || this.isDestroyed) return
+    const storedKeys = new Set(snapshot.rules.map((edit) => editKey(edit)))
+    const temporary = this.hiddenElements.filter(
+      (edit) => !edit.permanent && !storedKeys.has(editKey(edit)),
+    )
+    this.hiddenElements = [...snapshot.rules.map((edit) => ({ ...edit })), ...temporary]
+    this.settings = { ...snapshot.settings }
+    this.hotkey = snapshot.hotkey
+    this.paused = snapshot.paused
+    this.incognito = snapshot.incognito
+    if (this.incognito) {
+      this.settings.remember = false
+      this.hiddenElements.forEach((edit) => {
+        edit.permanent = false
+      })
     }
-  }
-
-  private async loadSavedElements(): Promise<void> {
-    const value = await this.sendMessage<string>({ action: 'get_saved_elms', website: siteKey() })
-    this.hiddenElements = normalizePersistedEdits(parseJson(value, []))
-    this.updateCSS()
-    this.applyTextEdits()
-    this.notify()
-  }
-
-  private async loadSettings(): Promise<void> {
-    const value = await this.sendMessage<string>({ action: 'get_settings' })
-    this.settings = normalizeSettings(parseJson<unknown>(value, {}))
+    this.history.clear()
     this.applyThemePreference()
-    this.notify()
-  }
-
-  private async loadHotkey(): Promise<void> {
-    this.hotkey = await this.sendMessage<string>({ action: 'get_hotkey' }) ?? localizedMessage('pickerNoShortcut', this.hotkey)
-    this.notify()
-  }
-
-  private async loadPaused(): Promise<void> {
-    this.paused = Boolean(await this.sendMessage<boolean>({ action: 'get_paused', website: siteKey() }))
     this.updateCSS()
     this.notify()
   }
 
   private saveSettings(): void {
-    void this.sendMessage({ action: 'set_settings', data: JSON.stringify(this.settings) })
+    const revision = ++this.settingsPersistRevision
+    const settings = { ...this.settings }
+    this.settingsPersistTail = this.settingsPersistTail
+      .then(async () => {
+        if (revision !== this.settingsPersistRevision) return
+        await this.request({
+          v: PROTOCOL_VERSION,
+          type: 'settings.save',
+          settings,
+        })
+      })
+      .catch(() => undefined)
   }
 
   // --- Theme -------------------------------------------------------------
@@ -194,13 +251,14 @@ export class ElementController {
   private applyThemePreference(): void {
     this.resolvedTheme = resolveTheme(this.settings.theme)
     this.stopThemeWatch?.()
-    this.stopThemeWatch = this.settings.theme === 'system'
-      ? watchSystemTheme(() => {
-        this.resolvedTheme = resolveTheme(this.settings.theme)
-        this.syncThemeSurfaces()
-        this.notify()
-      })
-      : null
+    this.stopThemeWatch =
+      this.settings.theme === 'system'
+        ? watchSystemTheme(() => {
+            this.resolvedTheme = resolveTheme(this.settings.theme)
+            this.syncThemeSurfaces()
+            this.notify()
+          })
+        : null
     this.syncThemeSurfaces()
   }
 
@@ -249,7 +307,7 @@ export class ElementController {
     if (!this.hoveredElement) return []
 
     let element: Element | null = this.hoveredElement
-    if (element.classList.contains('elements_overlay')) {
+    if (element.classList.contains('elements-extension-frame-shield-v2')) {
       element = (element as OverlayElement).relatedElement ?? null
     }
 
@@ -285,7 +343,7 @@ export class ElementController {
     if (this.highlighter) return this.highlighter
 
     const highlighter = document.createElement('div')
-    highlighter.id = 'elements_highlighter'
+    highlighter.id = 'elements-extension-highlighter-v2'
     Object.assign(highlighter.style, {
       pointerEvents: 'none',
       position: 'fixed',
@@ -303,8 +361,12 @@ export class ElementController {
         width: '10px',
         height: '10px',
         pointerEvents: 'none',
-        ...(corner.includes('t') ? { top: '-2px', borderTop: 'solid 2.5px currentColor' } : { bottom: '-2px', borderBottom: 'solid 2.5px currentColor' }),
-        ...(corner.includes('l') ? { left: '-2px', borderLeft: 'solid 2.5px currentColor' } : { right: '-2px', borderRight: 'solid 2.5px currentColor' }),
+        ...(corner.includes('t')
+          ? { top: '-2px', borderTop: 'solid 2.5px currentColor' }
+          : { bottom: '-2px', borderBottom: 'solid 2.5px currentColor' }),
+        ...(corner.includes('l')
+          ? { left: '-2px', borderLeft: 'solid 2.5px currentColor' }
+          : { right: '-2px', borderRight: 'solid 2.5px currentColor' }),
         ...(corner === 'tl' ? { borderTopLeftRadius: '6px' } : {}),
         ...(corner === 'tr' ? { borderTopRightRadius: '6px' } : {}),
         ...(corner === 'bl' ? { borderBottomLeftRadius: '6px' } : {}),
@@ -329,7 +391,7 @@ export class ElementController {
       boxShadow: dark
         ? '0 0 0 1px rgba(34,211,238,0.12), 0 8px 28px rgba(34,211,238,0.14)'
         : '0 0 0 1px rgba(8,145,178,0.12), 0 8px 28px rgba(8,145,178,0.18)',
-      color: dark ? '#67e3f5' : '#0e7490',
+      color: dark ? '#67e3f5' : '#155e75',
     })
   }
 
@@ -337,10 +399,13 @@ export class ElementController {
     if (!this.highlighter || matchMedia(REDUCED_MOTION).matches) return
     for (const bracket of this.highlighter.querySelectorAll<HTMLElement>('.elements_bracket')) {
       bracket.getAnimations().forEach((animation) => animation.cancel())
-      bracket.animate([
-        { opacity: 0, transform: 'scale(1.6)' },
-        { opacity: 1, transform: 'scale(1)' },
-      ], { duration: 130, easing: 'cubic-bezier(.23, 1, .32, 1)' })
+      bracket.animate(
+        [
+          { opacity: 0, transform: 'scale(1.6)' },
+          { opacity: 1, transform: 'scale(1)' },
+        ],
+        { duration: 130, easing: 'cubic-bezier(.23, 1, .32, 1)' },
+      )
     }
   }
 
@@ -348,7 +413,7 @@ export class ElementController {
     if (!this.hoveredElement) return
 
     let marked = this.hoveredElement
-    if (marked.classList.contains('elements_overlay')) {
+    if (marked.classList.contains('elements-extension-frame-shield-v2')) {
       marked = (marked as OverlayElement).relatedElement ?? marked
     }
 
@@ -369,13 +434,16 @@ export class ElementController {
     this.ensureHighlighter()
     this.positionHighlighter(animateGeometry)
     if (isNew && animateGeometry && !matchMedia(REDUCED_MOTION).matches) {
-      this.highlighter?.animate([
-        { opacity: 0, transform: 'scale(.985)' },
-        { opacity: 1, transform: 'scale(1)' },
-      ], {
-        duration: 140,
-        easing: 'cubic-bezier(.23, 1, .32, 1)',
-      })
+      this.highlighter?.animate(
+        [
+          { opacity: 0, transform: 'scale(.985)' },
+          { opacity: 1, transform: 'scale(1)' },
+        ],
+        {
+          duration: 140,
+          easing: 'cubic-bezier(.23, 1, .32, 1)',
+        },
+      )
     }
     if (animateGeometry) this.animateBrackets()
     this.notify()
@@ -393,9 +461,10 @@ export class ElementController {
   private positionHighlighter(animateGeometry: boolean): void {
     const rect = this.markedElement?.getBoundingClientRect()
     if (!rect || !this.highlighter) return
-    this.highlighter.style.transition = animateGeometry && !matchMedia(REDUCED_MOTION).matches
-      ? 'left .11s cubic-bezier(.23,1,.32,1), top .11s cubic-bezier(.23,1,.32,1), width .15s cubic-bezier(.23,1,.32,1), height .15s cubic-bezier(.23,1,.32,1)'
-      : 'none'
+    this.highlighter.style.transition =
+      animateGeometry && !matchMedia(REDUCED_MOTION).matches
+        ? 'left .11s cubic-bezier(.23,1,.32,1), top .11s cubic-bezier(.23,1,.32,1), width .15s cubic-bezier(.23,1,.32,1), height .15s cubic-bezier(.23,1,.32,1)'
+        : 'none'
     this.highlighter.style.left = `${rect.x}px`
     this.highlighter.style.top = `${rect.y}px`
     this.highlighter.style.width = `${rect.width}px`
@@ -419,7 +488,9 @@ export class ElementController {
 
     if (this.isChildOfWindow(event.target)) {
       const path = event.composedPath()
-      const keepHighlight = path.some((node) => node instanceof HTMLElement && node.hasAttribute('data-keep-highlight'))
+      const keepHighlight = path.some(
+        (node) => node instanceof HTMLElement && node.hasAttribute('data-keep-highlight'),
+      )
       if (!keepHighlight) {
         this.unhighlightElement()
         this.preventHighlightingUntil = Date.now() + 100
@@ -441,6 +512,7 @@ export class ElementController {
 
     if (this.modalCloseHandler) {
       if (event.code === 'Escape') {
+        this.suppressedKeyups.add(event.code)
         event.stopPropagation()
         event.preventDefault()
         this.modalCloseHandler()
@@ -464,12 +536,13 @@ export class ElementController {
       this.undo()
     } else return
 
+    this.suppressedKeyups.add(event.code)
     event.stopPropagation()
     event.preventDefault()
   }
 
   private handleKeyup = (event: KeyboardEvent): void => {
-    if (!this.targetingMode || this.textEditEl || this.modalCloseHandler) return
+    if (!this.suppressedKeyups.delete(event.code)) return
     event.stopPropagation()
     event.preventDefault()
   }
@@ -481,9 +554,12 @@ export class ElementController {
 
   // --- Edits -------------------------------------------------------------
 
-  private pushUndo(entry: UndoEntry): void {
-    this.undoStack.push(entry)
-    this.redoStack = []
+  private captureRules(): RuntimeEdit[] {
+    return cloneEdits(this.hiddenElements)
+  }
+
+  private recordHistory(before: RuntimeEdit[]): void {
+    this.history.record(before, this.captureRules())
   }
 
   applyAction(kind: 'hide' | EditAction, event?: MouseEvent): void {
@@ -502,12 +578,20 @@ export class ElementController {
     const selector = this.getSelector(this.markedElement)
     if (!selector) return
     this.previewOriginal = false
+    const before = this.captureRules()
 
     if (kind === 'hide') {
-      const edit: RuntimeEdit = { selector, permanent: this.settings.remember }
+      const now = Date.now()
+      const edit: RuntimeEdit = {
+        id: createRuleId(),
+        selector,
+        permanent: this.settings.remember,
+        createdAt: now,
+        updatedAt: now,
+      }
       this.unhighlightElement()
       this.hiddenElements.push(edit)
-      this.pushUndo({ type: 'add', edit })
+      this.recordHistory(before)
       this.showStatus(localizedMessage('pickerStatusHidden', 'Element hidden'), true)
       this.updateCSS()
       this.persist()
@@ -518,20 +602,24 @@ export class ElementController {
     }
 
     // Toggleable style actions: applying twice removes the rule.
-    const existing = this.hiddenElements.findIndex((edit) => edit.action === kind && edit.selector === selector)
+    const existing = this.hiddenElements.findIndex(
+      (edit) => edit.action === kind && edit.selector === selector,
+    )
     if (existing >= 0) {
-      const [removed] = this.hiddenElements.splice(existing, 1)
-      this.pushUndo({ type: 'remove', edit: removed })
+      this.hiddenElements.splice(existing, 1)
       this.showStatus(localizedMessage('pickerStatusRemoved', 'Edit removed'), true)
     } else {
+      const now = Date.now()
       const edit: RuntimeEdit = {
+        id: createRuleId(),
         selector,
         permanent: this.settings.remember,
         action: kind,
         ...(kind === 'round' ? { value: String(this.settings.radius) } : {}),
+        createdAt: now,
+        updatedAt: now,
       }
       this.hiddenElements.push(edit)
-      this.pushUndo({ type: 'add', edit })
       const statusKey = {
         round: 'pickerStatusRounded',
         blur: 'pickerStatusBlurred',
@@ -541,6 +629,7 @@ export class ElementController {
       }[kind]
       this.showStatus(localizedMessage(statusKey, 'Edit applied'), true)
     }
+    this.recordHistory(before)
     this.updateCSS()
     this.persist()
     this.notify()
@@ -558,90 +647,66 @@ export class ElementController {
     this.finishTextEdit()
     this.unhighlightElement()
     this.textEditEl = element
-    this.textEditOriginal = element.textContent ?? ''
-    element.setAttribute('contenteditable', 'plaintext-only')
-    element.style.setProperty('cursor', 'text', 'important')
-    element.style.setProperty('outline', `solid 2px ${this.resolvedTheme === 'dark' ? 'rgba(34,211,238,.85)' : 'rgba(8,145,178,.85)'}`, 'important')
-    element.style.setProperty('outline-offset', '2px', 'important')
-    element.focus()
-
-    const range = document.createRange()
-    range.selectNodeContents(element)
-    const selection = window.getSelection()
-    selection?.removeAllRanges()
-    selection?.addRange(range)
-    element.addEventListener('keydown', this.textEditKeydown, true)
-    element.addEventListener('blur', this.textEditCommit, true)
+    this.textEditOriginal = this.ruleEngine.textFor(element)
     this.notify()
   }
 
-  private textEditKeydown = (event: KeyboardEvent): void => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault()
-      this.textEditCommit()
-    } else if (event.key === 'Escape') {
-      event.preventDefault()
-      this.cancelTextEdit()
-    }
-    event.stopPropagation()
+  textEditValue(): string {
+    return this.textEditOriginal
   }
 
-  private textEditCommit = (): void => {
+  commitTextEdit(nextText: string): boolean {
     const element = this.textEditEl
-    if (!element) return
-    const nextText = element.textContent ?? ''
+    if (!element || !nextText.trim()) return false
     const original = this.textEditOriginal
-    this.finishTextEdit()
-    if (nextText === original || !nextText.trim()) return
+    if (nextText === original) {
+      this.finishTextEdit()
+      return true
+    }
 
     const selector = this.getSelector(element)
-    if (!selector) return
-    const existing = this.hiddenElements.findIndex((edit) => edit.action === 'text' && edit.selector === selector)
-    const originalText = existing >= 0 ? this.hiddenElements[existing]._original ?? original : original
-    const entry: RuntimeEdit = { selector, permanent: this.settings.remember, action: 'text', text: nextText, _original: originalText }
-    if (existing >= 0) this.hiddenElements[existing] = entry
-    else {
-      this.hiddenElements.push(entry)
-      this.pushUndo({ type: 'add', edit: entry })
+    if (!selector) return false
+    const before = this.captureRules()
+    const existing = this.hiddenElements.findIndex(
+      (edit) => edit.action === 'text' && edit.selector === selector,
+    )
+    const now = Date.now()
+    const entry: RuntimeEdit = {
+      id: existing >= 0 ? this.hiddenElements[existing].id : createRuleId(),
+      selector,
+      permanent: this.settings.remember,
+      action: 'text',
+      text: nextText,
+      createdAt: existing >= 0 ? (this.hiddenElements[existing].createdAt ?? now) : now,
+      updatedAt: now,
     }
+    if (existing >= 0) this.hiddenElements[existing] = entry
+    else this.hiddenElements.push(entry)
+    this.recordHistory(before)
+    this.finishTextEdit()
     this.showStatus(localizedMessage('pickerStatusTextSaved', 'Text saved'), true)
+    this.updateCSS()
     this.persist()
     this.notify()
+    return true
   }
 
-  private cancelTextEdit(): void {
-    const element = this.textEditEl
-    if (!element) return
-    const original = this.textEditOriginal
+  cancelTextEdit(): void {
+    if (!this.textEditEl) return
     this.finishTextEdit()
-    element.textContent = original
   }
 
   private finishTextEdit(): void {
-    const element = this.textEditEl
-    if (!element) return
-    element.removeEventListener('keydown', this.textEditKeydown, true)
-    element.removeEventListener('blur', this.textEditCommit, true)
-    element.removeAttribute('contenteditable')
-    element.style.removeProperty('cursor')
-    element.style.removeProperty('outline')
-    element.style.removeProperty('outline-offset')
-    if (!element.getAttribute('style')) element.removeAttribute('style')
+    if (!this.textEditEl) return
     this.textEditEl = null
     this.notify()
   }
 
   undo(): void {
-    const entry = this.undoStack.pop()
-    if (!entry) return
-    if (entry.type === 'add') {
-      const live = this.findLiveEdit(entry.edit)
-      if (live) this.hiddenElements = this.hiddenElements.filter((edit) => edit !== live)
-      this.redoStack.push({ type: 'add', edit: live ?? entry.edit })
-    } else {
-      this.hiddenElements.push(entry.edit)
-      this.redoStack.push({ type: 'remove', edit: entry.edit })
-    }
+    const previous = this.history.undo()
+    if (!previous) return
+    this.restoreTextEdits()
+    this.hiddenElements = previous
     this.showStatus(localizedMessage('pickerStatusUndone', 'Undone'))
     this.updateCSS()
     this.persist()
@@ -650,16 +715,10 @@ export class ElementController {
   }
 
   redo(): void {
-    const entry = this.redoStack.pop()
-    if (!entry) return
-    if (entry.type === 'add') {
-      this.hiddenElements.push(entry.edit)
-      this.undoStack.push({ type: 'add', edit: entry.edit })
-    } else {
-      const live = this.findLiveEdit(entry.edit)
-      if (live) this.hiddenElements = this.hiddenElements.filter((edit) => edit !== live)
-      this.undoStack.push({ type: 'remove', edit: live ?? entry.edit })
-    }
+    const next = this.history.redo()
+    if (!next) return
+    this.restoreTextEdits()
+    this.hiddenElements = next
     this.showStatus(localizedMessage('pickerStatusRedone', 'Redone'))
     this.updateCSS()
     this.persist()
@@ -676,38 +735,47 @@ export class ElementController {
   }
 
   private applyTextEdits(): void {
-    if (this.paused) return
-    for (const edit of this.hiddenElements) {
-      if (edit.action !== 'text' || edit.text === undefined) continue
-      try {
-        const node = document.querySelector(edit.selector)
-        if (!node || node === this.textEditEl) continue
-        if (edit._original === undefined && node.textContent !== edit.text) edit._original = node.textContent ?? ''
-        if (node.textContent !== edit.text) node.textContent = edit.text
-      } catch {
-        // A selector can become invalid when a SPA replaces its markup.
-      }
+    if (this.paused || this.previewOriginal) {
+      this.ruleEngine.restoreText()
+      return
     }
+    this.ruleEngine.apply({
+      rules: this.hiddenElements,
+      paused: this.paused,
+      showOriginal: this.previewOriginal,
+      previewSelector: this.previewedHiddenSelector,
+      defaultRadius: this.settings.radius,
+    })
   }
 
   private restoreTextEdits(): void {
-    for (const edit of this.hiddenElements) {
-      if (edit.action !== 'text' || edit._original === undefined) continue
-      try {
-        const node = document.querySelector(edit.selector)
-        if (node && node.textContent === edit.text) node.textContent = edit._original
-      } catch { /* stale selector */ }
+    this.ruleEngine.restoreText()
+  }
+
+  private syncTextObserver(): void {
+    const shouldObserve =
+      !this.paused &&
+      !this.previewOriginal &&
+      this.hiddenElements.some((edit) => edit.action === 'text')
+    if (!shouldObserve) {
+      this.mutationObserver?.disconnect()
+      this.mutationObserver = null
+      return
     }
+    if (this.mutationObserver) return
+    this.mutationObserver = new MutationObserver(() => {
+      if (this.targetingMode || this.textEditEl) return
+      window.clearTimeout(this.textEditObserverTimer)
+      this.textEditObserverTimer = window.setTimeout(() => this.applyTextEdits(), 120)
+    })
+    this.mutationObserver.observe(document.documentElement, { childList: true, subtree: true })
   }
 
   previewEdit(edit: RuntimeEdit, showOriginal: boolean): void {
     edit = this.findLiveEdit(edit) ?? edit
     if (edit.action === 'text') {
-      if (edit._original === undefined) return
-      try {
-        const node = document.querySelector(edit.selector)
-        if (node) node.textContent = showOriginal ? edit._original : edit.text ?? ''
-      } catch { /* stale selector */ }
+      if (showOriginal) this.ruleEngine.restoreText(edit)
+      else this.updateCSS()
       return
     }
 
@@ -718,9 +786,10 @@ export class ElementController {
   deleteEdit(edit: RuntimeEdit): void {
     const liveEdit = this.findLiveEdit(edit)
     if (!liveEdit) return
+    const before = this.captureRules()
     if (liveEdit.action === 'text') this.previewEdit(liveEdit, true)
     this.hiddenElements = this.hiddenElements.filter((candidate) => candidate !== liveEdit)
-    this.pushUndo({ type: 'remove', edit: liveEdit })
+    this.recordHistory(before)
     this.previewedHiddenSelector = null
     this.showStatus(localizedMessage('pickerStatusDeleted', 'Edit deleted'), true)
     this.updateCSS()
@@ -732,7 +801,10 @@ export class ElementController {
   setEditPermanent(edit: RuntimeEdit, permanent: boolean): void {
     const liveEdit = this.findLiveEdit(edit)
     if (!liveEdit) return
-    liveEdit.permanent = permanent
+    const before = this.captureRules()
+    liveEdit.permanent = this.incognito ? false : permanent
+    liveEdit.updatedAt = Date.now()
+    this.recordHistory(before)
     this.persist()
     this.notify()
   }
@@ -748,33 +820,29 @@ export class ElementController {
     }
   }
 
-  applySelectorChange(edit: RuntimeEdit, nextSelector: string): boolean {
+  updateEdit(edit: RuntimeEdit, changes: { selector: string; value?: string | number }): boolean {
     const liveEdit = this.findLiveEdit(edit)
-    const next = nextSelector.trim()
+    const next = changes.selector.trim()
     if (!liveEdit || !next || !isValidSelector(next) || /[{}]/.test(next)) return false
-    if (next !== liveEdit.selector) {
-      liveEdit.selector = next
-      this.updateCSS()
-      this.persist()
+
+    let value = liveEdit.value
+    if (liveEdit.action === 'css') {
+      if (typeof changes.value !== 'string') return false
+      const sanitized = sanitizeCssDeclarations(changes.value)
+      if (!sanitized) return false
+      value = sanitized
+    } else if (liveEdit.action === 'round') {
+      const radius = typeof changes.value === 'number' ? changes.value : Number(changes.value)
+      if (!Number.isFinite(radius)) return false
+      value = String(Math.min(MAX_RADIUS, Math.max(MIN_RADIUS, Math.round(radius))))
     }
-    this.notify()
-    return true
-  }
 
-  updateRoundRadius(edit: RuntimeEdit, radius: number): void {
-    const liveEdit = this.findLiveEdit(edit)
-    if (!liveEdit || liveEdit.action !== 'round') return
-    liveEdit.value = String(Math.round(radius))
-    this.updateCSS()
-    this.persist()
-    this.notify()
-  }
-
-  updateCssEdit(edit: RuntimeEdit, declarations: string): boolean {
-    const liveEdit = this.findLiveEdit(edit)
-    if (!liveEdit || liveEdit.action !== 'css') return false
-    if (!sanitizeCssDeclarations(declarations)) return false
-    liveEdit.value = declarations
+    const before = this.captureRules()
+    if (liveEdit.action === 'text' && next !== liveEdit.selector) this.previewEdit(liveEdit, true)
+    liveEdit.selector = next
+    if (liveEdit.action === 'round' || liveEdit.action === 'css') liveEdit.value = value
+    liveEdit.updatedAt = Date.now()
+    this.recordHistory(before)
     this.updateCSS()
     this.persist()
     this.notify()
@@ -784,10 +852,21 @@ export class ElementController {
   addCssEdit(selector: string, declarations: string): boolean {
     const next = selector.trim()
     if (!next || !isValidSelector(next) || /[{}]/.test(next)) return false
-    if (!sanitizeCssDeclarations(declarations)) return false
-    const edit: RuntimeEdit = { selector: next, permanent: this.settings.remember, action: 'css', value: declarations }
+    const sanitized = sanitizeCssDeclarations(declarations)
+    if (!sanitized) return false
+    const before = this.captureRules()
+    const now = Date.now()
+    const edit: RuntimeEdit = {
+      id: createRuleId(),
+      selector: next,
+      permanent: this.settings.remember,
+      action: 'css',
+      value: sanitized,
+      createdAt: now,
+      updatedAt: now,
+    }
     this.hiddenElements.push(edit)
-    this.pushUndo({ type: 'add', edit })
+    this.recordHistory(before)
     this.showStatus(localizedMessage('pickerStatusCss', 'Custom CSS applied'), true)
     this.updateCSS()
     this.persist()
@@ -806,12 +885,14 @@ export class ElementController {
 
   toggleCompare(): void {
     this.previewOriginal = !this.previewOriginal
+    if (this.previewOriginal) this.restoreTextEdits()
     this.updateCSS()
     this.triggerResize()
     this.notify()
   }
 
   toggleRemember(): void {
+    if (this.incognito) return
     this.settings.remember = !this.settings.remember
     this.saveSettings()
     this.notify()
@@ -819,12 +900,22 @@ export class ElementController {
 
   togglePause(): void {
     this.paused = !this.paused
-    void this.sendMessage({ action: 'set_paused', website: siteKey(), data: String(this.paused) })
+    void this.request({
+      v: PROTOCOL_VERSION,
+      type: 'site.pause',
+      site: siteKey(),
+      paused: this.paused,
+    })
     if (this.paused) this.restoreTextEdits()
     this.updateCSS()
     this.applyTextEdits()
     this.triggerResize()
-    this.showStatus(localizedMessage(this.paused ? 'pickerStatusPaused' : 'pickerStatusResumed', this.paused ? 'Paused on this site' : 'Rules active again'))
+    this.showStatus(
+      localizedMessage(
+        this.paused ? 'pickerStatusPaused' : 'pickerStatusResumed',
+        this.paused ? 'Paused on this site' : 'Rules active again',
+      ),
+    )
     this.notify()
   }
 
@@ -847,14 +938,21 @@ export class ElementController {
     requestAnimationFrame(() => {
       if (!panel.isConnected || revision !== this.minimizeRevision) return
       const endRect = panel.getBoundingClientRect()
-      if (Math.abs(startRect.width - endRect.width) < 1 && Math.abs(startRect.height - endRect.height) < 1) return
-      const animation = panel.animate([
-        { width: `${startRect.width}px`, height: `${startRect.height}px` },
-        { width: `${endRect.width}px`, height: `${endRect.height}px` },
-      ], {
-        duration: this.minimized ? 260 : 280,
-        easing: 'cubic-bezier(.32, .72, 0, 1)',
-      })
+      if (
+        Math.abs(startRect.width - endRect.width) < 1 &&
+        Math.abs(startRect.height - endRect.height) < 1
+      )
+        return
+      const animation = panel.animate(
+        [
+          { width: `${startRect.width}px`, height: `${startRect.height}px` },
+          { width: `${endRect.width}px`, height: `${endRect.height}px` },
+        ],
+        {
+          duration: this.minimized ? 260 : 280,
+          easing: 'cubic-bezier(.32, .72, 0, 1)',
+        },
+      )
       this.minimizeAnimation = animation
       const clearAnimation = () => {
         if (this.minimizeAnimation === animation) this.minimizeAnimation = null
@@ -868,7 +966,7 @@ export class ElementController {
 
   beginPanelDrag(startX: number, startY: number): void {
     const host = this.host
-    if (!host || this.dragCleanup) return
+    if (!host || this.dragCleanup || window.matchMedia('(max-width: 560px)').matches) return
     const rect = host.getBoundingClientRect()
     const offsetX = startX - rect.x
     const offsetY = startY - rect.y
@@ -877,10 +975,10 @@ export class ElementController {
     const applyPosition = (clientX: number, clientY: number) => {
       const x = Math.min(Math.max(clientX - offsetX, 4), window.innerWidth - rect.width - 4)
       const y = Math.min(Math.max(clientY - offsetY, 4), window.innerHeight - rect.height - 4)
-      host.style.left = `${x}px`
-      host.style.top = `${y}px`
-      host.style.right = 'auto'
-      host.style.bottom = 'auto'
+      host.style.setProperty('left', `${x}px`, 'important')
+      host.style.setProperty('top', `${y}px`, 'important')
+      host.style.removeProperty('right')
+      host.style.removeProperty('bottom')
     }
 
     const onMove = (event: PointerEvent) => {
@@ -896,10 +994,10 @@ export class ElementController {
       const horizontal = centerX < window.innerWidth / 2 ? 'l' : 'r'
       const vertical = centerY < window.innerHeight / 2 ? 't' : 'b'
       this.panelCorner = `${vertical}${horizontal}` as PanelCorner
-      host.style.left = ''
-      host.style.top = ''
-      host.style.right = ''
-      host.style.bottom = ''
+      host.style.removeProperty('left')
+      host.style.removeProperty('top')
+      host.style.removeProperty('right')
+      host.style.removeProperty('bottom')
       this.updateCSS()
 
       if (!matchMedia(REDUCED_MOTION).matches) {
@@ -907,10 +1005,13 @@ export class ElementController {
         const deltaX = current.x - settled.x
         const deltaY = current.y - settled.y
         if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
-          host.animate([
-            { transform: `translate(${deltaX}px, ${deltaY}px)` },
-            { transform: 'translate(0, 0)' },
-          ], { duration: 220, easing: 'cubic-bezier(.32, .72, 0, 1)' })
+          host.animate(
+            [
+              { transform: `translate(${deltaX}px, ${deltaY}px)` },
+              { transform: 'translate(0, 0)' },
+            ],
+            { duration: 220, easing: 'cubic-bezier(.32, .72, 0, 1)' },
+          )
         }
       }
     }
@@ -930,11 +1031,11 @@ export class ElementController {
   }
 
   openOptions(): void {
-    void this.sendMessage({ action: 'open_options' })
+    void this.request({ v: PROTOCOL_VERSION, type: 'options.open' })
   }
 
   openHotkeySettings(): void {
-    void this.sendMessage({ action: 'goto_hotkey_settings' })
+    void this.request({ v: PROTOCOL_VERSION, type: 'shortcut.open' })
   }
 
   activate(): void {
@@ -944,12 +1045,21 @@ export class ElementController {
     this.minimized = false
 
     const host = document.createElement('div')
-    host.id = 'elements_wnd'
+    host.id = 'elements-extension-root-v2'
+    host.setAttribute('data-elements-extension-root', '')
     host.dataset.theme = this.resolvedTheme
     const shadowRoot = host.attachShadow({ mode: 'open' })
     document.body.appendChild(host)
     this.host = host
-    this.overlayUi = this.renderer.mount(shadowRoot, this)
+    void this.loadRenderer()
+      .then((renderer) => {
+        if (!this.targetingMode || this.host !== host || !host.isConnected) return
+        this.overlayUi = renderer.mount(shadowRoot, this)
+        this.notify()
+      })
+      .catch(() => {
+        if (this.host === host) this.deactivate()
+      })
 
     document.addEventListener('mouseover', this.handleMouseover, true)
     document.addEventListener('mousedown', this.hideTarget, true)
@@ -958,7 +1068,7 @@ export class ElementController {
     document.addEventListener('scroll', this.updateHighlighterPosition, true)
     this.updateCSS()
     this.addOverlays()
-    void this.sendMessage({ action: 'status', active: true })
+    void this.request({ v: PROTOCOL_VERSION, type: 'picker.status', active: true })
     this.notify()
   }
 
@@ -967,6 +1077,7 @@ export class ElementController {
     this.targetingMode = false
     this.previewOriginal = false
     this.modalCloseHandler = null
+    this.finishTextEdit()
     this.dragCleanup?.()
     this.updateCSS()
     this.unhighlightElement()
@@ -987,7 +1098,7 @@ export class ElementController {
     document.removeEventListener('click', this.preventEvent, true)
     document.removeEventListener('scroll', this.updateHighlighterPosition, true)
     this.removeOverlays()
-    void this.sendMessage({ action: 'status', active: false })
+    void this.request({ v: PROTOCOL_VERSION, type: 'picker.status', active: false })
     this.notify()
   }
 
@@ -1004,10 +1115,13 @@ export class ElementController {
   }
 
   private addOverlays(): void {
+    if (!this.frameResizeObserver && typeof ResizeObserver !== 'undefined') {
+      this.frameResizeObserver = new ResizeObserver(() => this.syncFrameOverlays())
+    }
     for (const element of document.querySelectorAll('iframe, embed')) {
       const rect = element.getBoundingClientRect()
       const overlay = document.createElement('div') as OverlayElement
-      overlay.className = 'elements_overlay'
+      overlay.className = 'elements-extension-frame-shield-v2'
       Object.assign(overlay.style, {
         position: 'absolute',
         left: `${rect.left + window.scrollX}px`,
@@ -1019,11 +1133,34 @@ export class ElementController {
       })
       overlay.relatedElement = element
       document.body.appendChild(overlay)
+      this.iframeOverlays.add(overlay)
+      this.frameResizeObserver?.observe(element)
     }
   }
 
   private removeOverlays(): void {
-    document.querySelectorAll('.elements_overlay').forEach((element) => element.remove())
+    this.frameResizeObserver?.disconnect()
+    this.frameResizeObserver = null
+    for (const overlay of this.iframeOverlays) overlay.remove()
+    this.iframeOverlays.clear()
+  }
+
+  private syncFrameOverlays(): void {
+    for (const overlay of this.iframeOverlays) {
+      const element = overlay.relatedElement
+      if (!element?.isConnected) {
+        overlay.remove()
+        this.iframeOverlays.delete(overlay)
+        continue
+      }
+      const rect = element.getBoundingClientRect()
+      Object.assign(overlay.style, {
+        left: `${rect.left + window.scrollX}px`,
+        top: `${rect.top + window.scrollY}px`,
+        width: `${rect.width}px`,
+        height: `${rect.height}px`,
+      })
+    }
   }
 
   refreshOverlays(): void {
@@ -1037,67 +1174,98 @@ export class ElementController {
   }
 
   private updateCSS(): void {
+    this.positionHost()
+    this.ruleEngine.apply({
+      rules: this.hiddenElements,
+      paused: this.paused,
+      showOriginal: this.previewOriginal,
+      previewSelector: this.previewedHiddenSelector,
+      defaultRadius: this.settings.radius,
+    })
+    this.syncTextObserver()
+    void this.request({
+      v: PROTOCOL_VERSION,
+      type: 'badge.update',
+      count: this.hiddenElements.length,
+      paused: this.paused,
+    })
+  }
+
+  private positionHost(): void {
+    if (!this.host) return
+    const style = this.host.style
+    style.setProperty('position', 'fixed', 'important')
+    style.setProperty('z-index', String(this.maxZIndex), 'important')
+    style.removeProperty('top')
+    style.removeProperty('right')
+    style.removeProperty('bottom')
+    style.removeProperty('left')
+    if (window.matchMedia('(max-width: 560px)').matches) {
+      style.setProperty('right', '8px', 'important')
+      style.setProperty('bottom', '8px', 'important')
+      style.setProperty('left', '8px', 'important')
+      return
+    }
     const corner = this.panelCorner
-    const position = [
-      corner.includes('b') ? `bottom: ${PANEL_MARGIN}px;` : `top: ${PANEL_MARGIN}px;`,
-      corner.includes('r') ? `right: ${PANEL_MARGIN}px;` : `left: ${PANEL_MARGIN}px;`,
-    ].join(' ')
-    const cssLines = [
-      `#elements_wnd { position: fixed; ${position} z-index: ${this.maxZIndex}; }`,
-    ]
+    if (corner.includes('t')) style.setProperty('top', `${PANEL_MARGIN}px`, 'important')
+    if (corner.includes('r')) style.setProperty('right', `${PANEL_MARGIN}px`, 'important')
+    if (corner.includes('b')) style.setProperty('bottom', `${PANEL_MARGIN}px`, 'important')
+    if (corner.includes('l')) style.setProperty('left', `${PANEL_MARGIN}px`, 'important')
+  }
 
-    if (!this.previewOriginal && !this.paused) {
-      for (const edit of this.hiddenElements) {
-        const selector = edit.selector.replace(/[{}]/g, '')
-        if (selector === this.previewedHiddenSelector) {
-          cssLines.push(`${selector} { outline: solid 3px rgba(34,211,238,.6) !important; outline-offset: -3px; }`)
-          continue
-        }
-        if (!edit.action && (selector === 'body' || selector === 'html')) {
-          cssLines.push(`${selector} { background: transparent !important; }`)
-          continue
-        }
-        const declarations = editDeclarations(edit, this.settings.radius)
-        if (declarations) cssLines.push(`${selector} { ${declarations} }`)
-      }
-    }
-
-    if (!this.previewOriginal && !this.paused && this.hiddenElements.length) {
-      cssLines.push('html, html body, html body > #elements_wnd { display: block !important; }')
-    }
-
-    let style = document.querySelector<HTMLStyleElement>('#elements_styles')
-    if (!style) {
-      style = document.createElement('style')
-      style.id = 'elements_styles'
-      document.head.appendChild(style)
-    }
-    style.textContent = cssLines.join('\n')
-    this.applyTextEdits()
-    void this.sendMessage({ action: 'badge', count: this.hiddenElements.length, paused: this.paused })
+  private handleViewportResize = (): void => {
+    if (this.viewportNotifyFrame) return
+    this.viewportNotifyFrame = requestAnimationFrame(() => {
+      this.viewportNotifyFrame = 0
+      this.positionHost()
+      this.syncFrameOverlays()
+      this.notify()
+    })
   }
 
   private persist(): void {
     const saved = this.hiddenElements
       .filter((edit) => edit.permanent)
-      .map(({ selector, permanent, action, text, value }) => ({
+      .map(({ id, selector, permanent, action, text, value, createdAt, updatedAt }) => ({
+        ...(id ? { id } : {}),
         selector,
         permanent,
         ...(action ? { action } : {}),
         ...(text !== undefined ? { text } : {}),
         ...(value !== undefined ? { value } : {}),
+        ...(createdAt !== undefined ? { createdAt } : {}),
+        ...(updatedAt !== undefined ? { updatedAt } : {}),
       }))
-    void this.sendMessage({ action: 'set_saved_elms', website: siteKey(), data: JSON.stringify(saved) })
+    const revision = ++this.rulesPersistRevision
+    this.rulesPersistTail = this.rulesPersistTail
+      .then(async () => {
+        if (revision !== this.rulesPersistRevision) return
+        await this.request({
+          v: PROTOCOL_VERSION,
+          type: 'site.rules.save',
+          site: siteKey(),
+          rules: saved,
+        })
+      })
+      .catch(() => undefined)
   }
 
   // Native Chrome ignores a Promise returned from an onMessage listener, so
   // respond synchronously through sendResponse.
-  private handleExtensionMessage = (message: { action?: string }, _sender: unknown, sendResponse: (response?: unknown) => void): undefined => {
-    if (message.action === 'toggle') {
+  private handleExtensionMessage = (
+    message: unknown,
+    _sender: unknown,
+    sendResponse: (response?: unknown) => void,
+  ): undefined => {
+    if (!isContentCommand(message)) return undefined
+    if (message.type === 'picker.toggle') {
       this.toggle()
       sendResponse(true)
-    } else if (message.action === 'getStatus') {
+    } else if (message.type === 'picker.getStatus') {
       sendResponse(this.targetingMode)
+    } else if (message.type === 'site.changed' && message.site === siteKey()) {
+      void this.reloadSnapshot()
+      sendResponse(true)
     }
     return undefined
   }
@@ -1109,13 +1277,18 @@ export class ElementController {
     window.clearTimeout(this.textEditObserverTimer)
     window.clearTimeout(this.statusTimer)
     cancelAnimationFrame(this.scrollNotifyFrame)
+    cancelAnimationFrame(this.viewportNotifyFrame)
     this.stopThemeWatch?.()
     this.deactivate()
+    this.ruleEngine.destroy()
     document.removeEventListener('keydown', this.handleKeydown, true)
     document.removeEventListener('keyup', this.handleKeyup, true)
+    window.removeEventListener('resize', this.handleViewportResize, true)
     try {
       browser.runtime.onMessage.removeListener(this.handleExtensionMessage)
-    } catch { /* context already invalidated */ }
-    if (browser.runtime?.id) document.querySelector('#elements_styles')?.remove()
+    } catch {
+      /* context already invalidated */
+    }
+    this.onDestroy()
   }
 }

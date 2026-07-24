@@ -159,6 +159,63 @@
       }
     }
   },
+  "optionsImportReviewDetails": {
+    "message": "Содержимое резервной копии"
+  },
+  "optionsImportRuleCountOne": {
+    "message": "$COUNT$ правило",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "optionsImportRuleCountFew": {
+    "message": "$COUNT$ правила",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "optionsImportRuleCountMany": {
+    "message": "$COUNT$ правил",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "12"
+      }
+    }
+  },
+  "optionsImportConflictCount": {
+    "message": "Конфликтов: $COUNT$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "optionsImportMoreSites": {
+    "message": "Ещё сайтов: $COUNT$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "optionsImportInvalidRules": {
+    "message": "Некорректных правил будет пропущено: $COUNT$.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
   "optionsImportMerge": {
     "message": "Объединить"
   },
@@ -179,6 +236,9 @@
   },
   "optionsAboutTitle": {
     "message": "О расширении"
+  },
+  "optionsMadeBy": {
+    "message": "Автор:"
   },
   "optionsLegalDocuments": {
     "message": "Юридические документы проекта"
@@ -221,6 +281,15 @@
   },
   "optionsImportFailed": {
     "message": "Не удалось импортировать резервную копию."
+  },
+  "optionsImportTooLarge": {
+    "message": "Размер резервной копии превышает 1 МБ."
+  },
+  "optionsImportTooManySites": {
+    "message": "В резервной копии слишком много сайтов."
+  },
+  "optionsImportTooManyRules": {
+    "message": "В резервной копии слишком много правил."
   },
   "backgroundUnavailable": {
     "message": "Elements — недоступно на этой вкладке"
@@ -316,7 +385,10 @@
     "message": "Запоминать правки"
   },
   "pickerRememberHint": {
-    "message": "Сохраняет новые правки для сайта на всех устройствах. Выкл.: правки действуют до перезагрузки."
+    "message": "Сохраняет новые правки для сайта и синхронизирует их, когда это позволяет хранилище браузера. Выкл.: правки действуют до перезагрузки."
+  },
+  "pickerIncognitoTemporary": {
+    "message": "Инкогнито: правки остаются временными"
   },
   "pickerShowOriginal": {
     "message": "Показать оригинал"
@@ -408,6 +480,9 @@
   "pickerCssLabel": {
     "message": "CSS-декларации"
   },
+  "pickerCssPlaceholder": {
+    "message": "opacity: 0.5; border: none"
+  },
   "pickerSave": {
     "message": "Сохранить"
   },
@@ -416,6 +491,15 @@
   },
   "pickerTextEditHint": {
     "message": "Enter — сохранить · Esc — отмена"
+  },
+  "pickerTextEditorTitle": {
+    "message": "Изменить видимый текст"
+  },
+  "pickerTextEditorLabel": {
+    "message": "Новый текст"
+  },
+  "pickerTextEditorEmpty": {
+    "message": "Введите текст перед сохранением."
   },
   "pickerStatusHidden": {
     "message": "Элемент скрыт"
@@ -459,6 +543,9 @@
   "coachTitle": {
     "message": "Быстрый старт"
   },
+  "coachHint": {
+    "message": "Наведите курсор на элемент и выберите действие. Q/W перемещают выделение по родителям."
+  },
   "coachStep1": {
     "message": "Наведите курсор на элемент; Q и W перемещают выделение по вложенности."
   },
@@ -475,7 +562,7 @@
     "message": "Добро пожаловать в Elements"
   },
   "onboardTagline": {
-    "message": "Сделайте любой сайт своим: уберите лишнее, поправьте текст, измените оформление. Всё остаётся на вашем устройстве."
+    "message": "Сделайте любой сайт своим: уберите лишнее, поправьте текст и измените оформление."
   },
   "onboardStep1Title": {
     "message": "Откройте панель"
@@ -499,7 +586,7 @@
     "message": "Приватность по умолчанию"
   },
   "onboardPrivacyBody": {
-    "message": "Без аналитики, рекламы, удалённого кода и серверов. Elements никуда не отправляет данные о вашем браузинге."
+    "message": "Без аналитики, рекламы, удалённого кода и серверов разработчика. Сохранённые правила и настройки могут синхронизироваться через аккаунт браузера, когда синхронизация доступна."
   },
   "onboardOpenOptions": {
     "message": "Открыть настройки"

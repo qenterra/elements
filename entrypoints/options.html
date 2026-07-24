@@ -22,8 +22,17 @@
         padding: 48px 20px 64px;
         background: var(--el-bg);
         color: var(--el-text);
-        font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        transition: background-color .15s ease, color .15s ease;
+        font:
+          14px/1.55 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
+        transition:
+          background-color 0.15s ease,
+          color 0.15s ease;
       }
 
       :where(a, button, input, [tabindex]):focus-visible {
@@ -41,7 +50,7 @@
       @keyframes cardIn {
         from {
           opacity: 0;
-          transform: translateY(6px) scale(.99);
+          transform: translateY(6px) scale(0.99);
         }
         to {
           opacity: 1;
@@ -109,31 +118,43 @@
         border-radius: 16px;
         box-shadow: var(--el-shadow-card);
         padding: 24px 28px 28px;
-        animation: cardIn .24s var(--el-ease-out) backwards;
-        transition: background-color .15s ease, border-color .15s ease;
+        animation: cardIn 0.24s var(--el-ease-out) backwards;
+        transition:
+          background-color 0.15s ease,
+          border-color 0.15s ease;
       }
 
       .card::after {
-        content: "";
+        content: '';
         position: absolute;
         inset: -1px;
         border: 1px solid var(--el-accent);
         border-radius: inherit;
         opacity: 0;
-        transform: scale(.996);
+        transform: scale(0.996);
         pointer-events: none;
-        transition: opacity .2s ease, transform .24s var(--el-ease-out);
+        transition:
+          opacity 0.2s ease,
+          transform 0.24s var(--el-ease-out);
       }
 
       .card:focus-within::after {
-        opacity: .45;
+        opacity: 0.45;
         transform: scale(1);
       }
 
-      .card:nth-child(2) { animation-delay: 40ms; }
-      .card:nth-child(3) { animation-delay: 80ms; }
-      .card:nth-child(4) { animation-delay: 120ms; }
-      .card:nth-child(5) { animation-delay: 160ms; }
+      .card:nth-child(2) {
+        animation-delay: 40ms;
+      }
+      .card:nth-child(3) {
+        animation-delay: 80ms;
+      }
+      .card:nth-child(4) {
+        animation-delay: 120ms;
+      }
+      .card:nth-child(5) {
+        animation-delay: 160ms;
+      }
 
       .card + .card {
         margin-top: 20px;
@@ -163,7 +184,11 @@
       }
 
       .cardDescription code {
-        font: 11px/1 ui-monospace, "SF Mono", Menlo, monospace;
+        font:
+          11px/1 ui-monospace,
+          'SF Mono',
+          Menlo,
+          monospace;
         background: var(--el-surface-alt);
         border: 1px solid var(--el-border);
         border-radius: 5px;
@@ -193,7 +218,11 @@
         border: 1px solid transparent;
         padding: 10px 18px;
         border-radius: 9px;
-        transition: background-color .15s ease, transform .12s var(--el-ease-out), border-color .15s ease, opacity .15s ease;
+        transition:
+          background-color 0.15s ease,
+          transform 0.12s var(--el-ease-out),
+          border-color 0.15s ease,
+          opacity 0.15s ease;
       }
 
       button.primary:active:not(:disabled),
@@ -204,7 +233,7 @@
       button.primary:disabled,
       button.secondary:disabled {
         cursor: default;
-        opacity: .6;
+        opacity: 0.6;
       }
 
       button.secondary {
@@ -220,7 +249,7 @@
         border-radius: 50%;
         border: 2px solid currentColor;
         border-top-color: transparent;
-        animation: spin .5s linear infinite;
+        animation: spin 0.5s linear infinite;
       }
 
       .toast {
@@ -241,7 +270,9 @@
         color: var(--el-text-strong);
         opacity: 0;
         pointer-events: none;
-        transition: opacity .16s var(--el-ease-out), transform .18s var(--el-ease-out);
+        transition:
+          opacity 0.16s var(--el-ease-out),
+          transform 0.18s var(--el-ease-out);
         z-index: 10;
       }
 
@@ -274,7 +305,7 @@
         border-radius: 6px;
         padding: 2px 6px;
         cursor: pointer;
-        transition: background-color .15s ease;
+        transition: background-color 0.15s ease;
       }
 
       .sortSwitch,
@@ -302,12 +333,15 @@
         border-radius: 6px;
         padding: 5px 11px;
         cursor: pointer;
-        transition: color .15s ease, background-color .15s ease, transform .12s var(--el-ease-out);
+        transition:
+          color 0.15s ease,
+          background-color 0.15s ease,
+          transform 0.12s var(--el-ease-out);
       }
 
       .sortSwitch__btn:active,
       .segment__btn:active {
-        transform: scale(.97);
+        transform: scale(0.97);
       }
 
       .sortSwitch__btn.isActive,
@@ -327,7 +361,7 @@
         border: 1px solid var(--el-border);
         border-radius: 9px;
         padding: 9px 13px;
-        transition: border-color .15s ease;
+        transition: border-color 0.15s ease;
       }
 
       .search:focus {
@@ -369,12 +403,12 @@
         width: 9px;
         height: 16px;
         flex: none;
-        opacity: .7;
+        opacity: 0.7;
       }
 
       .bracket::before,
       .bracket::after {
-        content: "";
+        content: '';
         position: absolute;
         left: 0;
         width: 8px;
@@ -400,9 +434,9 @@
 
       .siteRow {
         border-radius: 7px;
-        animation: rowIn .18s var(--el-ease-out) both;
+        animation: rowIn 0.18s var(--el-ease-out) both;
         animation-delay: calc(var(--row-index, 0) * 30ms);
-        transition: background-color .15s ease;
+        transition: background-color 0.15s ease;
       }
 
       .siteRow.isPaused .siteRow__domain {
@@ -429,12 +463,14 @@
         color: var(--el-text-muted);
         cursor: pointer;
         padding: 0;
-        transition: color .15s ease, background-color .15s ease;
+        transition:
+          color 0.15s ease,
+          background-color 0.15s ease;
       }
 
       .siteRow__expand svg {
         transform: rotate(0deg);
-        transition: transform .2s var(--el-ease-out);
+        transition: transform 0.2s var(--el-ease-out);
       }
 
       .siteRow.isExpanded .siteRow__expand svg {
@@ -484,7 +520,10 @@
         border: none;
         cursor: pointer;
         padding: 0;
-        transition: color .15s ease, background-color .15s ease, transform .12s var(--el-ease-out);
+        transition:
+          color 0.15s ease,
+          background-color 0.15s ease,
+          transform 0.12s var(--el-ease-out);
       }
 
       .siteRow__btn:active {
@@ -499,7 +538,7 @@
       .siteRules {
         display: grid;
         grid-template-rows: 0fr;
-        transition: grid-template-rows .24s var(--el-ease-out);
+        transition: grid-template-rows 0.24s var(--el-ease-out);
       }
 
       .siteRow.isExpanded .siteRules {
@@ -538,7 +577,11 @@
       .ruleRow__selector {
         flex: 1;
         min-width: 0;
-        font: 11px/1.5 ui-monospace, "SF Mono", Menlo, monospace;
+        font:
+          11px/1.5 ui-monospace,
+          'SF Mono',
+          Menlo,
+          monospace;
         color: var(--el-text);
         overflow: hidden;
         text-overflow: ellipsis;
@@ -569,7 +612,9 @@
         border: none;
         cursor: pointer;
         padding: 0;
-        transition: color .15s ease, background-color .15s ease;
+        transition:
+          color 0.15s ease,
+          background-color 0.15s ease;
       }
 
       .ruleRow__delete svg,
@@ -628,7 +673,7 @@
         flex: none;
         border: solid 2px var(--el-accent);
         background: var(--el-accent-soft);
-        transition: border-radius .15s var(--el-ease-out);
+        transition: border-radius 0.15s var(--el-ease-out);
       }
 
       .switch {
@@ -643,7 +688,9 @@
         background-color: var(--el-border);
         cursor: pointer;
         flex: none;
-        transition: background-color .22s ease, box-shadow .22s ease;
+        transition:
+          background-color 0.22s ease,
+          box-shadow 0.22s ease;
       }
 
       .switch__knob {
@@ -651,17 +698,19 @@
         height: 15px;
         border-radius: 50%;
         background-color: var(--el-knob);
-        box-shadow: 0 1px 3px rgba(0, 0, 0, .42);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.42);
         transform: translateX(0);
-        transition: transform .24s var(--el-ease-drawer), background-color .18s ease;
+        transition:
+          transform 0.24s var(--el-ease-drawer),
+          background-color 0.18s ease;
       }
 
-      .switch[aria-checked="true"] {
+      .switch[aria-checked='true'] {
         background-color: var(--el-accent);
         box-shadow: 0 0 0 3px var(--el-accent-soft);
       }
 
-      .switch[aria-checked="true"] .switch__knob {
+      .switch[aria-checked='true'] .switch__knob {
         background-color: var(--el-accent-contrast);
         transform: translateX(15px);
       }
@@ -674,29 +723,36 @@
         align-items: center;
         justify-content: center;
         padding: 20px;
-        background: rgba(0, 0, 0, .45);
-        animation: modalFade .16s ease;
+        background: rgba(0, 0, 0, 0.45);
+        animation: modalFade 0.16s ease;
       }
 
       @keyframes modalFade {
-        from { opacity: 0; }
-        to { opacity: 1; }
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
       }
 
       .modal {
         width: min(440px, 100%);
+        max-height: min(720px, calc(100vh - 40px));
+        overflow-y: auto;
+        overscroll-behavior: contain;
         background: var(--el-surface);
         border: 1px solid var(--el-border);
         border-radius: 16px;
         box-shadow: var(--el-shadow-panel);
         padding: 22px 24px;
-        animation: modalIn .2s var(--el-ease-out);
+        animation: modalIn 0.2s var(--el-ease-out);
       }
 
       @keyframes modalIn {
         from {
           opacity: 0;
-          transform: scale(.96) translateY(6px);
+          transform: scale(0.96) translateY(6px);
         }
         to {
           opacity: 1;
@@ -718,6 +774,53 @@
         text-wrap: pretty;
       }
 
+      .modal__review {
+        display: grid;
+        gap: 5px;
+        max-height: 172px;
+        overflow-y: auto;
+        margin: 0 0 14px;
+        padding: 8px 10px;
+        background: var(--el-surface-alt);
+        border: 1px solid var(--el-border);
+        border-radius: 10px;
+        scrollbar-width: thin;
+      }
+
+      .modal__reviewRow {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 12px;
+        color: var(--el-text);
+      }
+
+      .modal__reviewRow span:first-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--el-text-strong);
+      }
+
+      .modal__reviewRow span:last-child {
+        flex: none;
+        color: var(--el-text-muted);
+      }
+
+      .modal__reviewMore,
+      .modal__warning {
+        margin: 2px 0 0;
+        font-size: 12px;
+      }
+
+      .modal__reviewMore {
+        color: var(--el-text-muted);
+      }
+
+      .modal__warning {
+        color: var(--el-danger);
+      }
+
       .modal__choice {
         display: flex;
         align-items: flex-start;
@@ -731,7 +834,9 @@
         padding: 11px 13px;
         cursor: pointer;
         color: var(--el-text);
-        transition: border-color .15s ease, background-color .15s ease;
+        transition:
+          border-color 0.15s ease,
+          background-color 0.15s ease;
       }
 
       .modal__choice + .modal__choice {
@@ -797,7 +902,7 @@
         font-weight: 600;
         text-decoration: none;
         border-bottom: 1px solid transparent;
-        transition: border-color .15s ease;
+        transition: border-color 0.15s ease;
       }
 
       .about .version {
@@ -816,7 +921,7 @@
 
       @media (hover: hover) and (pointer: fine) {
         .card:hover::after {
-          opacity: .72;
+          opacity: 0.72;
           transform: scale(1);
         }
 
@@ -908,6 +1013,22 @@
         .settingRow {
           flex-wrap: wrap;
         }
+
+        .modalOverlay {
+          align-items: flex-end;
+          padding: 8px;
+        }
+
+        .modal {
+          max-height: min(82vh, 720px);
+          padding: 18px;
+          border-radius: 16px;
+        }
+
+        .modal__actions button {
+          min-height: 44px;
+          flex: 1;
+        }
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -944,7 +1065,7 @@
 
         .card::after {
           transform: none;
-          transition: opacity .12s ease;
+          transition: opacity 0.12s ease;
         }
       }
     </style>

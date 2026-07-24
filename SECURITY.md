@@ -4,10 +4,10 @@
 
 Security fixes are provided for the latest released version of Elements.
 
-| Version | Supported |
-| --- | --- |
-| 1.1.x | Yes |
-| Earlier versions | No |
+| Version          | Supported |
+| ---------------- | --------- |
+| 1.1.x            | Yes       |
+| Earlier versions | No        |
 
 ## Reporting a vulnerability
 

@@ -8,30 +8,30 @@ in `package.json`; `package-lock.json` records the exact transitive versions.
 These packages are used by the extension at runtime or are compiled into its
 JavaScript bundle.
 
-| Package | Version | License | Copyright / attribution | Source |
-| --- | ---: | --- | --- | --- |
-| `react` | 19.2.7 | MIT | Meta Platforms, Inc. and affiliates | [facebook/react](https://github.com/facebook/react) |
-| `react-dom` | 19.2.7 | MIT | Meta Platforms, Inc. and affiliates | [facebook/react](https://github.com/facebook/react) |
-| `scheduler` | 0.27.0 | MIT | Meta Platforms, Inc. and affiliates | [facebook/react/tree/main/packages/scheduler](https://github.com/facebook/react/tree/main/packages/scheduler) |
-| `@wxt-dev/browser` | 0.2.2 | MIT | Aaron Klinker / WXT project | [wxt-dev/wxt](https://github.com/wxt-dev/wxt) |
+| Package            | Version | License | Copyright / attribution             | Source                                                                                                        |
+| ------------------ | ------: | ------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `react`            |  19.2.7 | MIT     | Meta Platforms, Inc. and affiliates | [facebook/react](https://github.com/facebook/react)                                                           |
+| `react-dom`        |  19.2.7 | MIT     | Meta Platforms, Inc. and affiliates | [facebook/react](https://github.com/facebook/react)                                                           |
+| `scheduler`        |  0.27.0 | MIT     | Meta Platforms, Inc. and affiliates | [facebook/react/tree/main/packages/scheduler](https://github.com/facebook/react/tree/main/packages/scheduler) |
+| `@wxt-dev/browser` |   0.2.2 | MIT     | Aaron Klinker / WXT project         | [wxt-dev/wxt](https://github.com/wxt-dev/wxt)                                                                 |
 
 ## Development and build tools
 
 The following packages are used to build or test Elements. They are not
 included in the published extension bundle.
 
-| Package | Version | License | Copyright / attribution | Source |
-| --- | ---: | --- | --- | --- |
-| `@wxt-dev/module-react` | 1.2.2 | MIT | Aaron (WXT project) | [wxt-dev/wxt](https://github.com/wxt-dev/wxt) |
-| `wxt` | 0.20.27 | MIT | Aaron (WXT project) | [wxt-dev/wxt](https://github.com/wxt-dev/wxt) |
-| `@vitejs/plugin-react` | 6.0.3 | MIT | Yuxi (Evan) You and Vite contributors | [vitejs/vite-plugin-react](https://github.com/vitejs/vite-plugin-react) |
-| `typescript` | 7.0.2 | Apache-2.0 | Microsoft Corporation | [microsoft/TypeScript](https://github.com/microsoft/TypeScript) |
-| `vitest` | 4.1.10 | MIT | VoidZero Inc. and Vitest contributors | [vitest-dev/vitest](https://github.com/vitest-dev/vitest) |
-| `@playwright/test` | 1.61.1 | Apache-2.0 | Microsoft Corporation | [microsoft/playwright](https://github.com/microsoft/playwright) |
-| `@resvg/resvg-js` | 2.6.2 | MPL-2.0 | Yisi Yu (yisibl) | [yisibl/resvg-js](https://github.com/yisibl/resvg-js) |
-| `@types/node` | 26.1.1 | MIT | DefinitelyTyped contributors | [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped) |
-| `@types/react` | 19.2.17 | MIT | Microsoft Corporation | [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped) |
-| `@types/react-dom` | 19.2.3 | MIT | Microsoft Corporation | [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped) |
+| Package                 | Version | License    | Copyright / attribution               | Source                                                                  |
+| ----------------------- | ------: | ---------- | ------------------------------------- | ----------------------------------------------------------------------- |
+| `@wxt-dev/module-react` |   1.2.2 | MIT        | Aaron (WXT project)                   | [wxt-dev/wxt](https://github.com/wxt-dev/wxt)                           |
+| `wxt`                   | 0.20.27 | MIT        | Aaron (WXT project)                   | [wxt-dev/wxt](https://github.com/wxt-dev/wxt)                           |
+| `@vitejs/plugin-react`  |   6.0.3 | MIT        | Yuxi (Evan) You and Vite contributors | [vitejs/vite-plugin-react](https://github.com/vitejs/vite-plugin-react) |
+| `typescript`            |   7.0.2 | Apache-2.0 | Microsoft Corporation                 | [microsoft/TypeScript](https://github.com/microsoft/TypeScript)         |
+| `vitest`                |  4.1.10 | MIT        | VoidZero Inc. and Vitest contributors | [vitest-dev/vitest](https://github.com/vitest-dev/vitest)               |
+| `@playwright/test`      |  1.61.1 | Apache-2.0 | Microsoft Corporation                 | [microsoft/playwright](https://github.com/microsoft/playwright)         |
+| `@resvg/resvg-js`       |   2.6.2 | MPL-2.0    | Yisi Yu (yisibl)                      | [yisibl/resvg-js](https://github.com/yisibl/resvg-js)                   |
+| `@types/node`           |  26.1.1 | MIT        | DefinitelyTyped contributors          | [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped)   |
+| `@types/react`          | 19.2.17 | MIT        | Microsoft Corporation                 | [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped)   |
+| `@types/react-dom`      |  19.2.3 | MIT        | Microsoft Corporation                 | [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped)   |
 
 The lockfile records the exact transitive dependency graph. If a package is
 added, removed, or upgraded, regenerate this file before publishing a new

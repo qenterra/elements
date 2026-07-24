@@ -199,6 +199,70 @@
       }
     }
   },
+  "optionsImportReviewDetails": {
+    "message": "Backup contents",
+    "description": "Accessible label for the detailed list of sites in an import."
+  },
+  "optionsImportRuleCountOne": {
+    "message": "$COUNT$ rule",
+    "description": "Singular rule count for one imported site.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "optionsImportRuleCountFew": {
+    "message": "$COUNT$ rules",
+    "description": "Few-form rule count for one imported site.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "optionsImportRuleCountMany": {
+    "message": "$COUNT$ rules",
+    "description": "Plural rule count for one imported site.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "12"
+      }
+    }
+  },
+  "optionsImportConflictCount": {
+    "message": "$COUNT$ conflicts",
+    "description": "Conflict count for one imported site.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "optionsImportMoreSites": {
+    "message": "+$COUNT$ more sites",
+    "description": "Count of import sites omitted from the compact preview.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "optionsImportInvalidRules": {
+    "message": "$COUNT$ invalid rules will be skipped.",
+    "description": "Warning shown when malformed rules are found in a backup.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
   "optionsImportMerge": {
     "message": "Merge",
     "description": "Import mode that keeps existing rules."
@@ -226,6 +290,10 @@
   "optionsAboutTitle": {
     "message": "About",
     "description": "Title of the about/credits section on the options page."
+  },
+  "optionsMadeBy": {
+    "message": "Made by",
+    "description": "Label before the author credit."
   },
   "optionsLegalDocuments": {
     "message": "Legal and project documents",
@@ -282,6 +350,18 @@
   "optionsImportFailed": {
     "message": "The backup could not be imported.",
     "description": "Error shown when the background import operation fails."
+  },
+  "optionsImportTooLarge": {
+    "message": "The backup is larger than 1 MB.",
+    "description": "Error shown when an import exceeds the supported file size."
+  },
+  "optionsImportTooManySites": {
+    "message": "The backup contains too many sites.",
+    "description": "Error shown when an import exceeds the supported site count."
+  },
+  "optionsImportTooManyRules": {
+    "message": "The backup contains too many rules.",
+    "description": "Error shown when an import exceeds the supported rule count."
   },
   "backgroundUnavailable": {
     "message": "Elements — unavailable on this tab",
@@ -406,8 +486,12 @@
     "description": "Label for the default remember setting."
   },
   "pickerRememberHint": {
-    "message": "Keeps new edits for this site on all your devices. Off: edits last until reload.",
+    "message": "Keeps new edits for this site and syncs them when browser storage allows it. Off: edits last until reload.",
     "description": "Tooltip explaining the remember toggle scope."
+  },
+  "pickerIncognitoTemporary": {
+    "message": "Incognito: edits stay temporary",
+    "description": "Explains why remembering edits is disabled in a private window."
   },
   "pickerShowOriginal": {
     "message": "Show original",
@@ -523,6 +607,10 @@
     "message": "CSS declarations",
     "description": "Label of the custom CSS textarea in the popover."
   },
+  "pickerCssPlaceholder": {
+    "message": "opacity: 0.5; border: none",
+    "description": "Example value in the custom CSS field."
+  },
   "pickerSave": {
     "message": "Save",
     "description": "Save button of the popover."
@@ -534,6 +622,18 @@
   "pickerTextEditHint": {
     "message": "Enter to save · Esc to cancel",
     "description": "Floating hint shown while editing text."
+  },
+  "pickerTextEditorTitle": {
+    "message": "Edit visible text",
+    "description": "Title of the transactional text editor."
+  },
+  "pickerTextEditorLabel": {
+    "message": "Replacement text",
+    "description": "Label of the text editor field."
+  },
+  "pickerTextEditorEmpty": {
+    "message": "Enter some text before saving.",
+    "description": "Validation message for an empty text edit."
   },
   "pickerStatusHidden": {
     "message": "Element hidden",
@@ -591,6 +691,10 @@
     "message": "Quick start",
     "description": "Title of the first-run coachmark."
   },
+  "coachHint": {
+    "message": "Hover an element, then choose an action. Use Q/W to move through its parents.",
+    "description": "Compact first-run picker instruction."
+  },
   "coachStep1": {
     "message": "Hover an element; Q and W move the selection up or down.",
     "description": "First coachmark step."
@@ -612,7 +716,7 @@
     "description": "Onboarding page title."
   },
   "onboardTagline": {
-    "message": "Make any website yours: hide clutter, fix text, restyle blocks. Everything stays on your device.",
+    "message": "Make any website yours: hide clutter, fix text, and restyle blocks.",
     "description": "Onboarding page tagline."
   },
   "onboardStep1Title": {
@@ -644,7 +748,7 @@
     "description": "Onboarding privacy section title."
   },
   "onboardPrivacyBody": {
-    "message": "No analytics, no ads, no remote code, no server. Elements never sends your browsing data anywhere.",
+    "message": "No analytics, ads, remote code, or developer-operated server. Saved rules and settings may sync through your browser account when browser sync is available.",
     "description": "Onboarding privacy section body."
   },
   "onboardOpenOptions": {

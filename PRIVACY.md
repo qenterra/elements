@@ -2,7 +2,7 @@
 
 **Elements** is developed by [Nikita Melnychenko (QenTerra)](https://github.com/QenTerra).
 
-**Effective date:** 2026-07-20
+**Effective date:** 2026-07-24
 
 This policy describes how Elements handles information when it is installed in
 Chrome, Firefox, Safari, or another compatible browser. Elements has no
@@ -42,7 +42,11 @@ developer does not receive a copy of that data.
 
 When the user exports a backup, Elements creates a JSON file locally and does
 not upload it. Import reads only the file selected by the user and stores the
-validated settings in extension storage.
+validated settings in extension storage. A local rollback snapshot is retained
+until the next import undo or replacement. It is not uploaded by Elements.
+
+In private or incognito windows, new rules and setting changes are temporary
+for that session and are not written to extension storage by Elements.
 
 ## How information is used
 

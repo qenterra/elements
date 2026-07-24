@@ -1,337 +1,681 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Elements — make any website yours</title>
-<meta name="description" content="A local-first browser extension for hiding page elements, editing visible text, and restyling blocks. No analytics, no server, no tracking.">
-<style>
-  :root {
-    color-scheme: light dark;
-    --bg: #0f1013;
-    --surface: #17181c;
-    --surface-alt: #1e2025;
-    --border: #2a2c33;
-    --text-strong: #e5e7eb;
-    --text: #a7adba;
-    --text-muted: #8991a1;
-    --accent: #22d3ee;
-    --accent-contrast: #0f1013;
-    --accent-soft: rgba(34, 211, 238, .12);
-    --shadow: 0 2px 6px rgba(0, 0, 0, .25), 0 20px 45px rgba(0, 0, 0, .5);
-    --ease-out: cubic-bezier(.23, 1, .32, 1);
-  }
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Elements — make any website yours</title>
+    <meta
+      name="description"
+      content="A local-first browser extension for hiding page elements, editing visible text, and restyling blocks. No analytics, ads, or developer-operated server."
+    />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #0f1013;
+        --surface: #17181c;
+        --surface-alt: #1e2025;
+        --border: #2a2c33;
+        --text-strong: #e5e7eb;
+        --text: #a7adba;
+        --text-muted: #8991a1;
+        --accent: #22d3ee;
+        --accent-contrast: #0f1013;
+        --accent-soft: rgba(34, 211, 238, 0.12);
+        --shadow: 0 2px 6px rgba(0, 0, 0, 0.25), 0 20px 45px rgba(0, 0, 0, 0.5);
+        --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+      }
 
-  @media (prefers-color-scheme: light) {
-    :root {
-      --bg: #f7f8fa;
-      --surface: #ffffff;
-      --surface-alt: #f1f3f6;
-      --border: #e2e5eb;
-      --text-strong: #111827;
-      --text: #3f4756;
-      --text-muted: #5b6472;
-      --accent: #0891b2;
-      --accent-contrast: #ffffff;
-      --accent-soft: rgba(8, 145, 178, .1);
-      --shadow: 0 2px 6px rgba(15, 23, 42, .08), 0 20px 45px rgba(15, 23, 42, .18);
-    }
-  }
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: #f7f8fa;
+          --surface: #ffffff;
+          --surface-alt: #f1f3f6;
+          --border: #e2e5eb;
+          --text-strong: #111827;
+          --text: #3f4756;
+          --text-muted: #5b6472;
+          --accent: #155e75;
+          --accent-contrast: #ffffff;
+          --accent-soft: rgba(21, 94, 117, 0.1);
+          --shadow: 0 2px 6px rgba(15, 23, 42, 0.08), 0 20px 45px rgba(15, 23, 42, 0.18);
+        }
+      }
 
-  * { box-sizing: border-box; margin: 0; }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+      }
 
-  html { -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+      html {
+        -webkit-font-smoothing: antialiased;
+        scroll-behavior: smooth;
+      }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font:
+          16px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
+      }
 
-  a { color: var(--accent); }
+      a {
+        color: var(--accent);
+      }
 
-  .wrap { max-width: 880px; margin: 0 auto; padding: 0 24px; }
+      .wrap {
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
 
-  @keyframes rise {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
 
-  @keyframes bracketIn {
-    from { opacity: 0; transform: scale(1.6); }
-    to { opacity: 1; transform: scale(1); }
-  }
+      @keyframes bracketIn {
+        from {
+          opacity: 0;
+          transform: scale(1.6);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
 
-  /* Hero */
-  .hero { padding: 96px 0 72px; text-align: center; }
+      /* Hero */
+      .hero {
+        padding: 96px 0 72px;
+        text-align: center;
+      }
 
-  .mark {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 96px; height: 96px;
-    margin-bottom: 28px;
-    color: var(--accent);
-  }
+      .mark {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 96px;
+        height: 96px;
+        margin-bottom: 28px;
+        color: var(--accent);
+      }
 
-  .mark i {
-    position: absolute; width: 24px; height: 24px;
-    animation: bracketIn .5s var(--ease-out) backwards;
-  }
+      .mark i {
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        animation: bracketIn 0.5s var(--ease-out) backwards;
+      }
 
-  .mark i:nth-child(1) { top: 0; left: 0; border-top: 4px solid; border-left: 4px solid; border-top-left-radius: 11px; animation-delay: .1s; }
-  .mark i:nth-child(2) { top: 0; right: 0; border-top: 4px solid; border-right: 4px solid; border-top-right-radius: 11px; animation-delay: .18s; }
-  .mark i:nth-child(3) { bottom: 0; left: 0; border-bottom: 4px solid; border-left: 4px solid; border-bottom-left-radius: 11px; animation-delay: .26s; }
-  .mark i:nth-child(4) { bottom: 0; right: 0; border-bottom: 4px solid; border-right: 4px solid; border-bottom-right-radius: 11px; animation-delay: .34s; }
+      .mark i:nth-child(1) {
+        top: 0;
+        left: 0;
+        border-top: 4px solid;
+        border-left: 4px solid;
+        border-top-left-radius: 11px;
+        animation-delay: 0.1s;
+      }
+      .mark i:nth-child(2) {
+        top: 0;
+        right: 0;
+        border-top: 4px solid;
+        border-right: 4px solid;
+        border-top-right-radius: 11px;
+        animation-delay: 0.18s;
+      }
+      .mark i:nth-child(3) {
+        bottom: 0;
+        left: 0;
+        border-bottom: 4px solid;
+        border-left: 4px solid;
+        border-bottom-left-radius: 11px;
+        animation-delay: 0.26s;
+      }
+      .mark i:nth-child(4) {
+        bottom: 0;
+        right: 0;
+        border-bottom: 4px solid;
+        border-right: 4px solid;
+        border-bottom-right-radius: 11px;
+        animation-delay: 0.34s;
+      }
 
-  .mark .rows { display: flex; flex-direction: column; gap: 9px; }
-  .mark .rows b { display: block; height: 7px; border-radius: 4px; background: var(--accent); animation: rise .4s var(--ease-out) backwards; }
-  .mark .rows b:nth-child(1) { width: 48px; animation-delay: .2s; }
-  .mark .rows b:nth-child(2) { width: 33px; opacity: .75; animation-delay: .28s; }
-  .mark .rows b:nth-child(3) { width: 40px; opacity: .55; animation-delay: .36s; }
+      .mark .rows {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+      }
+      .mark .rows b {
+        display: block;
+        height: 7px;
+        border-radius: 4px;
+        background: var(--accent);
+        animation: rise 0.4s var(--ease-out) backwards;
+      }
+      .mark .rows b:nth-child(1) {
+        width: 48px;
+        animation-delay: 0.2s;
+      }
+      .mark .rows b:nth-child(2) {
+        width: 33px;
+        opacity: 0.75;
+        animation-delay: 0.28s;
+      }
+      .mark .rows b:nth-child(3) {
+        width: 40px;
+        opacity: 0.55;
+        animation-delay: 0.36s;
+      }
 
-  h1 {
-    font-size: clamp(34px, 6vw, 52px);
-    line-height: 1.15;
-    letter-spacing: -0.03em;
-    color: var(--text-strong);
-    margin: 0 auto 18px;
-    max-width: 640px;
-    text-wrap: balance;
-    animation: rise .5s var(--ease-out) .1s backwards;
-  }
+      h1 {
+        font-size: clamp(34px, 6vw, 52px);
+        line-height: 1.15;
+        letter-spacing: -0.03em;
+        color: var(--text-strong);
+        margin: 0 auto 18px;
+        max-width: 640px;
+        text-wrap: balance;
+        animation: rise 0.5s var(--ease-out) 0.1s backwards;
+      }
 
-  .tagline {
-    font-size: 18px;
-    max-width: 560px;
-    margin: 0 auto 34px;
-    color: var(--text-muted);
-    text-wrap: pretty;
-    animation: rise .5s var(--ease-out) .2s backwards;
-  }
+      .tagline {
+        font-size: 18px;
+        max-width: 560px;
+        margin: 0 auto 34px;
+        color: var(--text-muted);
+        text-wrap: pretty;
+        animation: rise 0.5s var(--ease-out) 0.2s backwards;
+      }
 
-  .cta { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; animation: rise .5s var(--ease-out) .3s backwards; }
+      .cta {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        animation: rise 0.5s var(--ease-out) 0.3s backwards;
+      }
 
-  .btn {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-size: 15px; font-weight: 600; text-decoration: none;
-    padding: 13px 26px; border-radius: 11px;
-    transition: transform .12s var(--ease-out), background-color .15s ease;
-  }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        text-decoration: none;
+        padding: 13px 26px;
+        border-radius: 11px;
+        transition:
+          transform 0.12s var(--ease-out),
+          background-color 0.15s ease;
+      }
 
-  .btn:active { transform: scale(.97); }
-  .btn.primary { background: var(--accent); color: var(--accent-contrast); }
-  .btn.ghost { color: var(--text-strong); background: var(--surface-alt); border: 1px solid var(--border); }
+      .btn:active {
+        transform: scale(0.97);
+      }
+      .btn.primary {
+        background: var(--accent);
+        color: var(--accent-contrast);
+      }
+      .btn.ghost {
+        color: var(--text-strong);
+        background: var(--surface-alt);
+        border: 1px solid var(--border);
+      }
 
-  /* Demo */
-  .demo { margin: 24px auto 0; max-width: 720px; text-align: left; animation: rise .5s var(--ease-out) .4s backwards; }
+      /* Demo */
+      .demo {
+        margin: 24px auto 0;
+        max-width: 720px;
+        text-align: left;
+        animation: rise 0.5s var(--ease-out) 0.4s backwards;
+      }
 
-  .demo__frame {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    box-shadow: var(--shadow);
-    overflow: hidden;
-  }
+      .demo__frame {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
 
-  .demo__chrome {
-    display: flex; gap: 6px; padding: 12px 16px;
-    border-bottom: 1px solid var(--border);
-  }
+      .demo__chrome {
+        display: flex;
+        gap: 6px;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+      }
 
-  .demo__chrome i { width: 10px; height: 10px; border-radius: 50%; background: var(--surface-alt); border: 1px solid var(--border); }
+      .demo__chrome i {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--surface-alt);
+        border: 1px solid var(--border);
+      }
 
-  .demo__page { padding: 22px; }
+      .demo__page {
+        padding: 22px;
+      }
 
-  .demo__banner {
-    position: relative;
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    background: linear-gradient(90deg, #f43f5e, #f97316);
-    color: #fff; font-weight: 600; font-size: 14px;
-    border-radius: 12px; padding: 14px 18px; margin-bottom: 16px;
-    transition: opacity .3s ease, transform .3s var(--ease-out);
-  }
+      .demo__banner {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        background: linear-gradient(90deg, #f43f5e, #f97316);
+        color: #fff;
+        font-weight: 600;
+        font-size: 14px;
+        border-radius: 12px;
+        padding: 14px 18px;
+        margin-bottom: 16px;
+        transition:
+          opacity 0.3s ease,
+          transform 0.3s var(--ease-out);
+      }
 
-  .demo__banner.isHidden { opacity: 0; transform: scale(.96); pointer-events: none; }
+      .demo__banner.isHidden {
+        opacity: 0;
+        transform: scale(0.96);
+        pointer-events: none;
+      }
 
-  .demo__banner .brackets i {
-    position: absolute; width: 14px; height: 14px; color: var(--accent);
-    opacity: 0; transition: opacity .2s ease;
-  }
+      .demo__banner .brackets i {
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        color: var(--accent);
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
 
-  .demo__banner.isTargeted .brackets i { opacity: 1; animation: bracketIn .3s var(--ease-out); }
-  .demo__banner .brackets i:nth-child(1) { top: -4px; left: -4px; border-top: 3px solid; border-left: 3px solid; border-top-left-radius: 6px; }
-  .demo__banner .brackets i:nth-child(2) { top: -4px; right: -4px; border-top: 3px solid; border-right: 3px solid; border-top-right-radius: 6px; }
-  .demo__banner .brackets i:nth-child(3) { bottom: -4px; left: -4px; border-bottom: 3px solid; border-left: 3px solid; border-bottom-left-radius: 6px; }
-  .demo__banner .brackets i:nth-child(4) { bottom: -4px; right: -4px; border-bottom: 3px solid; border-right: 3px solid; border-bottom-right-radius: 6px; }
+      .demo__banner.isTargeted .brackets i {
+        opacity: 1;
+        animation: bracketIn 0.3s var(--ease-out);
+      }
+      .demo__banner .brackets i:nth-child(1) {
+        top: -4px;
+        left: -4px;
+        border-top: 3px solid;
+        border-left: 3px solid;
+        border-top-left-radius: 6px;
+      }
+      .demo__banner .brackets i:nth-child(2) {
+        top: -4px;
+        right: -4px;
+        border-top: 3px solid;
+        border-right: 3px solid;
+        border-top-right-radius: 6px;
+      }
+      .demo__banner .brackets i:nth-child(3) {
+        bottom: -4px;
+        left: -4px;
+        border-bottom: 3px solid;
+        border-left: 3px solid;
+        border-bottom-left-radius: 6px;
+      }
+      .demo__banner .brackets i:nth-child(4) {
+        bottom: -4px;
+        right: -4px;
+        border-bottom: 3px solid;
+        border-right: 3px solid;
+        border-bottom-right-radius: 6px;
+      }
 
-  .demo__text h3 { color: var(--text-strong); font-size: 17px; margin-bottom: 6px; }
-  .demo__text p { font-size: 14px; margin-bottom: 10px; }
+      .demo__text h3 {
+        color: var(--text-strong);
+        font-size: 17px;
+        margin-bottom: 6px;
+      }
+      .demo__text p {
+        font-size: 14px;
+        margin-bottom: 10px;
+      }
 
-  .demo__actions { display: flex; gap: 10px; padding: 0 22px 22px; }
+      .demo__actions {
+        display: flex;
+        gap: 10px;
+        padding: 0 22px 22px;
+      }
 
-  .demo__btn {
-    font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
-    color: var(--text-strong); background: var(--surface-alt);
-    border: 1px solid var(--border); border-radius: 9px; padding: 9px 16px;
-    transition: border-color .15s ease, transform .12s var(--ease-out);
-  }
+      .demo__btn {
+        font: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--text-strong);
+        background: var(--surface-alt);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        padding: 9px 16px;
+        transition:
+          border-color 0.15s ease,
+          transform 0.12s var(--ease-out);
+      }
 
-  .demo__btn:hover { border-color: var(--accent); }
-  .demo__btn:active { transform: scale(.97); }
-  .demo__btn.accent { background: var(--accent); color: var(--accent-contrast); border-color: transparent; }
+      .demo__btn:hover {
+        border-color: var(--accent);
+      }
+      .demo__btn:active {
+        transform: scale(0.97);
+      }
+      .demo__btn.accent {
+        background: var(--accent);
+        color: var(--accent-contrast);
+        border-color: transparent;
+      }
 
-  /* Features */
-  .features { padding: 72px 0; }
+      /* Features */
+      .features {
+        padding: 72px 0;
+      }
 
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+      }
 
-  .cardF {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 22px;
-  }
+      .cardF {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 22px;
+      }
 
-  .cardF h3 { color: var(--text-strong); font-size: 15.5px; margin-bottom: 7px; display: flex; align-items: center; gap: 9px; }
-  .cardF p { font-size: 14px; color: var(--text-muted); }
-  .cardF svg { color: var(--accent); flex: none; }
+      .cardF h3 {
+        color: var(--text-strong);
+        font-size: 15.5px;
+        margin-bottom: 7px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+      .cardF p {
+        font-size: 14px;
+        color: var(--text-muted);
+      }
+      .cardF svg {
+        color: var(--accent);
+        flex: none;
+      }
 
-  /* Privacy */
-  .privacy {
-    margin: 0 0 88px;
-    border: 1px solid var(--accent);
-    background: var(--accent-soft);
-    border-radius: 20px;
-    padding: 34px 36px;
-  }
+      /* Privacy */
+      .privacy {
+        margin: 0 0 88px;
+        border: 1px solid var(--accent);
+        background: var(--accent-soft);
+        border-radius: 20px;
+        padding: 34px 36px;
+      }
 
-  .privacy h2 { color: var(--text-strong); font-size: 24px; letter-spacing: -0.02em; margin-bottom: 10px; }
-  .privacy p { max-width: 640px; text-wrap: pretty; }
+      .privacy h2 {
+        color: var(--text-strong);
+        font-size: 24px;
+        letter-spacing: -0.02em;
+        margin-bottom: 10px;
+      }
+      .privacy p {
+        max-width: 640px;
+        text-wrap: pretty;
+      }
 
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 28px 0 44px;
-    font-size: 13.5px;
-    color: var(--text-muted);
-  }
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 28px 0 44px;
+        font-size: 13.5px;
+        color: var(--text-muted);
+      }
 
-  footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 22px; justify-content: space-between; }
-  footer a { text-decoration: none; font-weight: 600; }
+      footer .wrap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 22px;
+        justify-content: space-between;
+      }
+      footer a {
+        text-decoration: none;
+        font-weight: 600;
+      }
 
-  h2.section { color: var(--text-strong); font-size: 26px; letter-spacing: -0.02em; margin-bottom: 20px; }
+      h2.section {
+        color: var(--text-strong);
+        font-size: 26px;
+        letter-spacing: -0.02em;
+        margin-bottom: 20px;
+      }
 
-  @media (prefers-reduced-motion: reduce) {
-    * { animation: none !important; transition: none !important; }
-    html { scroll-behavior: auto; }
-  }
-</style>
-</head>
-<body>
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation: none !important;
+          transition: none !important;
+        }
+        html {
+          scroll-behavior: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hero wrap">
+      <span class="mark" aria-hidden="true">
+        <i></i><i></i><i></i><i></i>
+        <span class="rows"><b></b><b></b><b></b></span>
+      </span>
+      <h1>Make any website yours</h1>
+      <p class="tagline">
+        Elements is a browser extension that hides clutter, fixes text, and restyles blocks on any
+        page — and remembers your changes when you ask it to.
+      </p>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/QenTerra/elements/releases">Download</a>
+        <a class="btn ghost" href="https://github.com/QenTerra/elements">GitHub</a>
+      </div>
 
-<header class="hero wrap">
-  <span class="mark" aria-hidden="true">
-    <i></i><i></i><i></i><i></i>
-    <span class="rows"><b></b><b></b><b></b></span>
-  </span>
-  <h1>Make any website yours</h1>
-  <p class="tagline">Elements is a browser extension that hides clutter, fixes text, and restyles blocks on any page — and remembers your changes. Everything stays on your device.</p>
-  <div class="cta">
-    <a class="btn primary" href="https://github.com/QenTerra/elements/releases">Download</a>
-    <a class="btn ghost" href="https://github.com/QenTerra/elements">GitHub</a>
-  </div>
-
-  <div class="demo">
-    <div class="demo__frame">
-      <div class="demo__chrome" aria-hidden="true"><i></i><i></i><i></i></div>
-      <div class="demo__page">
-        <div class="demo__banner" id="banner">
-          <span>🔥 Limited offer — subscribe today and save 40%</span>
-          <span class="brackets" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-        </div>
-        <div class="demo__text">
-          <h3>The article you actually came to read</h3>
-          <p>That banner above? On a real page you'd hover it, press Space, and it would be gone — on every visit.</p>
+      <div class="demo">
+        <div class="demo__frame">
+          <div class="demo__chrome" aria-hidden="true"><i></i><i></i><i></i></div>
+          <div class="demo__page">
+            <div class="demo__banner" id="banner">
+              <span>🔥 Limited offer — subscribe today and save 40%</span>
+              <span class="brackets" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+            </div>
+            <div class="demo__text">
+              <h3>The article you actually came to read</h3>
+              <p>
+                That banner above? On a real page you'd hover it, press Space, and it would be gone
+                — on every visit.
+              </p>
+            </div>
+          </div>
+          <div class="demo__actions">
+            <button class="demo__btn accent" id="demoHide" type="button">
+              Try it: hide the banner
+            </button>
+            <button class="demo__btn" id="demoReset" type="button" hidden>Undo</button>
+          </div>
         </div>
       </div>
-      <div class="demo__actions">
-        <button class="demo__btn accent" id="demoHide" type="button">Try it: hide the banner</button>
-        <button class="demo__btn" id="demoReset" type="button" hidden>Undo</button>
+    </header>
+
+    <section class="features wrap">
+      <h2 class="section">A precision tool, not a hack</h2>
+      <div class="grid">
+        <div class="cardF">
+          <h3>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22"
+              /></svg
+            >Hide anything
+          </h3>
+          <p>Banners, popups, sidebars, comment sections — select and press Space.</p>
+        </div>
+        <div class="cardF">
+          <h3>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="4 7 4 4 20 4 20 7" />
+              <line x1="9" y1="20" x2="15" y2="20" />
+              <line x1="12" y1="4" x2="12" y2="20" /></svg
+            >Edit text in place
+          </h3>
+          <p>Fix a typo, rename a heading, rewrite a label — right on the page.</p>
+        </div>
+        <div class="cardF">
+          <h3>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M4 20v-6a10 10 0 0 1 10-10h6" /></svg
+            >Restyle blocks
+          </h3>
+          <p>Round corners, blur, dim, or desaturate any element. Custom CSS for power users.</p>
+        </div>
+        <div class="cardF">
+          <h3>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" /></svg
+            >Remembered per site
+          </h3>
+          <p>
+            Rules re-apply on every visit and may sync through your browser account. Pause or undo
+            any time.
+          </p>
+        </div>
+        <div class="cardF">
+          <h3>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="5" />
+              <path
+                d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
+              /></svg
+            >Light and dark
+          </h3>
+          <p>Follows your system theme, or pick one. The picker looks at home on any page.</p>
+        </div>
+        <div class="cardF">
+          <h3>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="3" y="11" width="18" height="11" rx="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg
+            >Keyboard-first
+          </h3>
+          <p>Ctrl/Cmd+Shift+X to open, Q/W to walk the DOM, one key per action, full undo/redo.</p>
+        </div>
       </div>
-    </div>
-  </div>
-</header>
+    </section>
 
-<section class="features wrap">
-  <h2 class="section">A precision tool, not a hack</h2>
-  <div class="grid">
-    <div class="cardF">
-      <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22"/></svg>Hide anything</h3>
-      <p>Banners, popups, sidebars, comment sections — select and press Space.</p>
-    </div>
-    <div class="cardF">
-      <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>Edit text in place</h3>
-      <p>Fix a typo, rename a heading, rewrite a label — right on the page.</p>
-    </div>
-    <div class="cardF">
-      <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20v-6a10 10 0 0 1 10-10h6"/></svg>Restyle blocks</h3>
-      <p>Round corners, blur, dim, or desaturate any element. Custom CSS for power users.</p>
-    </div>
-    <div class="cardF">
-      <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Remembered per site</h3>
-      <p>Rules re-apply on every visit and sync across your devices. Pause or undo any time.</p>
-    </div>
-    <div class="cardF">
-      <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>Light and dark</h3>
-      <p>Follows your system theme, or pick one. The picker looks at home on any page.</p>
-    </div>
-    <div class="cardF">
-      <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Keyboard-first</h3>
-      <p>Ctrl/Cmd+Shift+X to open, Q/W to walk the DOM, one key per action, full undo/redo.</p>
-    </div>
-  </div>
-</section>
+    <section class="wrap">
+      <div class="privacy">
+        <h2>Private by design</h2>
+        <p>
+          No analytics. No ads. No remote code. No developer-operated server. Rules stay in
+          browser-managed extension storage and may be processed by your browser's sync service; the
+          developer does not receive them. The code is MIT-licensed and open — read it, build it,
+          own it.
+        </p>
+      </div>
+    </section>
 
-<section class="wrap">
-  <div class="privacy">
-    <h2>Private by design</h2>
-    <p>No analytics. No ads. No remote code. No developer server. Elements works entirely inside your browser and never sends your browsing data anywhere. The code is MIT-licensed and open — read it, build it, own it.</p>
-  </div>
-</section>
+    <footer>
+      <div class="wrap">
+        <span>© 2026 Nikita Melnychenko (QenTerra) · MIT License</span>
+        <span>
+          <a href="https://github.com/QenTerra/elements/blob/master/PRIVACY.md">Privacy</a> ·
+          <a href="https://github.com/QenTerra/elements/blob/master/TERMS_OF_USE.md">Terms</a> ·
+          <a href="https://github.com/QenTerra/elements/issues">Feedback</a>
+        </span>
+      </div>
+    </footer>
 
-<footer>
-  <div class="wrap">
-    <span>© 2026 Nikita Melnychenko (QenTerra) · MIT License</span>
-    <span>
-      <a href="https://github.com/QenTerra/elements/blob/master/PRIVACY.md">Privacy</a> ·
-      <a href="https://github.com/QenTerra/elements/blob/master/TERMS_OF_USE.md">Terms</a> ·
-      <a href="https://github.com/QenTerra/elements/issues">Feedback</a>
-    </span>
-  </div>
-</footer>
+    <script>
+      const banner = document.getElementById('banner')
+      const hideBtn = document.getElementById('demoHide')
+      const resetBtn = document.getElementById('demoReset')
 
-<script>
-  const banner = document.getElementById('banner')
-  const hideBtn = document.getElementById('demoHide')
-  const resetBtn = document.getElementById('demoReset')
+      hideBtn.addEventListener('click', () => {
+        banner.classList.add('isTargeted')
+        setTimeout(() => {
+          banner.classList.add('isHidden')
+          banner.classList.remove('isTargeted')
+          hideBtn.hidden = true
+          resetBtn.hidden = false
+        }, 550)
+      })
 
-  hideBtn.addEventListener('click', () => {
-    banner.classList.add('isTargeted')
-    setTimeout(() => {
-      banner.classList.add('isHidden')
-      banner.classList.remove('isTargeted')
-      hideBtn.hidden = true
-      resetBtn.hidden = false
-    }, 550)
-  })
-
-  resetBtn.addEventListener('click', () => {
-    banner.classList.remove('isHidden')
-    resetBtn.hidden = true
-    hideBtn.hidden = false
-  })
-</script>
-
-</body>
+      resetBtn.addEventListener('click', () => {
+        banner.classList.remove('isHidden')
+        resetBtn.hidden = true
+        hideBtn.hidden = false
+      })
+    </script>
+  </body>
 </html>

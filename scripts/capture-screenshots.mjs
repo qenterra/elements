@@ -64,35 +64,44 @@ const baseUrl = `http://127.0.0.1:${server.address().port}/`
 
 const context = await chromium.launchPersistentContext('', {
   headless: true,
-  executablePath: process.env.CHROMIUM_PATH || undefined,
+  ...(process.env.CHROMIUM_PATH
+    ? { executablePath: process.env.CHROMIUM_PATH }
+    : { channel: 'chromium' }),
   viewport: { width: 1280, height: 800 },
   deviceScaleFactor: 2,
-  args: [
-    `--disable-extensions-except=${extensionPath}`,
-    `--load-extension=${extensionPath}`,
-  ],
+  args: [`--disable-extensions-except=${extensionPath}`, `--load-extension=${extensionPath}`],
 })
-const worker = context.serviceWorkers()[0] ?? await context.waitForEvent('serviceworker')
+const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'))
 const extensionId = new URL(worker.url()).host
 await mkdir(outputDirectory, { recursive: true })
 
 async function setTheme(theme) {
   await worker.evaluate(async (value) => {
-    await chrome.storage.sync.set({ settings: JSON.stringify({ theme: value, coachmarkSeen: true }) })
+    await chrome.storage.local.remove(['settings', '__elements_local_routes__'])
+    await chrome.storage.sync.set({
+      settings: JSON.stringify({
+        remember: true,
+        theme: value,
+        radius: 12,
+        advanced: true,
+        coachmarkSeen: true,
+      }),
+    })
   }, theme)
 }
 
-async function capturePicker(theme, file) {
+async function capturePicker(theme, file, viewport = { width: 1280, height: 800 }) {
   await setTheme(theme)
   const page = await context.newPage()
+  await page.setViewportSize(viewport)
   await page.goto(baseUrl)
   await worker.evaluate(async (urlPrefix) => {
     const tabs = await chrome.tabs.query({})
     const tab = tabs.find((candidate) => candidate.url?.startsWith(urlPrefix))
-    await chrome.tabs.sendMessage(tab.id, { action: 'toggle' })
+    await chrome.tabs.sendMessage(tab.id, { v: 2, type: 'picker.toggle' })
   }, baseUrl)
   await page.hover('#promo')
-  await page.waitForTimeout(600)
+  await page.locator('#elements-extension-root-v2 .mainWindow').waitFor()
   await page.screenshot({ path: join(outputDirectory, file) })
   await page.close()
 }
@@ -110,6 +119,7 @@ await capturePicker('dark', '01-picker-dark.png')
 await capturePicker('light', '02-picker-light.png')
 await captureOptions('dark', '03-options-dark.png')
 await captureOptions('light', '04-options-light.png')
+await capturePicker('dark', '05-picker-narrow.png', { width: 390, height: 844 })
 
 console.log(`Saved screenshots to ${outputDirectory}`)
 await context.close()

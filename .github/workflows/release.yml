@@ -30,14 +30,31 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Typecheck
-        run: npm run typecheck
+      - name: Verify release tag
+        env:
+          TAG_NAME: ${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
+        run: npm run verify:release -- "$TAG_NAME"
 
-      - name: Test
-        run: npm test
+      - name: Validate source
+        run: npm run validate
+
+      - name: Audit production dependencies
+        run: npm run audit:prod
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps --no-shell chromium
+
+      - name: Build Chrome for end-to-end tests
+        run: npm run build:chrome
+
+      - name: End-to-end tests
+        run: npm run test:e2e
 
       - name: Build release archives
         run: npm run release:archives
+
+      - name: Verify build artifacts
+        run: npm run verify:build
 
       - name: Create GitHub release
         env:
