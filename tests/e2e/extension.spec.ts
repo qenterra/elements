@@ -24,6 +24,13 @@ const fixtureHtml = `<!doctype html>
     <main id="content" style="padding:20px">
       <h1 id="headline">Original headline</h1>
       <p id="paragraph">Body text that stays.</p>
+      <section class="fixture-shell-with-a-long-class-name">
+        <div class="fixture-column-with-a-long-class-name">
+          <article class="fixture-card-with-a-long-class-name">
+            <span id="deep-target">Deep target</span>
+          </article>
+        </div>
+      </section>
     </main>
   </body>
 </html>`
@@ -72,6 +79,11 @@ async function openFixture(viewport?: { width: number; height: number }): Promis
   return page
 }
 
+async function lockTarget(page: Page, selector: string): Promise<void> {
+  await page.hover(selector)
+  await page.locator(selector).click()
+}
+
 async function expectNoSeriousAccessibilityViolations(page: Page, include?: string): Promise<void> {
   const builder = new AxeBuilder({ page })
   if (include) builder.include(include)
@@ -84,6 +96,26 @@ async function expectNoSeriousAccessibilityViolations(page: Page, include?: stri
       targets: violation.nodes.map((node) => node.target),
     }))
   expect(violations).toEqual([])
+}
+
+async function expectActivePathVisible(page: Page): Promise<void> {
+  const path = page.locator('#elements-extension-root-v2 #elements_current_elm')
+  const active = path.locator('.pathNode.active')
+  await expect(active).toBeVisible()
+  const [pathBox, activeBox] = await Promise.all([path.boundingBox(), active.boundingBox()])
+  expect(pathBox).not.toBeNull()
+  expect(activeBox).not.toBeNull()
+  expect(activeBox!.x).toBeGreaterThanOrEqual(pathBox!.x)
+  expect(activeBox!.x + activeBox!.width).toBeLessThanOrEqual(pathBox!.x + pathBox!.width)
+}
+
+async function expectLocatorInsideViewport(page: Page, selector: string): Promise<void> {
+  const box = await page.locator(selector).boundingBox()
+  expect(box).not.toBeNull()
+  expect(box!.x).toBeGreaterThanOrEqual(0)
+  expect(box!.y).toBeGreaterThanOrEqual(0)
+  expect(box!.x + box!.width).toBeLessThanOrEqual(await page.evaluate(() => window.innerWidth))
+  expect(box!.y + box!.height).toBeLessThanOrEqual(await page.evaluate(() => window.innerHeight))
 }
 
 test.beforeAll(async () => {
@@ -124,6 +156,106 @@ test('toolbar toggle opens the lazy-loaded picker panel', async () => {
   await page.close()
 })
 
+test('click locks a hovered target before actions become available', async () => {
+  const page = await openFixture()
+  await togglePicker()
+  const panel = page.locator('#elements-extension-root-v2 .mainWindow')
+  const hide = panel.getByRole('button', { name: 'Hide' })
+
+  await page.hover('#promo-banner')
+  await expect(hide).toBeDisabled()
+  await page.locator('#promo-banner').click()
+  await expect(hide).toBeEnabled()
+  await expect(page.locator('#elements-extension-highlighter-v2 .elements_bracket')).toHaveCount(0)
+  const [targetBox, toolbarBox] = await Promise.all([
+    page.locator('#promo-banner').boundingBox(),
+    page.locator('#elements-extension-root-v2 .miniBar').boundingBox(),
+  ])
+  expect(targetBox).not.toBeNull()
+  expect(toolbarBox).not.toBeNull()
+  expect(toolbarBox!.y).toBeGreaterThanOrEqual(targetBox!.y + targetBox!.height)
+
+  await page.hover('#headline')
+  await expect(panel.locator('.pathNode.active')).toHaveText('#promo-banner')
+  await panel.getByRole('button', { name: 'More actions' }).click()
+  await expect(page.getByRole('menu')).toBeVisible()
+  await expect(panel.locator('.pathNode.active')).toHaveText('#promo-banner')
+
+  await page.keyboard.press('Escape')
+  await page.locator('#headline').click()
+  await expect(panel.locator('.pathNode.active')).toHaveText('#headline')
+  await page.close()
+})
+
+test('Q and W keep the active breadcrumb layer in view', async () => {
+  const page = await openFixture()
+  await togglePicker()
+  await lockTarget(page, '#deep-target')
+
+  await expectActivePathVisible(page)
+  for (let index = 0; index < 7; index += 1) {
+    await page.keyboard.press('q')
+    await expectActivePathVisible(page)
+  }
+  for (let index = 0; index < 7; index += 1) {
+    await page.keyboard.press('w')
+    await expectActivePathVisible(page)
+  }
+  await page.close()
+})
+
+test('menus, history controls, and the text editor stay inside their visible bounds', async () => {
+  const page = await openFixture({ width: 600, height: 480 })
+  await togglePicker()
+  await lockTarget(page, '#deep-target')
+
+  const panel = page.locator('#elements-extension-root-v2 .mainWindow')
+  await panel.getByRole('button', { name: 'More actions' }).click()
+  const menu = page.getByRole('menu')
+  await expect(menu).toBeVisible()
+  await expectLocatorInsideViewport(page, '#elements-extension-root-v2 .moreMenu')
+  expect(
+    await menu.evaluate((element) => {
+      const rect = element.getBoundingClientRect()
+      const root = element.getRootNode()
+      if (!(root instanceof ShadowRoot)) return false
+      const topItem = root.elementFromPoint(rect.left + rect.width / 2, rect.top + 8)
+      return Boolean(topItem && element.contains(topItem))
+    }),
+  ).toBe(true)
+  await page.keyboard.press('Escape')
+
+  await panel.getByRole('button', { name: 'Round' }).click()
+  const row = panel.locator('.editRow').first()
+  const remove = row.getByRole('button', { name: /Delete the rule/ })
+  const [rowBox, removeBox] = await Promise.all([row.boundingBox(), remove.boundingBox()])
+  expect(rowBox).not.toBeNull()
+  expect(removeBox).not.toBeNull()
+  expect(removeBox!.x + removeBox!.width).toBeLessThanOrEqual(rowBox!.x + rowBox!.width)
+  await remove.click()
+  await expect(row).toHaveCount(0)
+  await page.close()
+
+  const narrow = await openFixture({ width: 320, height: 640 })
+  await togglePicker()
+  await lockTarget(narrow, '#site-header')
+  await narrow
+    .locator('#elements-extension-root-v2 .mainWindow')
+    .getByRole('button', { name: 'Text' })
+    .click()
+  await expectLocatorInsideViewport(narrow, '#elements-extension-root-v2 .textEditor')
+  const editor = narrow.getByRole('dialog', { name: 'Edit visible text' })
+  const [editorBox, textareaBox] = await Promise.all([
+    editor.boundingBox(),
+    editor.getByRole('textbox').boundingBox(),
+  ])
+  expect(editorBox).not.toBeNull()
+  expect(textareaBox).not.toBeNull()
+  expect(textareaBox!.x).toBeGreaterThanOrEqual(editorBox!.x)
+  expect(textareaBox!.x + textareaBox!.width).toBeLessThanOrEqual(editorBox!.x + editorBox!.width)
+  await narrow.close()
+})
+
 test('text editing is transactional and undo restores the original DOM node', async () => {
   const page = await openFixture()
   await page.evaluate(() => {
@@ -135,7 +267,7 @@ test('text editing is transactional and undo restores the original DOM node', as
   })
   await togglePicker()
 
-  await page.hover('#headline')
+  await lockTarget(page, '#headline')
   await page.getByRole('button', { name: "Edit the element's text" }).last().click()
   const editor = page.getByRole('dialog', { name: 'Edit visible text' })
   await expect(editor).toBeVisible()
@@ -143,7 +275,7 @@ test('text editing is transactional and undo restores the original DOM node', as
   await editor.getByRole('button', { name: 'Cancel' }).click()
   await expect(page.locator('#headline')).toHaveText('Original headline')
 
-  await page.hover('#headline')
+  await lockTarget(page, '#headline')
   await page.getByRole('button', { name: "Edit the element's text" }).last().click()
   await editor.getByRole('textbox').fill('Edited headline')
   await editor.getByRole('button', { name: 'Save' }).click()
@@ -164,7 +296,7 @@ test('text editing is transactional and undo restores the original DOM node', as
 test('a remembered rule re-applies after reload', async () => {
   const page = await openFixture()
   await togglePicker()
-  await page.hover('#promo-banner')
+  await lockTarget(page, '#promo-banner')
   await page.getByRole('button', { name: 'Hide the element' }).last().click()
   await expect(page.locator('#promo-banner')).toBeHidden()
   await expect(page.locator('#elements-extension-root-v2 .changes__count')).toHaveText('1')
@@ -177,7 +309,7 @@ test('a remembered rule re-applies after reload', async () => {
 test('complete history supports undo and redo', async () => {
   const page = await openFixture()
   await togglePicker()
-  await page.hover('#site-header')
+  await lockTarget(page, '#site-header')
   await page.getByRole('button', { name: 'Hide the element' }).last().click()
   await expect(page.locator('#site-header')).toBeHidden()
   await page.keyboard.press('Control+z')

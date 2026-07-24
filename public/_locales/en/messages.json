@@ -372,7 +372,7 @@
     "description": "Fallback shown when no keyboard shortcut is assigned."
   },
   "pickerHoverHint": {
-    "message": "Hover over an element to select it.",
+    "message": "Hover an element, then click to lock it.",
     "description": "Hint shown before the user selects an element."
   },
   "pickerAriaLabel": {
@@ -692,11 +692,11 @@
     "description": "Title of the first-run coachmark."
   },
   "coachHint": {
-    "message": "Hover an element, then choose an action. Use Q/W to move through its parents.",
+    "message": "Hover an element and click to lock it, then choose an action. Use Q/W to move through its parents.",
     "description": "Compact first-run picker instruction."
   },
   "coachStep1": {
-    "message": "Hover an element; Q and W move the selection up or down.",
+    "message": "Hover an element and click to lock it; Q and W move the selection up or down.",
     "description": "First coachmark step."
   },
   "coachStep2": {
@@ -732,7 +732,7 @@
     "description": "Onboarding step 2 title."
   },
   "onboardStep2Body": {
-    "message": "Hover an element and choose an action: hide it, edit its text, round its corners, blur or dim it.",
+    "message": "Hover an element and click to lock it, then choose an action: hide it, edit its text, round its corners, blur or dim it.",
     "description": "Onboarding step 2 body."
   },
   "onboardStep3Title": {

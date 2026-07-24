@@ -25,8 +25,9 @@ developer-operated backend.
 ## Highlights
 
 - Activate the picker from the toolbar or `Ctrl/Cmd+Shift+X`.
-- Hover and select elements; `Q`/`W` move through their ancestor chain; a mini
-  toolbar next to the selection puts every action one click away.
+- Hover to preview an element, then left-click to lock the selection before
+  choosing an action; `Q`/`W` move through its ancestor chain and keep the
+  active breadcrumb in view.
 - Hide (`Space` or click), edit text transactionally (`E`), round corners (`C`), or
   blur / dim / desaturate from the overflow menu.
 - Full undo/redo (`Ctrl/Cmd+Z`, `Ctrl/Cmd+Shift+Z`) with status feedback for

@@ -18,6 +18,8 @@ All notable changes to Elements are documented in this file.
 
 ### Changed
 
+- The picker now separates hover preview from click-to-lock selection, so moving
+  into its controls cannot silently retarget the pending action.
 - The background service worker now owns every persistent write behind a typed,
   runtime-validated protocol.
 - Storage operations are serialized across sync and local areas; local route
@@ -35,6 +37,11 @@ All notable changes to Elements are documented in this file.
 
 ### Fixed
 
+- Overflow menus, history actions, breadcrumbs, text editors, and selector
+  popovers now remain visible and usable at narrow widths and viewport edges.
+- Undo and delete snapshots are dispatched to the background immediately, so a
+  quick tab close cannot leave an older persisted rule behind.
+- Theme changes no longer animate through an inaccessible low-contrast midpoint.
 - Concurrent repository operations can no longer lose metadata or resurrect a
   rule deleted by another operation.
 - Public hostnames no longer split saved rules by port; localhost and IP

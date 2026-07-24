@@ -371,10 +371,9 @@ hr {
 }
 
 .moreMenu {
-  position: absolute;
-  left: 0;
-  bottom: calc(100% + 6px);
-  min-width: 190px;
+  position: fixed;
+  box-sizing: border-box;
+  width: min(220px, calc(100vw - 16px));
   background: var(--el-surface);
   border: solid 1px var(--el-border);
   border-radius: 12px;
@@ -383,6 +382,12 @@ hr {
   z-index: 3;
   transform-origin: bottom left;
   animation: elMenuIn 0.16s var(--el-ease-out);
+}
+
+.moreMenu *,
+.moreMenu *::before,
+.moreMenu *::after {
+  box-sizing: border-box;
 }
 
 @keyframes elMenuIn {
@@ -411,6 +416,7 @@ hr {
   padding: 8px 10px;
   cursor: pointer;
   text-align: left;
+  white-space: nowrap;
   transition:
     background-color 0.15s ease,
     color 0.15s ease;
@@ -431,7 +437,7 @@ hr {
 /* --- Changes list -------------------------------------------------------- */
 
 .changes {
-  margin: 0 -20px;
+  margin: 0 -16px;
   border-top: solid 1px var(--el-border);
 }
 
@@ -514,7 +520,7 @@ hr {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px 6px 20px;
+  padding: 6px 16px;
   border-top: solid 1px var(--el-border);
   overflow: hidden;
   transition: background-color 0.15s ease;
@@ -827,8 +833,11 @@ hr {
 
 .popover {
   position: fixed;
+  box-sizing: border-box;
   z-index: 5;
   width: min(320px, calc(100vw - 24px));
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
   background: var(--el-surface);
   border: solid 1px var(--el-border);
   border-radius: 12px;
@@ -845,6 +854,12 @@ hr {
   color: var(--el-text);
   transform-origin: bottom left;
   animation: elMenuIn 0.16s var(--el-ease-out);
+}
+
+.popover *,
+.popover *::before,
+.popover *::after {
+  box-sizing: border-box;
 }
 
 .popover__title {
@@ -897,6 +912,7 @@ hr {
 
 .popover__textarea {
   resize: vertical;
+  max-width: 100%;
   min-height: 56px;
 }
 
@@ -1224,6 +1240,11 @@ hr {
 
   .mainWindow__body {
     padding-bottom: max(2px, env(safe-area-inset-bottom));
+  }
+
+  .changes {
+    margin-right: -14px;
+    margin-left: -14px;
   }
 
   .header {

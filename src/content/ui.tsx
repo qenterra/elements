@@ -229,7 +229,7 @@ type PopoverState =
   | { kind: 'create-css'; selector: string; anchor: Rect }
 
 function clamp(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), max)
+  return Math.min(Math.max(value, min), Math.max(min, max))
 }
 
 function MatchBadge({ count }: { count: number }) {
@@ -418,9 +418,10 @@ function MiniToolbar({
   const width = size?.width ?? 210
   const height = size?.height ?? 36
   const left = clamp(marked.rect.x, 8, window.innerWidth - width - 8)
-  let top = marked.rect.y - height - 8
-  if (top < 8)
-    top = Math.min(marked.rect.y + marked.rect.height + 8, window.innerHeight - height - 8)
+  const maxTop = window.innerHeight - height - 8
+  const above = marked.rect.y - height - 8
+  const below = marked.rect.y + marked.rect.height + 8
+  const top = above >= 64 ? above : below <= maxTop ? below : clamp(above, 8, maxTop)
 
   return (
     <div
@@ -669,13 +670,61 @@ function PickerPanel({ controller }: { controller: ElementController }) {
   const pathRef = useRef<HTMLDivElement>(null)
   const moreButtonRef = useRef<HTMLButtonElement>(null)
   const moreMenuRef = useRef<HTMLDivElement>(null)
+  const [morePosition, setMorePosition] = useState<{ left: number; top: number } | null>(null)
+  const pathRevision = snapshot.path
+    .map((token) => `${token.label}:${token.active ? 'active' : 'idle'}`)
+    .join('|')
 
   useEffect(() => controller.subscribe(() => setSnapshot(controller.getSnapshot())), [controller])
-  useEffect(() => {
+  useLayoutEffect(() => {
     const pathContainer = pathRef.current
     if (!pathContainer) return
-    pathContainer.scrollLeft = pathContainer.scrollWidth
-  }, [snapshot.path])
+    const active = pathContainer.querySelector<HTMLElement>('.pathNode.active')
+    if (!active) {
+      pathContainer.scrollLeft = pathContainer.scrollWidth
+      return
+    }
+    const nextLeft = active.offsetLeft - (pathContainer.clientWidth - active.offsetWidth) / 2
+    pathContainer.scrollTo({
+      left: clamp(nextLeft, 0, pathContainer.scrollWidth - pathContainer.clientWidth),
+      behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+    })
+  }, [pathRevision])
+
+  useLayoutEffect(() => {
+    if (!moreOpen) {
+      setMorePosition(null)
+      return
+    }
+
+    const place = () => {
+      const button = moreButtonRef.current
+      const menu = moreMenuRef.current
+      if (!button || !menu) return
+      const anchor = button.getBoundingClientRect()
+      const size = menu.getBoundingClientRect()
+      const left = clamp(anchor.x, 8, window.innerWidth - size.width - 8)
+      const above = anchor.y - size.height - 8
+      const below = anchor.y + anchor.height + 8
+      const preferredTop = above >= 8 ? above : below
+      setMorePosition({
+        left,
+        top: clamp(preferredTop, 8, window.innerHeight - size.height - 8),
+      })
+    }
+
+    place()
+    const observer = new ResizeObserver(place)
+    if (moreButtonRef.current) observer.observe(moreButtonRef.current)
+    if (moreMenuRef.current) observer.observe(moreMenuRef.current)
+    window.addEventListener('resize', place)
+    window.addEventListener('scroll', place, true)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', place)
+      window.removeEventListener('scroll', place, true)
+    }
+  }, [moreOpen])
 
   useEffect(() => {
     if (!moreOpen) return
@@ -871,59 +920,6 @@ function PickerPanel({ controller }: { controller: ElementController }) {
               >
                 <MoreIcon />
               </button>
-              {moreOpen && (
-                <div
-                  ref={moreMenuRef}
-                  className="moreMenu"
-                  role="menu"
-                  onKeyDown={navigateMoreMenu}
-                >
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="moreMenu__item"
-                    disabled={!hasSelection}
-                    onClick={() => runAction('blur')}
-                  >
-                    <BlurIcon />
-                    {t('pickerBlurElement')}
-                  </button>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="moreMenu__item"
-                    disabled={!hasSelection}
-                    onClick={() => runAction('dim')}
-                  >
-                    <DimIcon />
-                    {t('pickerDimElement')}
-                  </button>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="moreMenu__item"
-                    disabled={!hasSelection}
-                    onClick={() => runAction('gray')}
-                  >
-                    <GrayIcon />
-                    {t('pickerGrayElement')}
-                  </button>
-                  {snapshot.settings.advanced && (
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className="moreMenu__item"
-                      disabled={!hasSelection}
-                      onClick={(event) =>
-                        openCreateCss((event.currentTarget as HTMLElement).getBoundingClientRect())
-                      }
-                    >
-                      <CodeIcon />
-                      {t('pickerCustomCss')}
-                    </button>
-                  )}
-                </div>
-              )}
             </div>
             <span className="actionBar__rule" />
             <button
@@ -1039,6 +1035,66 @@ function PickerPanel({ controller }: { controller: ElementController }) {
 
         <StatusToast snapshot={snapshot} controller={controller} />
       </div>
+
+      {moreOpen && (
+        <div
+          ref={moreMenuRef}
+          className="moreMenu"
+          data-keep-highlight=""
+          role="menu"
+          onKeyDown={navigateMoreMenu}
+          style={
+            morePosition
+              ? { left: morePosition.left, top: morePosition.top, visibility: 'visible' }
+              : { left: 0, top: 0, visibility: 'hidden' }
+          }
+        >
+          <button
+            type="button"
+            role="menuitem"
+            className="moreMenu__item"
+            disabled={!hasSelection}
+            onClick={() => runAction('blur')}
+          >
+            <BlurIcon />
+            {t('pickerBlurElement')}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className="moreMenu__item"
+            disabled={!hasSelection}
+            onClick={() => runAction('dim')}
+          >
+            <DimIcon />
+            {t('pickerDimElement')}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className="moreMenu__item"
+            disabled={!hasSelection}
+            onClick={() => runAction('gray')}
+          >
+            <GrayIcon />
+            {t('pickerGrayElement')}
+          </button>
+          {snapshot.settings.advanced && (
+            <button
+              type="button"
+              role="menuitem"
+              className="moreMenu__item"
+              disabled={!hasSelection}
+              onClick={(event) =>
+                openCreateCss((event.currentTarget as HTMLElement).getBoundingClientRect())
+              }
+            >
+              <CodeIcon />
+              {t('pickerCustomCss')}
+            </button>
+          )}
+        </div>
+      )}
 
       {snapshot.marked && !snapshot.minimized && (
         <MiniToolbar

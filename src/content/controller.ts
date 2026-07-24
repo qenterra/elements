@@ -88,10 +88,6 @@ export class ElementController {
   private readonly iframeOverlays = new Set<OverlayElement>()
   private frameResizeObserver: ResizeObserver | null = null
   private mutationObserver: MutationObserver | null = null
-  private rulesPersistRevision = 0
-  private rulesPersistTail: Promise<void> = Promise.resolve()
-  private settingsPersistRevision = 0
-  private settingsPersistTail: Promise<void> = Promise.resolve()
   private isDestroyed = false
   private incognito = false
   private textEditEl: HTMLElement | null = null
@@ -115,6 +111,7 @@ export class ElementController {
   private scrollNotifyFrame = 0
   private viewportNotifyFrame = 0
   private readonly suppressedKeyups = new Set<string>()
+  private selectionLocked = false
 
   hoveredElement: Element | null = null
   markedElement: Element | null = null
@@ -232,18 +229,12 @@ export class ElementController {
   }
 
   private saveSettings(): void {
-    const revision = ++this.settingsPersistRevision
     const settings = { ...this.settings }
-    this.settingsPersistTail = this.settingsPersistTail
-      .then(async () => {
-        if (revision !== this.settingsPersistRevision) return
-        await this.request({
-          v: PROTOCOL_VERSION,
-          type: 'settings.save',
-          settings,
-        })
-      })
-      .catch(() => undefined)
+    void this.request({
+      v: PROTOCOL_VERSION,
+      type: 'settings.save',
+      settings,
+    }).catch(() => undefined)
   }
 
   // --- Theme -------------------------------------------------------------
@@ -296,7 +287,7 @@ export class ElementController {
   // --- Selection ---------------------------------------------------------
 
   private getMarkedInfo(): MarkedInfo | null {
-    if (!this.markedElement?.isConnected || this.textEditEl) return null
+    if (!this.selectionLocked || !this.markedElement?.isConnected || this.textEditEl) return null
     return {
       rect: toPlainRect(this.markedElement.getBoundingClientRect()),
       label: this.elementLabel(this.markedElement),
@@ -331,12 +322,9 @@ export class ElementController {
   }
 
   private isChildOfWindow(element: EventTarget | null): boolean {
-    let current = element as Node | null
-    for (let index = 0; current && index < 10; index += 1) {
-      if (current === this.host) return true
-      current = current.parentNode
-    }
-    return false
+    const host = this.host
+    if (!host || !(element instanceof Node)) return false
+    return element === host || host.contains(element) || element.getRootNode() === host.shadowRoot
   }
 
   private ensureHighlighter(): HTMLDivElement {
@@ -352,29 +340,6 @@ export class ElementController {
       zIndex: String(this.maxZIndex - 1),
     })
 
-    // The brand signature: four corner brackets drawn on capture.
-    for (const corner of ['tl', 'tr', 'bl', 'br']) {
-      const bracket = document.createElement('div')
-      bracket.className = `elements_bracket elements_bracket_${corner}`
-      Object.assign(bracket.style, {
-        position: 'absolute',
-        width: '10px',
-        height: '10px',
-        pointerEvents: 'none',
-        ...(corner.includes('t')
-          ? { top: '-2px', borderTop: 'solid 2.5px currentColor' }
-          : { bottom: '-2px', borderBottom: 'solid 2.5px currentColor' }),
-        ...(corner.includes('l')
-          ? { left: '-2px', borderLeft: 'solid 2.5px currentColor' }
-          : { right: '-2px', borderRight: 'solid 2.5px currentColor' }),
-        ...(corner === 'tl' ? { borderTopLeftRadius: '6px' } : {}),
-        ...(corner === 'tr' ? { borderTopRightRadius: '6px' } : {}),
-        ...(corner === 'bl' ? { borderBottomLeftRadius: '6px' } : {}),
-        ...(corner === 'br' ? { borderBottomRightRadius: '6px' } : {}),
-      })
-      highlighter.appendChild(bracket)
-    }
-
     document.body.appendChild(highlighter)
     this.highlighter = highlighter
     this.styleHighlighter()
@@ -384,29 +349,26 @@ export class ElementController {
   private styleHighlighter(): void {
     if (!this.highlighter) return
     const dark = this.resolvedTheme === 'dark'
+    this.highlighter.toggleAttribute('data-locked', this.selectionLocked)
     Object.assign(this.highlighter.style, {
-      background: dark ? 'rgba(34,211,238,0.14)' : 'rgba(8,145,178,0.12)',
-      outline: dark ? 'solid 2px rgba(103,227,245,0.9)' : 'solid 2px rgba(8,145,178,0.85)',
+      background: dark
+        ? this.selectionLocked
+          ? 'rgba(34,211,238,0.14)'
+          : 'rgba(34,211,238,0.08)'
+        : this.selectionLocked
+          ? 'rgba(21,94,117,0.12)'
+          : 'rgba(21,94,117,0.07)',
+      outline: dark
+        ? `${this.selectionLocked ? 'solid 2px' : 'dashed 1px'} rgba(103,227,245,0.9)`
+        : `${this.selectionLocked ? 'solid 2px' : 'dashed 1px'} rgba(21,94,117,0.9)`,
       outlineOffset: '-2px',
-      boxShadow: dark
-        ? '0 0 0 1px rgba(34,211,238,0.12), 0 8px 28px rgba(34,211,238,0.14)'
-        : '0 0 0 1px rgba(8,145,178,0.12), 0 8px 28px rgba(8,145,178,0.18)',
+      boxShadow: this.selectionLocked
+        ? dark
+          ? '0 0 0 1px rgba(34,211,238,0.12), 0 8px 28px rgba(34,211,238,0.14)'
+          : '0 0 0 1px rgba(21,94,117,0.12), 0 8px 28px rgba(21,94,117,0.16)'
+        : 'none',
       color: dark ? '#67e3f5' : '#155e75',
     })
-  }
-
-  private animateBrackets(): void {
-    if (!this.highlighter || matchMedia(REDUCED_MOTION).matches) return
-    for (const bracket of this.highlighter.querySelectorAll<HTMLElement>('.elements_bracket')) {
-      bracket.getAnimations().forEach((animation) => animation.cancel())
-      bracket.animate(
-        [
-          { opacity: 0, transform: 'scale(1.6)' },
-          { opacity: 1, transform: 'scale(1)' },
-        ],
-        { duration: 130, easing: 'cubic-bezier(.23, 1, .32, 1)' },
-      )
-    }
   }
 
   private highlightElement(animateGeometry = false): void {
@@ -445,7 +407,6 @@ export class ElementController {
         },
       )
     }
-    if (animateGeometry) this.animateBrackets()
     this.notify()
   }
 
@@ -455,6 +416,7 @@ export class ElementController {
     this.markedElement = null
     this.hoveredElement = null
     this.transpose = 0
+    this.selectionLocked = false
     this.notify()
   }
 
@@ -483,20 +445,10 @@ export class ElementController {
   }
 
   private handleMouseover = (event: MouseEvent): void => {
-    if (!this.targetingMode || Date.now() < this.preventHighlightingUntil) return
+    if (!this.targetingMode || this.selectionLocked) return
     if (this.textEditEl || this.modalCloseHandler) return
 
-    if (this.isChildOfWindow(event.target)) {
-      const path = event.composedPath()
-      const keepHighlight = path.some(
-        (node) => node instanceof HTMLElement && node.hasAttribute('data-keep-highlight'),
-      )
-      if (!keepHighlight) {
-        this.unhighlightElement()
-        this.preventHighlightingUntil = Date.now() + 100
-      }
-      return
-    }
+    if (this.isChildOfWindow(event.target)) return
 
     if (!(event.target instanceof Element) || event.target === this.hoveredElement) return
     this.transpose = 0
@@ -505,7 +457,25 @@ export class ElementController {
     this.notify()
   }
 
-  private preventHighlightingUntil = 0
+  private selectTarget = (event: MouseEvent): void => {
+    if (!this.targetingMode || this.textEditEl || this.modalCloseHandler) return
+    if (this.isChildOfWindow(event.target)) return
+
+    event.preventDefault()
+    event.stopPropagation()
+    if (event.button !== 0 || !(event.target instanceof Element)) return
+
+    if (event.target !== this.hoveredElement) {
+      this.transpose = 0
+      this.hoveredElement = event.target
+      this.highlightElement(true)
+    }
+    if (!this.markedElement) return
+
+    this.selectionLocked = true
+    this.styleHighlighter()
+    this.notify()
+  }
 
   private handleKeydown = (event: KeyboardEvent): void => {
     if (!this.targetingMode || this.textEditEl) return
@@ -521,9 +491,10 @@ export class ElementController {
     }
 
     if (event.code === 'Escape') this.deactivate()
-    else if (event.code === 'Space' && this.markedElement) this.applyAction('hide')
-    else if (event.code === 'KeyE' && this.markedElement) this.startTextEdit(this.markedElement)
-    else if (event.code === 'KeyC' && this.markedElement) this.applyAction('round')
+    else if (event.code === 'Space' && this.selectionLocked) this.applyAction('hide')
+    else if (event.code === 'KeyE' && this.selectionLocked && this.markedElement)
+      this.startTextEdit(this.markedElement)
+    else if (event.code === 'KeyC' && this.selectionLocked) this.applyAction('round')
     else if (event.code === 'KeyW') {
       this.transpose = Math.max(0, this.transpose - 1)
       this.highlightElement()
@@ -563,7 +534,12 @@ export class ElementController {
   }
 
   applyAction(kind: 'hide' | EditAction, event?: MouseEvent): void {
-    if (!this.markedElement || (event && this.isChildOfWindow(event.target))) return
+    if (
+      !this.selectionLocked ||
+      !this.markedElement ||
+      (event && this.isChildOfWindow(event.target))
+    )
+      return
     if (event && event.button !== 0) {
       event.preventDefault()
       event.stopPropagation()
@@ -633,10 +609,6 @@ export class ElementController {
     this.updateCSS()
     this.persist()
     this.notify()
-  }
-
-  private hideTarget = (event?: MouseEvent): void => {
-    this.applyAction('hide', event)
   }
 
   startTextEdit(element: Element): void {
@@ -876,7 +848,7 @@ export class ElementController {
 
   /** Selector of the current selection, for creating a custom-CSS rule. */
   draftSelector(): string | null {
-    return this.markedElement ? this.getSelector(this.markedElement) : null
+    return this.selectionLocked && this.markedElement ? this.getSelector(this.markedElement) : null
   }
 
   private findLiveEdit(edit: RuntimeEdit): RuntimeEdit | undefined {
@@ -1062,7 +1034,7 @@ export class ElementController {
       })
 
     document.addEventListener('mouseover', this.handleMouseover, true)
-    document.addEventListener('mousedown', this.hideTarget, true)
+    document.addEventListener('mousedown', this.selectTarget, true)
     document.addEventListener('mouseup', this.preventEvent, true)
     document.addEventListener('click', this.preventEvent, true)
     document.addEventListener('scroll', this.updateHighlighterPosition, true)
@@ -1093,7 +1065,7 @@ export class ElementController {
     host?.remove()
 
     document.removeEventListener('mouseover', this.handleMouseover, true)
-    document.removeEventListener('mousedown', this.hideTarget, true)
+    document.removeEventListener('mousedown', this.selectTarget, true)
     document.removeEventListener('mouseup', this.preventEvent, true)
     document.removeEventListener('click', this.preventEvent, true)
     document.removeEventListener('scroll', this.updateHighlighterPosition, true)
@@ -1236,18 +1208,15 @@ export class ElementController {
         ...(createdAt !== undefined ? { createdAt } : {}),
         ...(updatedAt !== undefined ? { updatedAt } : {}),
       }))
-    const revision = ++this.rulesPersistRevision
-    this.rulesPersistTail = this.rulesPersistTail
-      .then(async () => {
-        if (revision !== this.rulesPersistRevision) return
-        await this.request({
-          v: PROTOCOL_VERSION,
-          type: 'site.rules.save',
-          site: siteKey(),
-          rules: saved,
-        })
-      })
-      .catch(() => undefined)
+    // Dispatch immediately: the background repository already serializes writes.
+    // Deferring the final snapshot behind a content-script promise can lose an
+    // undo/delete when the tab closes before that queued callback starts.
+    void this.request({
+      v: PROTOCOL_VERSION,
+      type: 'site.rules.save',
+      site: siteKey(),
+      rules: saved,
+    }).catch(() => undefined)
   }
 
   // Native Chrome ignores a Promise returned from an onMessage listener, so

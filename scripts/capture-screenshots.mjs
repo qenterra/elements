@@ -90,7 +90,13 @@ async function setTheme(theme) {
   }, theme)
 }
 
-async function capturePicker(theme, file, viewport = { width: 1280, height: 800 }) {
+async function capturePicker(
+  theme,
+  file,
+  viewport = { width: 1280, height: 800 },
+  interaction = 'locked',
+  target = '#promo',
+) {
   await setTheme(theme)
   const page = await context.newPage()
   await page.setViewportSize(viewport)
@@ -100,8 +106,26 @@ async function capturePicker(theme, file, viewport = { width: 1280, height: 800 
     const tab = tabs.find((candidate) => candidate.url?.startsWith(urlPrefix))
     await chrome.tabs.sendMessage(tab.id, { v: 2, type: 'picker.toggle' })
   }, baseUrl)
-  await page.hover('#promo')
+  await page.hover(target)
   await page.locator('#elements-extension-root-v2 .mainWindow').waitFor()
+  if (interaction !== 'hover') await page.locator(target).click()
+  if (interaction === 'more') {
+    await page
+      .locator('#elements-extension-root-v2 .mainWindow')
+      .getByRole('button', { name: 'More actions' })
+      .click()
+  }
+  if (interaction === 'ancestor') {
+    await page.keyboard.press('q')
+    await page.keyboard.press('q')
+  }
+  if (interaction === 'text') {
+    await page
+      .locator('#elements-extension-root-v2 .mainWindow')
+      .getByRole('button', { name: 'Text' })
+      .click()
+  }
+  await page.waitForTimeout(250)
   await page.screenshot({ path: join(outputDirectory, file) })
   await page.close()
 }
@@ -120,6 +144,10 @@ await capturePicker('light', '02-picker-light.png')
 await captureOptions('dark', '03-options-dark.png')
 await captureOptions('light', '04-options-light.png')
 await capturePicker('dark', '05-picker-narrow.png', { width: 390, height: 844 })
+await capturePicker('dark', '06-picker-hover-preview.png', undefined, 'hover')
+await capturePicker('dark', '07-picker-more-menu.png', undefined, 'more')
+await capturePicker('dark', '08-picker-ancestor-focus.png', undefined, 'ancestor', '#newsletter')
+await capturePicker('dark', '09-picker-text-editor-narrow.png', { width: 390, height: 844 }, 'text')
 
 console.log(`Saved screenshots to ${outputDirectory}`)
 await context.close()
