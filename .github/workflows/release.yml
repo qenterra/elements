@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Tag to create (e.g. v1.1.0)
+        description: Tag to create or publish (e.g. v1.2.0)
         required: true
 
 permissions:
@@ -15,7 +15,7 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Check out repository
@@ -44,26 +44,54 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps --no-shell chromium
 
+      - name: Install Xvfb
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
       - name: Build Chrome for end-to-end tests
         run: npm run build:chrome
 
       - name: End-to-end tests
-        run: npm run test:e2e
+        run: xvfb-run --auto-servernum npm run test:e2e
 
       - name: Build release archives
         run: npm run release:archives
 
-      - name: Verify build artifacts
-        run: npm run verify:build
+      - name: Verify release artifacts
+        run: npm run verify:release-artifacts
 
-      - name: Create GitHub release
+      - name: Write release notes
+        env:
+          TAG_NAME: ${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
+        run: npm run release:notes -- "$TAG_NAME" ".output/release-notes.md"
+
+      - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG_NAME: ${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
         run: |
-          gh release create "$TAG_NAME" \
-            --target "${{ github.sha }}" \
-            --draft \
-            --title "Elements $TAG_NAME" \
-            --generate-notes \
-            .output/*.zip
+          VERSION="${TAG_NAME#v}"
+          DISPLAY_VERSION=$(node --input-type=module -e "console.log(process.argv[1].split('.').slice(0, 2).join('.'))" "$VERSION")
+          CHROME_ARCHIVE=".output/elements-$VERSION-chrome.zip"
+          FIREFOX_ARCHIVE=".output/elements-$VERSION-firefox.zip"
+          SAFARI_ARCHIVE=".output/elements-$VERSION-safari.zip"
+
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            gh release edit "$TAG_NAME" \
+              --target "${{ github.sha }}" \
+              --title "Elements $DISPLAY_VERSION" \
+              --notes-file ".output/release-notes.md" \
+              --draft=false
+            gh release upload "$TAG_NAME" \
+              "$CHROME_ARCHIVE" \
+              "$FIREFOX_ARCHIVE" \
+              "$SAFARI_ARCHIVE" \
+              --clobber
+          else
+            gh release create "$TAG_NAME" \
+              --target "${{ github.sha }}" \
+              --title "Elements $DISPLAY_VERSION" \
+              --notes-file ".output/release-notes.md" \
+              "$CHROME_ARCHIVE" \
+              "$FIREFOX_ARCHIVE" \
+              "$SAFARI_ARCHIVE"
+          fi

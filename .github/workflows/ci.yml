@@ -68,8 +68,11 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps --no-shell chromium
 
+      - name: Install Xvfb
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
       - name: Build Chrome
         run: npm run build:chrome
 
       - name: End-to-end tests
-        run: npm run test:e2e
+        run: xvfb-run --auto-servernum npm run test:e2e

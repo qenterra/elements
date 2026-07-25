@@ -143,7 +143,7 @@ test.beforeAll(async () => {
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
   baseUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}/`
   context = await chromium.launchPersistentContext('', {
-    headless: true,
+    headless: false,
     ...(process.env.CHROMIUM_PATH
       ? { executablePath: process.env.CHROMIUM_PATH }
       : { channel: 'chromium' }),
@@ -387,6 +387,7 @@ test('options initializes its theme, lists the port-scoped site, and reviews imp
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto(`chrome-extension://${extensionId}/options.html`)
 
+  await expect(page.locator('.version')).toHaveText('v1.2')
   await expect(page.locator('.siteRow__domain').first()).toHaveText(new URL(baseUrl).host)
   await expect(page.locator('html')).toHaveAttribute('data-theme', /light|dark/)
   await page.getByRole('button', { name: 'Dark' }).click()

@@ -7,6 +7,7 @@ const projectRoot = join(import.meta.dirname, '..')
 const packageJson = JSON.parse(await readFile(join(projectRoot, 'package.json'), 'utf8'))
 const packageLock = JSON.parse(await readFile(join(projectRoot, 'package-lock.json'), 'utf8'))
 const targets = ['chrome', 'firefox', 'safari']
+const verifyReleaseArchives = process.argv.includes('--release')
 
 if (
   packageLock.version !== packageJson.version ||
@@ -32,6 +33,16 @@ for (const target of targets) {
   await access(join(output, 'elements-ui.js'))
   await access(join(output, 'options.html'))
   await access(join(output, 'onboarding.html'))
+}
+
+if (verifyReleaseArchives) {
+  for (const target of targets) {
+    const archive = join(projectRoot, '.output', `elements-${packageJson.version}-${target}.zip`)
+    const archiveStats = await stat(archive)
+    if (!archiveStats.isFile() || archiveStats.size === 0) {
+      throw new Error(`Release archive is missing or empty: ${archive}`)
+    }
+  }
 }
 
 const contentScriptBytes = (
@@ -60,5 +71,6 @@ if (missingInRussian.length || extraInRussian.length) {
 
 console.log(
   `Verified ${targets.length} manifests, lazy UI boundary (${contentScriptBytes} B), ` +
-    `required assets, version ${packageJson.version}, and locale parity.`,
+    `required assets, version ${packageJson.version}, locale parity` +
+    `${verifyReleaseArchives ? ', and release archives' : ''}.`,
 )
