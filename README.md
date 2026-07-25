@@ -70,9 +70,9 @@ contains separate unsigned builds for Chrome, Firefox, and Safari.
 
 | Browser             | Archive                                                                                                                  | Intended use                                               |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
-| Chrome and Chromium | [`elements-1.2.0-chrome.zip`](https://github.com/QenTerra/elements/releases/latest/download/elements-1.2.0-chrome.zip)   | Unpack and load from the extensions page                   |
-| Firefox             | [`elements-1.2.0-firefox.zip`](https://github.com/QenTerra/elements/releases/latest/download/elements-1.2.0-firefox.zip) | Temporary installation or submission for Mozilla signing   |
-| Safari              | [`elements-1.2.0-safari.zip`](https://github.com/QenTerra/elements/releases/latest/download/elements-1.2.0-safari.zip)   | Input for Safari Web Extension Converter and Xcode signing |
+| Chrome and Chromium | [`elements-1.2.1-chrome.zip`](https://github.com/QenTerra/elements/releases/latest/download/elements-1.2.1-chrome.zip)   | Unpack and load from the extensions page                   |
+| Firefox             | [`elements-1.2.1-firefox.zip`](https://github.com/QenTerra/elements/releases/latest/download/elements-1.2.1-firefox.zip) | Temporary installation or submission for Mozilla signing   |
+| Safari              | [`elements-1.2.1-safari.zip`](https://github.com/QenTerra/elements/releases/latest/download/elements-1.2.1-safari.zip)   | Input for Safari Web Extension Converter and Xcode signing |
 
 Store distribution still requires each browser vendor's signing and review
 process.
@@ -170,10 +170,10 @@ React is loaded into the picker only after activation.
 
 ```sh
 npm run validate
-npm run audit:prod
+npm run audit:all
 npm run release:archives
 npm run verify:build
-npm run verify:release -- v1.2.0
+npm run verify:release -- v1.2.1
 ```
 
 A `v*` tag runs the full release workflow, including Chromium E2E tests, and

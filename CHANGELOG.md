@@ -2,6 +2,20 @@
 
 All notable changes to Elements are documented in this file.
 
+## [Unreleased]
+
+## [1.2.1] — 2026-07-25
+
+### Fixed
+
+- A rule save that finishes during a page reload now notifies the new document
+  without resetting undo history in the document that created the rule.
+
+### Security
+
+- Patched vulnerable transitive development dependencies used by WXT tooling.
+  Published extension bundles were not affected.
+
 ## [1.2.0] — 2026-07-25
 
 ### Added
@@ -134,3 +148,5 @@ All notable changes to Elements are documented in this file.
 [1.0.0]: https://github.com/QenTerra/elements/releases/tag/v1.0.0
 [1.1.0]: https://github.com/QenTerra/elements/releases/tag/v1.1
 [1.2.0]: https://github.com/QenTerra/elements/releases/tag/v1.2.0
+[1.2.1]: https://github.com/QenTerra/elements/releases/tag/v1.2.1
+[Unreleased]: https://github.com/QenTerra/elements/compare/v1.2.1...HEAD

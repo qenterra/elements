@@ -33,8 +33,8 @@ jobs:
       - name: Validate source
         run: npm run validate
 
-      - name: Audit production dependencies
-        run: npm run audit:prod
+      - name: Audit dependencies
+        run: npm run audit:all
 
       - name: Build Chrome
         run: npm run build:chrome

@@ -38,8 +38,8 @@ jobs:
       - name: Validate source
         run: npm run validate
 
-      - name: Audit production dependencies
-        run: npm run audit:prod
+      - name: Audit dependencies
+        run: npm run audit:all
 
       - name: Install Chromium
         run: npx playwright install --with-deps --no-shell chromium
@@ -70,7 +70,7 @@ jobs:
           TAG_NAME: ${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
         run: |
           VERSION="${TAG_NAME#v}"
-          DISPLAY_VERSION=$(node --input-type=module -e "console.log(process.argv[1].split('.').slice(0, 2).join('.'))" "$VERSION")
+          DISPLAY_VERSION=$(node --input-type=module -e "const parts=process.argv[1].split('.'); console.log(parts[2] === '0' ? parts.slice(0, 2).join('.') : parts.join('.'))" "$VERSION")
           CHROME_ARCHIVE=".output/elements-$VERSION-chrome.zip"
           FIREFOX_ARCHIVE=".output/elements-$VERSION-firefox.zip"
           SAFARI_ARCHIVE=".output/elements-$VERSION-safari.zip"

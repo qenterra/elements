@@ -1,6 +1,6 @@
 {
   "name": "elements",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "description": "A cross-browser extension for hiding page elements, editing their visible text, and restyling them.",
   "type": "module",
@@ -20,6 +20,7 @@
     "lint": "oxlint --deny-warnings .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "audit:all": "npm audit --audit-level=high",
     "audit:prod": "npm audit --omit=dev --audit-level=high",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -51,5 +52,13 @@
     "typescript": "7.0.2",
     "vitest": "4.1.10",
     "wxt": "0.20.27"
+  },
+  "overrides": {
+    "adm-zip": "0.6.0",
+    "brace-expansion": "5.0.8",
+    "esbuild": "0.28.1",
+    "shell-quote": "1.10.0",
+    "tmp": "0.2.7",
+    "uuid": "11.1.1"
   }
 }
