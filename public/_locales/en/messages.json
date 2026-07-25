@@ -716,7 +716,7 @@
     "description": "Onboarding page title."
   },
   "onboardTagline": {
-    "message": "Make any website yours: hide clutter, fix text, and restyle blocks.",
+    "message": "Hide clutter, replace visible text, and restyle page elements.",
     "description": "Onboarding page tagline."
   },
   "onboardStep1Title": {
@@ -736,15 +736,15 @@
     "description": "Onboarding step 2 body."
   },
   "onboardStep3Title": {
-    "message": "Keep what you like",
+    "message": "Save per site",
     "description": "Onboarding step 3 title."
   },
   "onboardStep3Body": {
-    "message": "Remembered edits re-apply on every visit and sync across devices when browser storage allows it.",
+    "message": "Saved edits apply on later visits and may sync through browser-managed storage.",
     "description": "Onboarding step 3 body."
   },
   "onboardPrivacyTitle": {
-    "message": "Private by design",
+    "message": "Stored by your browser",
     "description": "Onboarding privacy section title."
   },
   "onboardPrivacyBody": {

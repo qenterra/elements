@@ -6,7 +6,7 @@ Security fixes are provided for the latest released version of Elements.
 
 | Version          | Supported |
 | ---------------- | --------- |
-| 1.1.x            | Yes       |
+| 1.2.x            | Yes       |
 | Earlier versions | No        |
 
 ## Reporting a vulnerability

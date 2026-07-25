@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Elements — make any website yours</title>
+    <title>Elements — edit what you see</title>
     <meta
       name="description"
       content="A local-first browser extension for hiding page elements, editing visible text, and restyling blocks. No analytics, ads, or developer-operated server."
@@ -288,52 +288,14 @@
           transform 0.3s var(--ease-out);
       }
 
+      .demo__banner.isTargeted {
+        box-shadow: 0 0 0 2px var(--accent);
+      }
+
       .demo__banner.isHidden {
         opacity: 0;
         transform: scale(0.96);
         pointer-events: none;
-      }
-
-      .demo__banner .brackets i {
-        position: absolute;
-        width: 14px;
-        height: 14px;
-        color: var(--accent);
-        opacity: 0;
-        transition: opacity 0.2s ease;
-      }
-
-      .demo__banner.isTargeted .brackets i {
-        opacity: 1;
-        animation: bracketIn 0.3s var(--ease-out);
-      }
-      .demo__banner .brackets i:nth-child(1) {
-        top: -4px;
-        left: -4px;
-        border-top: 3px solid;
-        border-left: 3px solid;
-        border-top-left-radius: 6px;
-      }
-      .demo__banner .brackets i:nth-child(2) {
-        top: -4px;
-        right: -4px;
-        border-top: 3px solid;
-        border-right: 3px solid;
-        border-top-right-radius: 6px;
-      }
-      .demo__banner .brackets i:nth-child(3) {
-        bottom: -4px;
-        left: -4px;
-        border-bottom: 3px solid;
-        border-left: 3px solid;
-        border-bottom-left-radius: 6px;
-      }
-      .demo__banner .brackets i:nth-child(4) {
-        bottom: -4px;
-        right: -4px;
-        border-bottom: 3px solid;
-        border-right: 3px solid;
-        border-bottom-right-radius: 6px;
       }
 
       .demo__text h3 {
@@ -476,10 +438,10 @@
         <i></i><i></i><i></i><i></i>
         <span class="rows"><b></b><b></b><b></b></span>
       </span>
-      <h1>Make any website yours</h1>
+      <h1>Edit what you see</h1>
       <p class="tagline">
-        Elements is a browser extension that hides clutter, fixes text, and restyles blocks on any
-        page — and remembers your changes when you ask it to.
+        Elements hides clutter, replaces visible text, and restyles page elements. Saved rules
+        return on your next visit.
       </p>
       <div class="cta">
         <a class="btn primary" href="https://github.com/QenTerra/elements/releases">Download</a>
@@ -492,13 +454,12 @@
           <div class="demo__page">
             <div class="demo__banner" id="banner">
               <span>🔥 Limited offer — subscribe today and save 40%</span>
-              <span class="brackets" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
             </div>
             <div class="demo__text">
-              <h3>The article you actually came to read</h3>
+              <h3>The article</h3>
               <p>
-                That banner above? On a real page you'd hover it, press Space, and it would be gone
-                — on every visit.
+                Hover the banner, click to lock it, then hide it. Save the rule and it stays gone on
+                later visits.
               </p>
             </div>
           </div>
@@ -513,7 +474,7 @@
     </header>
 
     <section class="features wrap">
-      <h2 class="section">A precision tool, not a hack</h2>
+      <h2 class="section">Choose the element. Keep the change.</h2>
       <div class="grid">
         <div class="cardF">
           <h3>
@@ -635,12 +596,11 @@
 
     <section class="wrap">
       <div class="privacy">
-        <h2>Private by design</h2>
+        <h2>Stored by your browser</h2>
         <p>
           No analytics. No ads. No remote code. No developer-operated server. Rules stay in
           browser-managed extension storage and may be processed by your browser's sync service; the
-          developer does not receive them. The code is MIT-licensed and open — read it, build it,
-          own it.
+          developer does not receive them. The source is available under the MIT License.
         </p>
       </div>
     </section>

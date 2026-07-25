@@ -2,7 +2,7 @@
 
 All notable changes to Elements are documented in this file.
 
-## [1.2.0] — Unreleased
+## [1.2.0] — 2026-07-25
 
 ### Added
 
@@ -15,6 +15,8 @@ All notable changes to Elements are documented in this file.
   repository transactions, protocol validation, history, text restoration, and
   the rule engine.
 - Oxlint and Prettier checks in the local validation and CI workflow.
+- A product-focused README with reproducible interface screenshots and direct
+  browser download links.
 
 ### Changed
 
@@ -34,6 +36,8 @@ All notable changes to Elements are documented in this file.
   site snapshots, and theme initialization no longer flashes the wrong theme.
 - Privacy copy now explicitly describes browser-managed sync and temporary
   incognito behavior.
+- Release automation now publishes changelog-based notes and only the three
+  browser runtime archives.
 
 ### Fixed
 
@@ -115,7 +119,7 @@ All notable changes to Elements are documented in this file.
 - Options page with site management, sorting, and responsive layout.
 - Dedicated active, inactive, and unavailable toolbar icons.
 
-### Polished
+### Interface
 
 - Interruptible popup minimize/expand morph and coordinated content crossfade.
 - Smooth switches, selection overlay transitions, and card hover motion.
@@ -129,3 +133,4 @@ All notable changes to Elements are documented in this file.
 
 [1.0.0]: https://github.com/QenTerra/elements/releases/tag/v1.0.0
 [1.1.0]: https://github.com/QenTerra/elements/releases/tag/v1.1
+[1.2.0]: https://github.com/QenTerra/elements/releases/tag/v1.2.0

@@ -3,7 +3,7 @@
 // extension. Requires `npm run build:chrome` first.
 // Usage: CHROMIUM_PATH=/path/to/chrome node scripts/capture-screenshots.mjs
 import { createServer } from 'node:http'
-import { mkdir } from 'node:fs/promises'
+import { copyFile, mkdir } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium } from '@playwright/test'
@@ -11,6 +11,7 @@ import { chromium } from '@playwright/test'
 const projectDirectory = join(dirname(fileURLToPath(import.meta.url)), '..')
 const extensionPath = join(projectDirectory, '.output/chrome-mv3')
 const outputDirectory = join(projectDirectory, '.output/screenshots')
+const readmeImageDirectory = join(projectDirectory, 'docs/images')
 
 const demoHtml = `<!doctype html>
 <html lang="en">
@@ -74,6 +75,7 @@ const context = await chromium.launchPersistentContext('', {
 const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'))
 const extensionId = new URL(worker.url()).host
 await mkdir(outputDirectory, { recursive: true })
+await mkdir(readmeImageDirectory, { recursive: true })
 
 async function setTheme(theme) {
   await worker.evaluate(async (value) => {
@@ -177,7 +179,20 @@ await captureOnboarding('dark', '12-onboarding-dark.png')
 await capturePicker('dark', '13-picker-default-wide.png', undefined, 'idle')
 await capturePicker('dark', '14-picker-default-narrow.png', { width: 390, height: 844 }, 'idle')
 
-console.log(`Saved screenshots to ${outputDirectory}`)
+const readmeImages = new Map([
+  ['01-picker-dark.png', 'picker-dark.png'],
+  ['03-options-dark.png', 'options-dark.png'],
+  ['05-picker-narrow.png', 'picker-narrow.png'],
+  ['12-onboarding-dark.png', 'onboarding-dark.png'],
+])
+await Promise.all(
+  [...readmeImages].map(([source, destination]) =>
+    copyFile(join(outputDirectory, source), join(readmeImageDirectory, destination)),
+  ),
+)
+
+console.log(`Saved QA screenshots to ${outputDirectory}`)
+console.log(`Refreshed ${readmeImages.size} README images in ${readmeImageDirectory}`)
 await context.close()
 server.close()
 process.exit(0)

@@ -1,7 +1,8 @@
 # Third-party notices
 
-Elements uses open-source npm packages. Direct dependency versions are pinned
-in `package.json`; `package-lock.json` records the exact transitive versions.
+Elements uses open-source npm packages. Direct dependencies are declared in
+`package.json`; `package-lock.json` records the exact installed versions and
+transitive dependency graph.
 
 ## Included in the extension bundle
 
@@ -20,18 +21,25 @@ JavaScript bundle.
 The following packages are used to build or test Elements. They are not
 included in the published extension bundle.
 
-| Package                 | Version | License    | Copyright / attribution               | Source                                                                  |
-| ----------------------- | ------: | ---------- | ------------------------------------- | ----------------------------------------------------------------------- |
-| `@wxt-dev/module-react` |   1.2.2 | MIT        | Aaron (WXT project)                   | [wxt-dev/wxt](https://github.com/wxt-dev/wxt)                           |
-| `wxt`                   | 0.20.27 | MIT        | Aaron (WXT project)                   | [wxt-dev/wxt](https://github.com/wxt-dev/wxt)                           |
-| `@vitejs/plugin-react`  |   6.0.3 | MIT        | Yuxi (Evan) You and Vite contributors | [vitejs/vite-plugin-react](https://github.com/vitejs/vite-plugin-react) |
-| `typescript`            |   7.0.2 | Apache-2.0 | Microsoft Corporation                 | [microsoft/TypeScript](https://github.com/microsoft/TypeScript)         |
-| `vitest`                |  4.1.10 | MIT        | VoidZero Inc. and Vitest contributors | [vitest-dev/vitest](https://github.com/vitest-dev/vitest)               |
-| `@playwright/test`      |  1.61.1 | Apache-2.0 | Microsoft Corporation                 | [microsoft/playwright](https://github.com/microsoft/playwright)         |
-| `@resvg/resvg-js`       |   2.6.2 | MPL-2.0    | Yisi Yu (yisibl)                      | [yisibl/resvg-js](https://github.com/yisibl/resvg-js)                   |
-| `@types/node`           |  26.1.1 | MIT        | DefinitelyTyped contributors          | [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped)   |
-| `@types/react`          | 19.2.17 | MIT        | Microsoft Corporation                 | [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped)   |
-| `@types/react-dom`      |  19.2.3 | MIT        | Microsoft Corporation                 | [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped)   |
+| Package                       | Version | License    | Copyright / attribution               | Source                                                                                            |
+| ----------------------------- | ------: | ---------- | ------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `@axe-core/playwright`        |  4.12.1 | MPL-2.0    | Deque Systems, Inc.                   | [dequelabs/axe-core-npm](https://github.com/dequelabs/axe-core-npm)                               |
+| `@playwright/test`            |  1.61.1 | Apache-2.0 | Microsoft Corporation                 | [microsoft/playwright](https://github.com/microsoft/playwright)                                   |
+| `@resvg/resvg-js`             |   2.6.2 | MPL-2.0    | Yisi Yu (yisibl)                      | [yisibl/resvg-js](https://github.com/yisibl/resvg-js)                                             |
+| `@testing-library/dom`        |  10.4.1 | MIT        | Testing Library contributors          | [testing-library/dom-testing-library](https://github.com/testing-library/dom-testing-library)     |
+| `@testing-library/react`      |  16.3.2 | MIT        | Testing Library contributors          | [testing-library/react-testing-library](https://github.com/testing-library/react-testing-library) |
+| `@testing-library/user-event` |  14.6.1 | MIT        | Testing Library contributors          | [testing-library/user-event](https://github.com/testing-library/user-event)                       |
+| `@types/node`                 |  26.1.1 | MIT        | DefinitelyTyped contributors          | [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped)                             |
+| `@types/react`                | 19.2.17 | MIT        | DefinitelyTyped contributors          | [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped)                             |
+| `@types/react-dom`            |  19.2.3 | MIT        | DefinitelyTyped contributors          | [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped)                             |
+| `@vitejs/plugin-react`        |   6.0.3 | MIT        | Yuxi (Evan) You and Vite contributors | [vitejs/vite-plugin-react](https://github.com/vitejs/vite-plugin-react)                           |
+| `@wxt-dev/module-react`       |   1.2.2 | MIT        | Aaron (WXT project)                   | [wxt-dev/wxt](https://github.com/wxt-dev/wxt)                                                     |
+| `jsdom`                       |  29.1.1 | MIT        | jsdom contributors                    | [jsdom/jsdom](https://github.com/jsdom/jsdom)                                                     |
+| `oxlint`                      |  1.75.0 | MIT        | Oxc contributors                      | [oxc-project/oxc](https://github.com/oxc-project/oxc)                                             |
+| `prettier`                    |   3.9.6 | MIT        | Prettier contributors                 | [prettier/prettier](https://github.com/prettier/prettier)                                         |
+| `typescript`                  |   7.0.2 | Apache-2.0 | Microsoft Corporation                 | [microsoft/TypeScript](https://github.com/microsoft/TypeScript)                                   |
+| `vitest`                      |  4.1.10 | MIT        | VoidZero Inc. and Vitest contributors | [vitest-dev/vitest](https://github.com/vitest-dev/vitest)                                         |
+| `wxt`                         | 0.20.27 | MIT        | Aaron (WXT project)                   | [wxt-dev/wxt](https://github.com/wxt-dev/wxt)                                                     |
 
 The lockfile records the exact transitive dependency graph. If a package is
 added, removed, or upgraded, regenerate this file before publishing a new
@@ -62,8 +70,8 @@ authors. Packages marked MIT are distributed under the following license:
 
 TypeScript and Playwright are distributed under the
 [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
-`@resvg/resvg-js` is distributed under the
-[Mozilla Public License 2.0](https://www.mozilla.org/en-US/MPL/2.0/); it is a
-build-time tool used only to render icon PNGs and ships in no browser bundle.
+`@axe-core/playwright` and `@resvg/resvg-js` are distributed under the
+[Mozilla Public License 2.0](https://www.mozilla.org/en-US/MPL/2.0/). They are
+test and build tools and do not ship in the browser bundle.
 The package distributions contain the corresponding copyright notices and full
 license texts; the pinned versions can be audited from `package-lock.json`.
