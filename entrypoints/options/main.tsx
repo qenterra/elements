@@ -451,6 +451,7 @@ function OptionsApp({
   initialHotkey: string
 }) {
   const [sites, setSites] = useState<Site[]>([])
+  const displayVersion = browser.runtime.getManifest().version.split('.').slice(0, 2).join('.')
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set())
   const [search, setSearch] = useState('')
   const [settings, setSettings] = useState<ExtensionSettings>(initialSettings)
@@ -915,7 +916,7 @@ function OptionsApp({
           <div className="about">
             <p>
               <b>Elements</b>
-              <span className="version">v{browser.runtime.getManifest().version}</span>
+              <span className="version">v{displayVersion}</span>
               <br />
               {t('optionsMadeBy')}{' '}
               <a href="https://github.com/QenTerra" target="_blank" rel="noopener noreferrer">
