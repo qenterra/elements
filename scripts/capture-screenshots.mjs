@@ -11,7 +11,7 @@ import { chromium } from '@playwright/test'
 const projectDirectory = join(dirname(fileURLToPath(import.meta.url)), '..')
 const extensionPath = join(projectDirectory, '.output/chrome-mv3')
 const outputDirectory = join(projectDirectory, '.output/screenshots')
-const readmeImageDirectory = join(projectDirectory, 'docs/images')
+const documentationImageDirectory = join(projectDirectory, 'docs/images')
 const siteImageDirectory = join(projectDirectory, 'site/images')
 
 const demoHtml = `<!doctype html>
@@ -76,7 +76,7 @@ const context = await chromium.launchPersistentContext('', {
 const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'))
 const extensionId = new URL(worker.url()).host
 await mkdir(outputDirectory, { recursive: true })
-await mkdir(readmeImageDirectory, { recursive: true })
+await mkdir(documentationImageDirectory, { recursive: true })
 await mkdir(siteImageDirectory, { recursive: true })
 
 async function setTheme(theme) {
@@ -100,6 +100,7 @@ async function capturePicker(
   viewport = { width: 1280, height: 800 },
   interaction = 'locked',
   target = '#promo',
+  panelFile,
 ) {
   await setTheme(theme)
   const page = await context.newPage()
@@ -110,7 +111,8 @@ async function capturePicker(
     const tab = tabs.find((candidate) => candidate.url?.startsWith(urlPrefix))
     await chrome.tabs.sendMessage(tab.id, { v: 2, type: 'picker.toggle' })
   }, baseUrl)
-  await page.locator('#elements-extension-root-v2 .mainWindow').waitFor()
+  const pickerPanel = page.locator('#elements-extension-root-v2 .mainWindow')
+  await pickerPanel.waitFor()
   if (interaction !== 'idle') await page.hover(target)
   if (interaction !== 'hover' && interaction !== 'idle') await page.locator(target).click()
   if (interaction === 'more') {
@@ -140,6 +142,20 @@ async function capturePicker(
   }
   await page.waitForTimeout(250)
   await page.screenshot({ path: join(outputDirectory, file) })
+  if (panelFile) {
+    await page.addStyleTag({
+      content: `
+        body {
+          background: #0d0f12 !important;
+        }
+
+        body > :not(#elements-extension-root-v2) {
+          visibility: hidden !important;
+        }
+      `,
+    })
+    await pickerPanel.screenshot({ path: join(outputDirectory, panelFile) })
+  }
   await page.close()
 }
 
@@ -161,7 +177,14 @@ async function captureOnboarding(theme, file) {
   await page.close()
 }
 
-await capturePicker('dark', '01-picker-dark.png')
+await capturePicker(
+  'dark',
+  '01-picker-dark.png',
+  undefined,
+  'locked',
+  '#promo',
+  '15-picker-panel-dark.png',
+)
 await capturePicker('light', '02-picker-light.png')
 await captureOptions('dark', '03-options-dark.png')
 await captureOptions('light', '04-options-light.png')
@@ -181,18 +204,19 @@ await captureOnboarding('dark', '12-onboarding-dark.png')
 await capturePicker('dark', '13-picker-default-wide.png', undefined, 'idle')
 await capturePicker('dark', '14-picker-default-narrow.png', { width: 390, height: 844 }, 'idle')
 
-const readmeImages = new Map([
+const documentationImages = new Map([
   ['01-picker-dark.png', 'picker-dark.png'],
   ['03-options-dark.png', 'options-dark.png'],
   ['05-picker-narrow.png', 'picker-narrow.png'],
   ['12-onboarding-dark.png', 'onboarding-dark.png'],
+  ['15-picker-panel-dark.png', 'picker-panel-dark.png'],
 ])
 const siteImages = new Map(
-  [...readmeImages].filter(([, destination]) => destination !== 'onboarding-dark.png'),
+  [...documentationImages].filter(([, destination]) => destination !== 'onboarding-dark.png'),
 )
 await Promise.all(
-  [...readmeImages].map(([source, destination]) =>
-    copyFile(join(outputDirectory, source), join(readmeImageDirectory, destination)),
+  [...documentationImages].map(([source, destination]) =>
+    copyFile(join(outputDirectory, source), join(documentationImageDirectory, destination)),
   ),
 )
 await Promise.all(
@@ -207,7 +231,7 @@ await copyFile(
 
 console.log(`Saved QA screenshots to ${outputDirectory}`)
 console.log(
-  `Refreshed ${readmeImages.size} README screenshots, ${siteImages.size} Pages screenshots, and the Pages icon.`,
+  `Refreshed ${documentationImages.size} documentation screenshots, ${siteImages.size} Pages screenshots, and the Pages icon.`,
 )
 await context.close()
 server.close()

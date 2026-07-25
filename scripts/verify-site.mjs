@@ -29,6 +29,12 @@ if (headingCount !== 1) errors.push(`Expected one h1, found ${headingCount}`)
 requirePattern(/class="skip-link"/, 'Missing skip link')
 requirePattern(/role="tablist"/, 'Missing product-tour tablist')
 requirePattern(/aria-live="polite"/, 'Missing live demo status')
+requirePattern(/data-actions=""/, 'Demo must expose a composable action state')
+requirePattern(/images\/picker-panel-dark\.png/, 'Missing focused picker-panel hero image')
+requirePattern(
+  /data-tour-image="picker"[\s\S]*data-tour-image="options"[\s\S]*data-tour-image="narrow"/,
+  'Product tour must preload all three interface screenshots',
+)
 requirePattern(/prefers-reduced-motion:\s*reduce/, 'Missing reduced-motion styles')
 requirePattern(
   /matchMedia\('\(prefers-reduced-motion: reduce\)'\)/,

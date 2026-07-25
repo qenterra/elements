@@ -147,7 +147,8 @@ npm run site:serve
 viewports, including its demo, product tour, accessibility, and reduced-motion
 fallback. `npm run site:serve` opens the static site at
 `http://127.0.0.1:4173` for local review. `npm run screenshots` refreshes the
-product images used by both the README and GitHub Pages after the Chrome build.
+product images used by the documentation and GitHub Pages after the Chrome
+build.
 
 ## Architecture
 
