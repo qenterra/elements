@@ -37,6 +37,15 @@ function localTargets(markdown) {
 }
 
 const markdownFiles = await collectMarkdown(projectRoot)
+const internalDocuments = markdownFiles
+  .map((file) => file.slice(projectRoot.length + 1))
+  .filter((file) => file === 'docs/RELEASING.md' || file.startsWith('docs/design/'))
+if (internalDocuments.length) {
+  throw new Error(
+    `Internal maintainer documents belong in the private knowledge base:\n${internalDocuments.join('\n')}`,
+  )
+}
+
 const brokenLinks = []
 for (const file of markdownFiles) {
   const markdown = await readFile(file, 'utf8')

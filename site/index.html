@@ -51,10 +51,6 @@
         --cyan-ink: #071114;
         --cyan-soft: rgba(37, 212, 238, 0.12);
         --danger: #f66e78;
-        --browser-cyan: #5edff4;
-        --browser-indigo: #9a82ff;
-        --browser-mint: #66d9b0;
-        --browser-flame: #ff8b78;
         --shadow-sm: 0 10px 30px rgba(0, 0, 0, 0.22);
         --shadow-lg: 0 32px 90px rgba(0, 0, 0, 0.46);
         --radius-sm: 12px;
@@ -80,10 +76,6 @@
           --cyan-strong: #00697d;
           --cyan-ink: #ffffff;
           --cyan-soft: rgba(8, 127, 150, 0.1);
-          --browser-cyan: #007f98;
-          --browser-indigo: #6657d6;
-          --browser-mint: #0b8066;
-          --browser-flame: #c84f4f;
           --shadow-sm: 0 10px 30px rgba(27, 47, 58, 0.1);
           --shadow-lg: 0 32px 90px rgba(27, 47, 58, 0.16);
         }
@@ -1146,7 +1138,7 @@
 
       .download-card {
         display: flex;
-        min-height: 270px;
+        min-height: 240px;
         flex-direction: column;
         align-items: flex-start;
         padding: 28px;
@@ -1163,48 +1155,6 @@
         transform: translateY(-5px);
         border-color: color-mix(in srgb, var(--cyan) 34%, var(--border));
         box-shadow: var(--shadow-sm);
-      }
-
-      .browser-icon {
-        display: grid;
-        width: 56px;
-        height: 56px;
-        margin-bottom: 30px;
-        place-items: center;
-        border-radius: 15px;
-        background: var(--cyan-soft);
-        color: var(--cyan-strong);
-      }
-
-      .browser-icon svg {
-        width: 34px;
-        height: 34px;
-        overflow: visible;
-      }
-
-      .browser-icon-firefox {
-        color: var(--browser-indigo);
-      }
-
-      .browser-icon-safari {
-        color: var(--browser-cyan);
-      }
-
-      .browser-icon-chromium .segment-a {
-        stroke: var(--browser-cyan);
-      }
-
-      .browser-icon-chromium .segment-b {
-        stroke: var(--browser-indigo);
-      }
-
-      .browser-icon-chromium .segment-c {
-        stroke: var(--browser-mint);
-      }
-
-      .browser-icon-firefox .fire-core,
-      .browser-icon-safari .compass-needle {
-        fill: var(--browser-flame);
       }
 
       .download-card h3 {
@@ -2198,40 +2148,6 @@
           </div>
           <div class="download-grid">
             <article class="download-card" data-reveal>
-              <div class="browser-icon browser-icon-chromium" aria-hidden="true">
-                <svg viewBox="0 0 36 36" fill="none">
-                  <path
-                    class="segment-a"
-                    d="M18 5.5a12.5 12.5 0 0 1 10.8 6.2"
-                    stroke="currentColor"
-                    stroke-width="6"
-                    stroke-linecap="round"
-                  />
-                  <path
-                    class="segment-b"
-                    d="M30 16.1a12.5 12.5 0 0 1-5.1 11.8"
-                    stroke="currentColor"
-                    stroke-width="6"
-                    stroke-linecap="round"
-                  />
-                  <path
-                    class="segment-c"
-                    d="M19.4 30.4A12.5 12.5 0 0 1 7.2 11.7"
-                    stroke="currentColor"
-                    stroke-width="6"
-                    stroke-linecap="round"
-                  />
-                  <circle
-                    cx="18"
-                    cy="18"
-                    r="6.2"
-                    fill="var(--surface)"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                  />
-                  <circle cx="18" cy="18" r="2.4" fill="currentColor" />
-                </svg>
-              </div>
               <h3>Chrome</h3>
               <p>Chromium Manifest V3 build for Chrome and compatible Chromium browsers.</p>
               <a
@@ -2242,16 +2158,6 @@
               </a>
             </article>
             <article class="download-card" data-reveal>
-              <div class="browser-icon browser-icon-firefox" aria-hidden="true">
-                <svg viewBox="0 0 36 36" fill="none">
-                  <path
-                    d="M28.8 7.1c-.4 3.1-2.1 5-4.9 5.9 2.5 1.9 3.6 5.3 2.5 8.4-1.5 4.3-6.2 6.6-10.5 5.1-4.3-1.5-6.6-6.2-5.1-10.5.8-2.2 2.4-3.9 4.4-4.8-5.2 1.1-8.7 6.1-7.8 11.4 1 5.9 6.6 9.8 12.5 8.8 6.3-1.1 10.4-7.2 9.1-13.4-.4-2-1.4-3.8-2.8-5.3 1.4-1.6 2.3-3.5 2.6-5.6Z"
-                    fill="currentColor"
-                  />
-                  <circle cx="18.4" cy="18.7" r="5.6" fill="var(--surface)" opacity="0.86" />
-                  <path class="fire-core" d="m14.2 20.5 3.2-5.3 5.7 1.8-3.4 5.1-5.5-1.6Z" />
-                </svg>
-              </div>
               <h3>Firefox</h3>
               <p>Firefox Manifest V3 build with the browser-specific extension manifest.</p>
               <a
@@ -2262,25 +2168,6 @@
               </a>
             </article>
             <article class="download-card" data-reveal>
-              <div class="browser-icon browser-icon-safari" aria-hidden="true">
-                <svg viewBox="0 0 36 36" fill="none">
-                  <circle cx="18" cy="18" r="14" stroke="currentColor" stroke-width="2.5" />
-                  <path
-                    d="M18 6v3M18 27v3M6 18h3M27 18h3"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                  />
-                  <path
-                    class="compass-needle"
-                    d="m21.7 14.3-2.1 5.3-5.3 2.1 2.1-5.3 5.3-2.1Z"
-                    stroke="var(--browser-flame)"
-                    stroke-width="1.5"
-                    stroke-linejoin="round"
-                  />
-                  <circle cx="18" cy="18" r="1.4" fill="var(--surface)" />
-                </svg>
-              </div>
               <h3>Safari</h3>
               <p>Safari Web Extension build ready for the platform conversion workflow.</p>
               <a

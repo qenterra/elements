@@ -157,6 +157,7 @@ test('narrow layout stays inside the viewport', async ({ page }) => {
   })
   expect(heroContainment.contained).toBe(true)
   await expect(page.locator('.download-card')).toHaveCount(3)
+  await expect(page.locator('.download-card svg')).toHaveCount(0)
   const overflow = await page.locator('body *').evaluateAll((elements) =>
     elements
       .map((element) => {

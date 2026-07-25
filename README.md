@@ -190,7 +190,6 @@ publishes the three browser archives with notes taken from
 ## Project documents
 
 - [Contributing guide](CONTRIBUTING.md)
-- [Release guide](docs/RELEASING.md)
 - [Changelog](CHANGELOG.md)
 - [Privacy Policy](PRIVACY.md)
 - [Terms of Use](TERMS_OF_USE.md)

@@ -58,6 +58,7 @@ requirePattern(
 rejectPattern(/\bv1\.1(?!\.0)\b/, 'Found a standalone v1.1 reference')
 rejectPattern(/\belements-1\.1-sources\.zip\b/, 'Found the deleted duplicate source archive')
 rejectPattern(/\b(?:lorem ipsum|placeholder|coming soon|tbd)\b/i, 'Found placeholder copy')
+rejectPattern(/\bbrowser-icon\b/, 'Download cards must not use decorative browser icons')
 
 const localAssets = new Set()
 for (const match of html.matchAll(/\b(?:src|href)="([^"]+)"/g)) {
