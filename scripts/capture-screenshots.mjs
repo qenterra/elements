@@ -12,6 +12,7 @@ const projectDirectory = join(dirname(fileURLToPath(import.meta.url)), '..')
 const extensionPath = join(projectDirectory, '.output/chrome-mv3')
 const outputDirectory = join(projectDirectory, '.output/screenshots')
 const readmeImageDirectory = join(projectDirectory, 'docs/images')
+const siteImageDirectory = join(projectDirectory, 'site/images')
 
 const demoHtml = `<!doctype html>
 <html lang="en">
@@ -76,6 +77,7 @@ const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('servi
 const extensionId = new URL(worker.url()).host
 await mkdir(outputDirectory, { recursive: true })
 await mkdir(readmeImageDirectory, { recursive: true })
+await mkdir(siteImageDirectory, { recursive: true })
 
 async function setTheme(theme) {
   await worker.evaluate(async (value) => {
@@ -185,14 +187,28 @@ const readmeImages = new Map([
   ['05-picker-narrow.png', 'picker-narrow.png'],
   ['12-onboarding-dark.png', 'onboarding-dark.png'],
 ])
+const siteImages = new Map(
+  [...readmeImages].filter(([, destination]) => destination !== 'onboarding-dark.png'),
+)
 await Promise.all(
   [...readmeImages].map(([source, destination]) =>
     copyFile(join(outputDirectory, source), join(readmeImageDirectory, destination)),
   ),
 )
+await Promise.all(
+  [...siteImages].map(([source, destination]) =>
+    copyFile(join(outputDirectory, source), join(siteImageDirectory, destination)),
+  ),
+)
+await copyFile(
+  join(projectDirectory, 'public/icons/icon_128.png'),
+  join(siteImageDirectory, 'icon-128.png'),
+)
 
 console.log(`Saved QA screenshots to ${outputDirectory}`)
-console.log(`Refreshed ${readmeImages.size} README images in ${readmeImageDirectory}`)
+console.log(
+  `Refreshed ${readmeImages.size} README screenshots, ${siteImages.size} Pages screenshots, and the Pages icon.`,
+)
 await context.close()
 server.close()
 process.exit(0)

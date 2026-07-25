@@ -3,7 +3,10 @@ name: Deploy landing page
 on:
   push:
     branches: [master]
-    paths: ['site/**']
+    paths:
+      - 'site/**'
+      - 'scripts/verify-site.mjs'
+      - 'package.json'
   workflow_dispatch:
 
 permissions:
@@ -26,6 +29,9 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
+
+      - name: Verify site
+        run: node scripts/verify-site.mjs
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v6

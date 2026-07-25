@@ -146,7 +146,7 @@ All notable changes to Elements are documented in this file.
 - Saved rules remain in browser-managed extension storage.
 
 [1.0.0]: https://github.com/QenTerra/elements/releases/tag/v1.0.0
-[1.1.0]: https://github.com/QenTerra/elements/releases/tag/v1.1
+[1.1.0]: https://github.com/QenTerra/elements/releases/tag/v1.1.0
 [1.2.0]: https://github.com/QenTerra/elements/releases/tag/v1.2.0
 [1.2.1]: https://github.com/QenTerra/elements/releases/tag/v1.2.1
 [Unreleased]: https://github.com/QenTerra/elements/compare/v1.2.1...HEAD

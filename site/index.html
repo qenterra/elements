@@ -3,639 +3,2465 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Elements — edit what you see</title>
+    <title>Elements — make the web fit you</title>
     <meta
       name="description"
-      content="A local-first browser extension for hiding page elements, editing visible text, and restyling blocks. No analytics, ads, or developer-operated server."
+      content="Hide distractions, edit visible text, and restyle any page with a private, open-source extension for Chrome, Firefox, and Safari."
     />
+    <meta name="theme-color" content="#0d0f12" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f5f7f8" media="(prefers-color-scheme: light)" />
+    <meta name="color-scheme" content="light dark" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Elements" />
+    <meta property="og:title" content="Elements — make the web fit you" />
+    <meta
+      property="og:description"
+      content="A private, open-source element picker for hiding clutter, editing text, and restyling the web."
+    />
+    <meta
+      property="og:image"
+      content="https://qenterra.github.io/elements/images/picker-dark.png"
+    />
+    <meta property="og:url" content="https://qenterra.github.io/elements/" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="canonical" href="https://qenterra.github.io/elements/" />
+    <link rel="icon" href="images/icon-128.png" />
+    <link rel="preload" href="images/picker-dark.png" as="image" type="image/png" />
+    <script>
+      document.documentElement.classList.add('js')
+    </script>
     <style>
       :root {
-        color-scheme: light dark;
-        --bg: #0f1013;
-        --surface: #17181c;
-        --surface-alt: #1e2025;
-        --border: #2a2c33;
-        --text-strong: #e5e7eb;
-        --text: #a7adba;
-        --text-muted: #8991a1;
-        --accent: #22d3ee;
-        --accent-contrast: #0f1013;
-        --accent-soft: rgba(34, 211, 238, 0.12);
-        --shadow: 0 2px 6px rgba(0, 0, 0, 0.25), 0 20px 45px rgba(0, 0, 0, 0.5);
-        --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+        color-scheme: dark light;
+        --page: #0d0f12;
+        --page-soft: #111419;
+        --surface: #16191f;
+        --surface-raised: #1b1f26;
+        --surface-soft: #20252d;
+        --border: #2b313a;
+        --border-strong: #3a424e;
+        --ink: #f2f5f7;
+        --text: #b3bbc7;
+        --muted: #848e9e;
+        --cyan: #25d4ee;
+        --cyan-strong: #6cecff;
+        --cyan-ink: #071114;
+        --cyan-soft: rgba(37, 212, 238, 0.12);
+        --danger: #f66e78;
+        --shadow-sm: 0 10px 30px rgba(0, 0, 0, 0.22);
+        --shadow-lg: 0 32px 90px rgba(0, 0, 0, 0.46);
+        --radius-sm: 12px;
+        --radius: 20px;
+        --radius-lg: 30px;
+        --container: 1180px;
+        --ease: cubic-bezier(0.22, 1, 0.36, 1);
       }
 
       @media (prefers-color-scheme: light) {
         :root {
-          --bg: #f7f8fa;
+          --page: #f5f7f8;
+          --page-soft: #eef2f4;
           --surface: #ffffff;
-          --surface-alt: #f1f3f6;
-          --border: #e2e5eb;
-          --text-strong: #111827;
-          --text: #3f4756;
-          --text-muted: #5b6472;
-          --accent: #155e75;
-          --accent-contrast: #ffffff;
-          --accent-soft: rgba(21, 94, 117, 0.1);
-          --shadow: 0 2px 6px rgba(15, 23, 42, 0.08), 0 20px 45px rgba(15, 23, 42, 0.18);
+          --surface-raised: #f9fbfc;
+          --surface-soft: #e9eef1;
+          --border: #d8e0e5;
+          --border-strong: #c1ccd3;
+          --ink: #10151a;
+          --text: #46525f;
+          --muted: #687583;
+          --cyan: #087f96;
+          --cyan-strong: #00697d;
+          --cyan-ink: #ffffff;
+          --cyan-soft: rgba(8, 127, 150, 0.1);
+          --shadow-sm: 0 10px 30px rgba(27, 47, 58, 0.1);
+          --shadow-lg: 0 32px 90px rgba(27, 47, 58, 0.16);
         }
       }
 
-      * {
+      *,
+      *::before,
+      *::after {
         box-sizing: border-box;
-        margin: 0;
       }
 
       html {
-        -webkit-font-smoothing: antialiased;
         scroll-behavior: smooth;
+        scroll-padding-top: 94px;
+        -webkit-font-smoothing: antialiased;
       }
 
       body {
-        background: var(--bg);
+        min-width: 320px;
+        margin: 0;
+        overflow-x: hidden;
+        background:
+          radial-gradient(circle at 68% 8%, rgba(37, 212, 238, 0.09), transparent 27rem),
+          var(--page);
         color: var(--text);
         font:
           16px/1.6 -apple-system,
           BlinkMacSystemFont,
           'Segoe UI',
-          Roboto,
           Helvetica,
           Arial,
           sans-serif;
       }
 
-      a {
-        color: var(--accent);
-      }
-
-      .wrap {
-        max-width: 880px;
-        margin: 0 auto;
-        padding: 0 24px;
-      }
-
-      @keyframes rise {
-        from {
-          opacity: 0;
-          transform: translateY(10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      @keyframes bracketIn {
-        from {
-          opacity: 0;
-          transform: scale(1.6);
-        }
-        to {
-          opacity: 1;
-          transform: scale(1);
-        }
-      }
-
-      /* Hero */
-      .hero {
-        padding: 96px 0 72px;
-        text-align: center;
-      }
-
-      .mark {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 96px;
-        height: 96px;
-        margin-bottom: 28px;
-        color: var(--accent);
-      }
-
-      .mark i {
-        position: absolute;
-        width: 24px;
-        height: 24px;
-        animation: bracketIn 0.5s var(--ease-out) backwards;
-      }
-
-      .mark i:nth-child(1) {
-        top: 0;
-        left: 0;
-        border-top: 4px solid;
-        border-left: 4px solid;
-        border-top-left-radius: 11px;
-        animation-delay: 0.1s;
-      }
-      .mark i:nth-child(2) {
-        top: 0;
-        right: 0;
-        border-top: 4px solid;
-        border-right: 4px solid;
-        border-top-right-radius: 11px;
-        animation-delay: 0.18s;
-      }
-      .mark i:nth-child(3) {
-        bottom: 0;
-        left: 0;
-        border-bottom: 4px solid;
-        border-left: 4px solid;
-        border-bottom-left-radius: 11px;
-        animation-delay: 0.26s;
-      }
-      .mark i:nth-child(4) {
-        bottom: 0;
-        right: 0;
-        border-bottom: 4px solid;
-        border-right: 4px solid;
-        border-bottom-right-radius: 11px;
-        animation-delay: 0.34s;
-      }
-
-      .mark .rows {
-        display: flex;
-        flex-direction: column;
-        gap: 9px;
-      }
-      .mark .rows b {
-        display: block;
-        height: 7px;
-        border-radius: 4px;
-        background: var(--accent);
-        animation: rise 0.4s var(--ease-out) backwards;
-      }
-      .mark .rows b:nth-child(1) {
-        width: 48px;
-        animation-delay: 0.2s;
-      }
-      .mark .rows b:nth-child(2) {
-        width: 33px;
-        opacity: 0.75;
-        animation-delay: 0.28s;
-      }
-      .mark .rows b:nth-child(3) {
-        width: 40px;
-        opacity: 0.55;
-        animation-delay: 0.36s;
-      }
-
-      h1 {
-        font-size: clamp(34px, 6vw, 52px);
-        line-height: 1.15;
-        letter-spacing: -0.03em;
-        color: var(--text-strong);
-        margin: 0 auto 18px;
-        max-width: 640px;
-        text-wrap: balance;
-        animation: rise 0.5s var(--ease-out) 0.1s backwards;
-      }
-
-      .tagline {
-        font-size: 18px;
-        max-width: 560px;
-        margin: 0 auto 34px;
-        color: var(--text-muted);
-        text-wrap: pretty;
-        animation: rise 0.5s var(--ease-out) 0.2s backwards;
-      }
-
-      .cta {
-        display: flex;
-        justify-content: center;
-        gap: 12px;
-        flex-wrap: wrap;
-        animation: rise 0.5s var(--ease-out) 0.3s backwards;
-      }
-
-      .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 15px;
-        font-weight: 600;
-        text-decoration: none;
-        padding: 13px 26px;
-        border-radius: 11px;
-        transition:
-          transform 0.12s var(--ease-out),
-          background-color 0.15s ease;
-      }
-
-      .btn:active {
-        transform: scale(0.97);
-      }
-      .btn.primary {
-        background: var(--accent);
-        color: var(--accent-contrast);
-      }
-      .btn.ghost {
-        color: var(--text-strong);
-        background: var(--surface-alt);
-        border: 1px solid var(--border);
-      }
-
-      /* Demo */
-      .demo {
-        margin: 24px auto 0;
-        max-width: 720px;
-        text-align: left;
-        animation: rise 0.5s var(--ease-out) 0.4s backwards;
-      }
-
-      .demo__frame {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 18px;
-        box-shadow: var(--shadow);
-        overflow: hidden;
-      }
-
-      .demo__chrome {
-        display: flex;
-        gap: 6px;
-        padding: 12px 16px;
-        border-bottom: 1px solid var(--border);
-      }
-
-      .demo__chrome i {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: var(--surface-alt);
-        border: 1px solid var(--border);
-      }
-
-      .demo__page {
-        padding: 22px;
-      }
-
-      .demo__banner {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        background: linear-gradient(90deg, #f43f5e, #f97316);
-        color: #fff;
-        font-weight: 600;
-        font-size: 14px;
-        border-radius: 12px;
-        padding: 14px 18px;
-        margin-bottom: 16px;
-        transition:
-          opacity 0.3s ease,
-          transform 0.3s var(--ease-out);
-      }
-
-      .demo__banner.isTargeted {
-        box-shadow: 0 0 0 2px var(--accent);
-      }
-
-      .demo__banner.isHidden {
-        opacity: 0;
-        transform: scale(0.96);
+      body::before {
+        position: fixed;
+        z-index: -1;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(132, 142, 158, 0.045) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(132, 142, 158, 0.045) 1px, transparent 1px);
+        background-size: 72px 72px;
+        mask-image: linear-gradient(to bottom, black, transparent 60%);
+        content: '';
         pointer-events: none;
       }
 
-      .demo__text h3 {
-        color: var(--text-strong);
-        font-size: 17px;
-        margin-bottom: 6px;
-      }
-      .demo__text p {
-        font-size: 14px;
-        margin-bottom: 10px;
+      button,
+      a {
+        -webkit-tap-highlight-color: transparent;
       }
 
-      .demo__actions {
-        display: flex;
-        gap: 10px;
-        padding: 0 22px 22px;
+      a {
+        color: inherit;
       }
 
-      .demo__btn {
+      button {
         font: inherit;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        color: var(--text-strong);
-        background: var(--surface-alt);
-        border: 1px solid var(--border);
-        border-radius: 9px;
-        padding: 9px 16px;
+      }
+
+      img {
+        display: block;
+        max-width: 100%;
+      }
+
+      :focus-visible {
+        outline: 3px solid var(--cyan);
+        outline-offset: 3px;
+      }
+
+      .skip-link {
+        position: fixed;
+        z-index: 100;
+        top: 12px;
+        left: 12px;
+        padding: 10px 14px;
+        transform: translateY(-160%);
+        border-radius: 10px;
+        background: var(--cyan);
+        color: var(--cyan-ink);
+        font-weight: 750;
+        text-decoration: none;
+        transition: transform 160ms ease;
+      }
+
+      .skip-link:focus {
+        transform: translateY(0);
+      }
+
+      .container {
+        width: min(calc(100% - 40px), var(--container));
+        margin-inline: auto;
+      }
+
+      .site-nav {
+        position: sticky;
+        z-index: 40;
+        top: 0;
+        border-bottom: 1px solid transparent;
+        background: color-mix(in srgb, var(--page) 78%, transparent);
+        backdrop-filter: blur(18px) saturate(130%);
         transition:
-          border-color 0.15s ease,
-          transform 0.12s var(--ease-out);
+          border-color 180ms ease,
+          box-shadow 180ms ease;
       }
 
-      .demo__btn:hover {
-        border-color: var(--accent);
-      }
-      .demo__btn:active {
-        transform: scale(0.97);
-      }
-      .demo__btn.accent {
-        background: var(--accent);
-        color: var(--accent-contrast);
-        border-color: transparent;
+      .site-nav.is-scrolled {
+        border-color: var(--border);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
       }
 
-      /* Features */
-      .features {
-        padding: 72px 0;
+      .nav-inner {
+        display: flex;
+        align-items: center;
+        min-height: 72px;
+        gap: 28px;
       }
 
-      .grid {
+      .brand {
+        display: inline-flex;
+        flex: none;
+        align-items: center;
+        gap: 11px;
+        color: var(--ink);
+        font-size: 17px;
+        font-weight: 780;
+        letter-spacing: -0.02em;
+        text-decoration: none;
+      }
+
+      .brand img {
+        width: 30px;
+        height: 30px;
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        margin: 0 auto;
+      }
+
+      .nav-links a {
+        position: relative;
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 650;
+        text-decoration: none;
+        transition: color 160ms ease;
+      }
+
+      .nav-links a::after {
+        position: absolute;
+        right: 0;
+        bottom: -8px;
+        left: 0;
+        height: 2px;
+        transform: scaleX(0);
+        border-radius: 999px;
+        background: var(--cyan);
+        content: '';
+        transition: transform 180ms var(--ease);
+      }
+
+      .nav-links a:hover,
+      .nav-links a[aria-current='true'] {
+        color: var(--ink);
+      }
+
+      .nav-links a[aria-current='true']::after {
+        transform: scaleX(1);
+      }
+
+      .nav-github {
+        display: inline-flex;
+        flex: none;
+        align-items: center;
+        gap: 8px;
+        min-height: 40px;
+        padding: 0 15px;
+        border: 1px solid var(--border);
+        border-radius: 11px;
+        background: var(--surface);
+        color: var(--ink);
+        font-size: 14px;
+        font-weight: 700;
+        text-decoration: none;
+        transition:
+          transform 160ms var(--ease),
+          border-color 160ms ease;
+      }
+
+      .nav-github:hover {
+        transform: translateY(-2px);
+        border-color: var(--border-strong);
+      }
+
+      .hero {
+        position: relative;
+        padding: clamp(72px, 10vw, 126px) 0 70px;
+      }
+
+      .hero-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        min-width: 0;
+        grid-template-columns: minmax(0, 0.86fr) minmax(510px, 1.14fr);
+        align-items: center;
+        gap: clamp(52px, 7vw, 96px);
+      }
+
+      .hero-copy-block {
+        min-width: 0;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        margin-bottom: 22px;
+        color: var(--cyan-strong);
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow::before {
+        width: 22px;
+        height: 2px;
+        border-radius: 999px;
+        background: var(--cyan);
+        content: '';
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        max-width: 650px;
+        margin-bottom: 24px;
+        color: var(--ink);
+        font-size: clamp(48px, 6.2vw, 78px);
+        line-height: 0.98;
+        letter-spacing: -0.055em;
+        text-wrap: balance;
+      }
+
+      .hero-copy {
+        max-width: 600px;
+        margin-bottom: 32px;
+        color: var(--text);
+        font-size: clamp(18px, 2vw, 21px);
+        line-height: 1.55;
+        text-wrap: pretty;
+      }
+
+      .button-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .button {
+        display: inline-flex;
+        min-height: 50px;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        padding: 0 21px;
+        border: 1px solid transparent;
+        border-radius: 13px;
+        font-size: 15px;
+        font-weight: 760;
+        text-decoration: none;
+        transition:
+          transform 170ms var(--ease),
+          box-shadow 170ms ease,
+          border-color 170ms ease,
+          background-color 170ms ease;
+      }
+
+      .button:hover {
+        transform: translateY(-2px);
+      }
+
+      .button:active {
+        transform: translateY(0) scale(0.98);
+      }
+
+      .button-primary {
+        background: var(--cyan);
+        color: var(--cyan-ink);
+        box-shadow: 0 12px 36px rgba(37, 212, 238, 0.18);
+      }
+
+      .button-primary:hover {
+        box-shadow: 0 16px 44px rgba(37, 212, 238, 0.28);
+      }
+
+      .button-secondary {
+        border-color: var(--border);
+        background: var(--surface);
+        color: var(--ink);
+      }
+
+      .button-secondary:hover {
+        border-color: var(--border-strong);
+      }
+
+      .hero-proof {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px 20px;
+        margin: 26px 0 0;
+        padding: 0;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 650;
+        list-style: none;
+      }
+
+      .hero-proof li {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .hero-proof li::before {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--cyan);
+        box-shadow: 0 0 12px rgba(37, 212, 238, 0.6);
+        content: '';
+      }
+
+      .hero-product {
+        position: relative;
+        min-width: 0;
+        transform-style: preserve-3d;
+        perspective: 1100px;
+      }
+
+      .hero-orbit {
+        position: absolute;
+        z-index: -1;
+        inset: 9% 0 auto 13%;
+        width: 70%;
+        aspect-ratio: 1;
+        border: 1px solid rgba(37, 212, 238, 0.18);
+        border-radius: 50%;
+        box-shadow:
+          0 0 90px rgba(37, 212, 238, 0.12),
+          inset 0 0 90px rgba(37, 212, 238, 0.07);
+        pointer-events: none;
+      }
+
+      .browser-shot {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--border-strong);
+        border-radius: 24px;
+        background: var(--surface);
+        box-shadow: var(--shadow-lg);
+      }
+
+      .browser-shot img {
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        object-fit: cover;
+        object-position: center top;
+      }
+
+      .hero-note {
+        position: absolute;
+        right: -22px;
+        bottom: 36px;
+        display: flex;
+        max-width: 210px;
+        align-items: center;
+        gap: 11px;
+        padding: 13px 15px;
+        border: 1px solid color-mix(in srgb, var(--cyan) 52%, var(--border));
+        border-radius: 14px;
+        background: color-mix(in srgb, var(--surface) 92%, transparent);
+        box-shadow: var(--shadow-sm);
+        color: var(--ink);
+        font-size: 13px;
+        font-weight: 720;
+        line-height: 1.35;
+        backdrop-filter: blur(14px);
+      }
+
+      .hero-note svg {
+        flex: none;
+        color: var(--cyan);
+      }
+
+      .scroll-cue {
+        display: flex;
+        width: max-content;
+        align-items: center;
+        gap: 10px;
+        margin: 66px auto 0;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 760;
+        letter-spacing: 0.08em;
+        text-decoration: none;
+        text-transform: uppercase;
+      }
+
+      .scroll-cue span {
+        display: grid;
+        width: 26px;
+        height: 38px;
+        place-items: start center;
+        padding-top: 8px;
+        border: 1px solid var(--border-strong);
+        border-radius: 999px;
+      }
+
+      .scroll-cue i {
+        width: 3px;
+        height: 7px;
+        border-radius: 999px;
+        background: var(--cyan);
+        animation: scroll-dot 1.8s var(--ease) infinite;
+      }
+
+      @keyframes scroll-dot {
+        0%,
+        100% {
+          transform: translateY(0);
+          opacity: 0.55;
+        }
+        50% {
+          transform: translateY(11px);
+          opacity: 1;
+        }
+      }
+
+      .section {
+        padding: clamp(78px, 10vw, 132px) 0;
+      }
+
+      .section-rule {
+        border-top: 1px solid var(--border);
+      }
+
+      .section-heading {
+        max-width: 730px;
+        margin-bottom: 46px;
+      }
+
+      .section-heading.center {
+        margin-inline: auto;
+        text-align: center;
+      }
+
+      .section-kicker {
+        display: block;
+        margin-bottom: 12px;
+        color: var(--cyan-strong);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+      }
+
+      h2 {
+        margin-bottom: 16px;
+        color: var(--ink);
+        font-size: clamp(34px, 4.8vw, 55px);
+        line-height: 1.08;
+        letter-spacing: -0.045em;
+        text-wrap: balance;
+      }
+
+      .section-heading p {
+        margin-bottom: 0;
+        font-size: 18px;
+        text-wrap: pretty;
+      }
+
+      .demo-shell {
+        display: grid;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        background: var(--surface);
+        box-shadow: var(--shadow-lg);
+        grid-template-columns: minmax(0, 1fr) 320px;
+      }
+
+      .demo-canvas {
+        min-height: 520px;
+        padding: 24px;
+        border-right: 1px solid var(--border);
+        background:
+          radial-gradient(circle at 20% 12%, rgba(37, 212, 238, 0.07), transparent 16rem),
+          var(--page-soft);
+      }
+
+      .mock-browser {
+        overflow: hidden;
+        height: 100%;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background: var(--surface-raised);
+      }
+
+      .mock-address {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 44px;
+        padding: 0 14px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .mock-address i {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--border-strong);
+      }
+
+      .mock-address span {
+        width: 56%;
+        height: 20px;
+        margin-left: 8px;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        background: var(--page);
+      }
+
+      .mock-page {
+        padding: clamp(24px, 4vw, 44px);
+      }
+
+      .demo-target {
+        position: relative;
+        display: flex;
+        min-height: 76px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 34px;
+        padding: 17px 20px;
+        border: 2px solid var(--cyan);
+        border-radius: 10px;
+        background: linear-gradient(135deg, #f55067, #e77226);
+        color: white;
+        font-size: 14px;
+        font-weight: 740;
+        box-shadow: 0 0 0 4px rgba(37, 212, 238, 0.1);
+        transition:
+          opacity 320ms var(--ease),
+          transform 320ms var(--ease),
+          filter 320ms ease;
+      }
+
+      .demo-target::after {
+        position: absolute;
+        top: -26px;
+        left: -2px;
+        padding: 3px 7px;
+        border-radius: 5px 5px 0 0;
+        background: var(--cyan);
+        color: var(--cyan-ink);
+        content: 'div.promo';
+        font:
+          700 10px/20px ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+      }
+
+      .demo-target button {
+        flex: none;
+        padding: 7px 11px;
+        border: 0;
+        border-radius: 7px;
+        background: white;
+        color: #d3484e;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .demo-title {
+        margin-bottom: 10px;
+        color: var(--ink);
+        font-size: clamp(25px, 3.2vw, 38px);
+        line-height: 1.1;
+        letter-spacing: -0.035em;
+        transition: color 220ms ease;
+      }
+
+      .demo-paragraph {
+        max-width: 610px;
+        margin-bottom: 22px;
+        color: var(--muted);
+      }
+
+      .demo-card {
+        display: grid;
+        min-height: 116px;
+        align-items: center;
+        padding: 22px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--surface);
+        transition:
+          border-radius 360ms var(--ease),
+          transform 360ms var(--ease),
+          box-shadow 360ms ease,
+          border-color 360ms ease;
+        grid-template-columns: 44px 1fr;
         gap: 16px;
       }
 
-      .cardF {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 22px;
+      .demo-card-icon {
+        display: grid;
+        width: 44px;
+        height: 44px;
+        place-items: center;
+        border-radius: 12px;
+        background: var(--cyan-soft);
+        color: var(--cyan-strong);
+        font-weight: 800;
       }
 
-      .cardF h3 {
-        color: var(--text-strong);
-        font-size: 15.5px;
-        margin-bottom: 7px;
+      .demo-card b {
+        display: block;
+        margin-bottom: 3px;
+        color: var(--ink);
+      }
+
+      .demo-card span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .demo-canvas[data-state='hide'] .demo-target {
+        transform: scale(0.95);
+        opacity: 0.08;
+        filter: saturate(0);
+      }
+
+      .demo-canvas[data-state='round'] .demo-card {
+        transform: translateY(-3px);
+        border-color: color-mix(in srgb, var(--cyan) 44%, var(--border));
+        border-radius: 28px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
+      }
+
+      .demo-panel {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        padding: 28px;
+      }
+
+      .demo-panel h3 {
+        margin-bottom: 8px;
+        color: var(--ink);
+        font-size: 20px;
+        letter-spacing: -0.025em;
+      }
+
+      .demo-panel > p {
+        margin-bottom: 24px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .demo-actions {
+        display: grid;
+        gap: 10px;
+      }
+
+      .demo-action,
+      .tour-tab {
+        width: 100%;
+        cursor: pointer;
+        border: 1px solid var(--border);
+        background: var(--surface-raised);
+        color: var(--text);
+        text-align: left;
+        transition:
+          transform 170ms var(--ease),
+          border-color 170ms ease,
+          background-color 170ms ease,
+          color 170ms ease;
+      }
+
+      .demo-action {
+        display: flex;
+        min-height: 54px;
+        align-items: center;
+        gap: 12px;
+        padding: 0 15px;
+        border-radius: 13px;
+        font-weight: 720;
+      }
+
+      .demo-action svg {
+        flex: none;
+        color: var(--cyan);
+      }
+
+      .demo-action:hover,
+      .demo-action[aria-pressed='true'] {
+        transform: translateX(3px);
+        border-color: color-mix(in srgb, var(--cyan) 55%, var(--border));
+        background: var(--cyan-soft);
+        color: var(--ink);
+      }
+
+      .demo-undo {
+        margin-top: auto;
+        padding-top: 26px;
+      }
+
+      .demo-undo button {
+        width: 100%;
+        min-height: 44px;
+        cursor: pointer;
+        border: 1px solid var(--border);
+        border-radius: 11px;
+        background: transparent;
+        color: var(--text);
+        font-weight: 700;
+      }
+
+      .demo-undo button:disabled {
+        cursor: default;
+        opacity: 0.42;
+      }
+
+      .demo-status {
+        min-height: 22px;
+        margin: 12px 0 0;
+        color: var(--cyan-strong);
+        font-size: 12px;
+        font-weight: 700;
+        text-align: center;
+      }
+
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .feature-card {
+        position: relative;
+        overflow: hidden;
+        min-height: 230px;
+        padding: 26px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface);
+        transition:
+          transform 220ms var(--ease),
+          border-color 220ms ease,
+          box-shadow 220ms ease;
+      }
+
+      .feature-card:hover {
+        transform: translateY(-5px);
+        border-color: color-mix(in srgb, var(--cyan) 34%, var(--border));
+        box-shadow: var(--shadow-sm);
+      }
+
+      .feature-icon {
+        display: grid;
+        width: 44px;
+        height: 44px;
+        margin-bottom: 38px;
+        place-items: center;
+        border: 1px solid color-mix(in srgb, var(--cyan) 28%, var(--border));
+        border-radius: 13px;
+        background: var(--cyan-soft);
+        color: var(--cyan-strong);
+      }
+
+      .feature-card h3 {
+        margin-bottom: 8px;
+        color: var(--ink);
+        font-size: 18px;
+        letter-spacing: -0.025em;
+      }
+
+      .feature-card p {
+        margin-bottom: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .tour {
+        display: grid;
+        align-items: stretch;
+        grid-template-columns: 330px minmax(0, 1fr);
+        gap: 22px;
+      }
+
+      .tour-tabs {
+        display: grid;
+        align-content: start;
+        gap: 12px;
+      }
+
+      .tour-tab {
+        min-height: 112px;
+        padding: 18px 20px;
+        border-radius: 16px;
+      }
+
+      .tour-tab:hover,
+      .tour-tab[aria-selected='true'] {
+        transform: translateX(4px);
+        border-color: color-mix(in srgb, var(--cyan) 52%, var(--border));
+        background: var(--cyan-soft);
+      }
+
+      .tour-tab span {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--ink);
+        font-weight: 780;
+      }
+
+      .tour-tab small {
+        display: block;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .tour-visual {
+        position: relative;
+        display: flex;
+        min-width: 0;
+        min-height: 510px;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        padding: 34px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        background:
+          radial-gradient(circle at 75% 20%, rgba(37, 212, 238, 0.12), transparent 18rem),
+          var(--surface);
+      }
+
+      .tour-visual::after {
+        position: absolute;
+        right: 22px;
+        bottom: 17px;
+        color: var(--muted);
+        content: attr(data-label);
+        font:
+          700 11px/1.2 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .tour-image {
+        max-height: 445px;
+        border: 1px solid var(--border-strong);
+        border-radius: 18px;
+        box-shadow: var(--shadow-lg);
+        object-fit: contain;
+        transition:
+          opacity 180ms ease,
+          transform 240ms var(--ease);
+      }
+
+      .tour-image.is-changing {
+        transform: translateY(8px) scale(0.985);
+        opacity: 0;
+      }
+
+      .privacy-layout {
+        display: grid;
+        align-items: center;
+        grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
+        gap: clamp(54px, 8vw, 108px);
+      }
+
+      .privacy-copy h2 {
+        max-width: 560px;
+      }
+
+      .privacy-copy > p {
+        margin-bottom: 28px;
+        font-size: 18px;
+      }
+
+      .privacy-list {
+        display: grid;
+        margin: 0;
+        padding: 0;
+        gap: 13px;
+        list-style: none;
+      }
+
+      .privacy-list li {
         display: flex;
         align-items: center;
-        gap: 9px;
+        gap: 11px;
+        color: var(--ink);
+        font-weight: 670;
       }
-      .cardF p {
-        font-size: 14px;
-        color: var(--text-muted);
-      }
-      .cardF svg {
-        color: var(--accent);
+
+      .privacy-list svg {
         flex: none;
+        color: var(--cyan);
       }
 
-      /* Privacy */
-      .privacy {
-        margin: 0 0 88px;
-        border: 1px solid var(--accent);
-        background: var(--accent-soft);
-        border-radius: 20px;
-        padding: 34px 36px;
+      .privacy-map {
+        position: relative;
+        overflow: hidden;
+        padding: 34px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        background: var(--surface);
+        box-shadow: var(--shadow-sm);
       }
 
-      .privacy h2 {
-        color: var(--text-strong);
-        font-size: 24px;
-        letter-spacing: -0.02em;
-        margin-bottom: 10px;
+      .privacy-map::before {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 50% 50%, rgba(37, 212, 238, 0.1), transparent 55%);
+        content: '';
+        pointer-events: none;
       }
-      .privacy p {
-        max-width: 640px;
-        text-wrap: pretty;
+
+      .privacy-node {
+        position: relative;
+        display: flex;
+        min-height: 70px;
+        align-items: center;
+        gap: 14px;
+        padding: 16px 18px;
+        border: 1px solid var(--border);
+        border-radius: 15px;
+        background: var(--surface-raised);
+      }
+
+      .privacy-node + .privacy-node {
+        margin-top: 48px;
+      }
+
+      .privacy-node + .privacy-node::before {
+        position: absolute;
+        bottom: 100%;
+        left: 37px;
+        width: 2px;
+        height: 49px;
+        background: linear-gradient(var(--cyan), var(--border));
+        content: '';
+      }
+
+      .privacy-node-icon {
+        display: grid;
+        width: 42px;
+        height: 42px;
+        flex: none;
+        place-items: center;
+        border-radius: 12px;
+        background: var(--cyan-soft);
+        color: var(--cyan-strong);
+      }
+
+      .privacy-node b,
+      .privacy-node small {
+        display: block;
+      }
+
+      .privacy-node b {
+        color: var(--ink);
+      }
+
+      .privacy-node small {
+        color: var(--muted);
+      }
+
+      .privacy-cut {
+        position: relative;
+        margin-top: 48px;
+        padding: 19px;
+        border: 1px dashed color-mix(in srgb, var(--danger) 55%, var(--border));
+        border-radius: 15px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 680;
+        text-align: center;
+      }
+
+      .privacy-cut::before {
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        width: 2px;
+        height: 49px;
+        background: repeating-linear-gradient(
+          to bottom,
+          var(--danger),
+          var(--danger) 4px,
+          transparent 4px,
+          transparent 8px
+        );
+        content: '';
+      }
+
+      .download-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .download-card {
+        display: flex;
+        min-height: 270px;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 28px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface);
+        transition:
+          transform 220ms var(--ease),
+          box-shadow 220ms ease,
+          border-color 220ms ease;
+      }
+
+      .download-card:hover {
+        transform: translateY(-5px);
+        border-color: color-mix(in srgb, var(--cyan) 34%, var(--border));
+        box-shadow: var(--shadow-sm);
+      }
+
+      .browser-icon {
+        display: grid;
+        width: 50px;
+        height: 50px;
+        margin-bottom: 30px;
+        place-items: center;
+        border-radius: 15px;
+        background: var(--cyan-soft);
+        color: var(--cyan-strong);
+        font-size: 21px;
+        font-weight: 850;
+      }
+
+      .download-card h3 {
+        margin-bottom: 7px;
+        color: var(--ink);
+        font-size: 20px;
+      }
+
+      .download-card p {
+        margin-bottom: 22px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .download-card a {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin-top: auto;
+        color: var(--cyan-strong);
+        font-weight: 760;
+        text-decoration: none;
+      }
+
+      .install-note {
+        margin: 24px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+        text-align: center;
+      }
+
+      .install-note a {
+        color: var(--cyan-strong);
+        font-weight: 700;
+      }
+
+      .technical-panel {
+        display: grid;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        background: var(--surface);
+        box-shadow: var(--shadow-sm);
+        grid-template-columns: 0.92fr 1.08fr;
+      }
+
+      .technical-copy {
+        padding: clamp(32px, 5vw, 58px);
+        border-right: 1px solid var(--border);
+      }
+
+      .technical-copy h2 {
+        font-size: clamp(32px, 4vw, 48px);
+      }
+
+      .technical-copy p {
+        margin-bottom: 28px;
+      }
+
+      .technical-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 18px;
+      }
+
+      .technical-links a {
+        color: var(--cyan-strong);
+        font-size: 14px;
+        font-weight: 740;
+      }
+
+      .technical-facts {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .fact {
+        min-height: 150px;
+        padding: 27px;
+        border-right: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .fact:nth-child(2n) {
+        border-right: 0;
+      }
+
+      .fact:nth-last-child(-n + 2) {
+        border-bottom: 0;
+      }
+
+      .fact code {
+        display: inline-block;
+        margin-bottom: 18px;
+        color: var(--cyan-strong);
+        font:
+          700 12px/1.2 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+      }
+
+      .fact b,
+      .fact span {
+        display: block;
+      }
+
+      .fact b {
+        margin-bottom: 5px;
+        color: var(--ink);
+      }
+
+      .fact span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .shortcut-strip {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 28px;
+      }
+
+      .shortcut {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      kbd {
+        min-width: 30px;
+        padding: 5px 8px;
+        border: 1px solid var(--border-strong);
+        border-bottom-width: 3px;
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--ink);
+        font:
+          700 12px/1 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+        text-align: center;
+      }
+
+      .final-cta {
+        padding: 0 0 clamp(86px, 11vw, 140px);
+      }
+
+      .final-card {
+        position: relative;
+        overflow: hidden;
+        padding: clamp(48px, 8vw, 88px) 30px;
+        border: 1px solid color-mix(in srgb, var(--cyan) 35%, var(--border));
+        border-radius: var(--radius-lg);
+        background:
+          radial-gradient(circle at 50% 0%, rgba(37, 212, 238, 0.14), transparent 25rem),
+          var(--surface);
+        text-align: center;
+      }
+
+      .final-card h2 {
+        max-width: 700px;
+        margin-inline: auto;
+      }
+
+      .final-card p {
+        max-width: 610px;
+        margin: 0 auto 28px;
+        font-size: 18px;
+      }
+
+      .final-card .button-row {
+        justify-content: center;
       }
 
       footer {
         border-top: 1px solid var(--border);
-        padding: 28px 0 44px;
-        font-size: 13.5px;
-        color: var(--text-muted);
+        padding: 30px 0 42px;
+        color: var(--muted);
+        font-size: 13px;
       }
 
-      footer .wrap {
+      .footer-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px 32px;
+      }
+
+      .footer-links {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px 22px;
-        justify-content: space-between;
-      }
-      footer a {
-        text-decoration: none;
-        font-weight: 600;
+        gap: 14px 20px;
       }
 
-      h2.section {
-        color: var(--text-strong);
-        font-size: 26px;
-        letter-spacing: -0.02em;
-        margin-bottom: 20px;
+      .footer-links a {
+        font-weight: 660;
+        text-decoration: none;
+      }
+
+      .footer-links a:hover {
+        color: var(--ink);
+      }
+
+      .js[data-motion='full'] .hero-reveal,
+      .js[data-motion='full'] [data-reveal] {
+        transform: translateY(22px);
+        opacity: 0;
+      }
+
+      @media (max-width: 1020px) {
+        .hero-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-copy-block {
+          max-width: 760px;
+        }
+
+        .hero-product {
+          width: min(100%, 820px);
+          margin-inline: auto;
+        }
+
+        .hero-note {
+          right: 18px;
+        }
+
+        .privacy-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .privacy-copy {
+          max-width: 720px;
+        }
+      }
+
+      @media (max-width: 860px) {
+        .nav-links {
+          display: none;
+        }
+
+        .nav-github {
+          margin-left: auto;
+        }
+
+        .demo-shell,
+        .tour,
+        .technical-panel {
+          grid-template-columns: 1fr;
+        }
+
+        .demo-canvas,
+        .technical-copy {
+          border-right: 0;
+          border-bottom: 1px solid var(--border);
+        }
+
+        .demo-panel {
+          min-height: 310px;
+        }
+
+        .demo-actions {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .demo-action {
+          justify-content: center;
+          padding: 10px;
+          text-align: center;
+        }
+
+        .feature-grid,
+        .download-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .tour-tabs {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .tour-tab {
+          min-height: 130px;
+        }
+
+        .tour-tab:hover,
+        .tour-tab[aria-selected='true'] {
+          transform: translateY(-3px);
+        }
+      }
+
+      @media (max-width: 620px) {
+        .container {
+          width: min(calc(100% - 28px), var(--container));
+        }
+
+        .site-nav {
+          position: relative;
+        }
+
+        .nav-inner {
+          min-height: 64px;
+        }
+
+        .nav-github span {
+          display: none;
+        }
+
+        .hero {
+          padding-top: 62px;
+        }
+
+        h1 {
+          font-size: clamp(44px, 15vw, 60px);
+        }
+
+        .hero-copy {
+          font-size: 17px;
+        }
+
+        .hero-note {
+          position: relative;
+          right: auto;
+          bottom: auto;
+          width: max-content;
+          max-width: 100%;
+          margin: 14px 0 0 auto;
+        }
+
+        .scroll-cue {
+          margin-top: 46px;
+        }
+
+        .section {
+          padding-block: 80px;
+        }
+
+        .demo-canvas {
+          min-height: 480px;
+          padding: 12px;
+        }
+
+        .mock-page {
+          padding: 34px 18px 22px;
+        }
+
+        .demo-target {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .demo-actions,
+        .feature-grid,
+        .download-grid,
+        .tour-tabs,
+        .technical-facts {
+          grid-template-columns: 1fr;
+        }
+
+        .demo-action {
+          justify-content: flex-start;
+          text-align: left;
+        }
+
+        .feature-card {
+          min-height: 205px;
+        }
+
+        .tour-tab {
+          min-height: auto;
+        }
+
+        .tour-visual {
+          min-height: 420px;
+          padding: 18px;
+        }
+
+        .privacy-map {
+          padding: 22px;
+        }
+
+        .technical-copy {
+          padding: 34px 26px;
+        }
+
+        .fact,
+        .fact:nth-child(2n),
+        .fact:nth-last-child(-n + 2) {
+          border-right: 0;
+          border-bottom: 1px solid var(--border);
+        }
+
+        .fact:last-child {
+          border-bottom: 0;
+        }
+
+        .footer-inner {
+          align-items: flex-start;
+          flex-direction: column;
+        }
       }
 
       @media (prefers-reduced-motion: reduce) {
-        * {
-          animation: none !important;
-          transition: none !important;
-        }
         html {
           scroll-behavior: auto;
+        }
+
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
         }
       }
     </style>
   </head>
   <body>
-    <header class="hero wrap">
-      <span class="mark" aria-hidden="true">
-        <i></i><i></i><i></i><i></i>
-        <span class="rows"><b></b><b></b><b></b></span>
-      </span>
-      <h1>Edit what you see</h1>
-      <p class="tagline">
-        Elements hides clutter, replaces visible text, and restyles page elements. Saved rules
-        return on your next visit.
-      </p>
-      <div class="cta">
-        <a class="btn primary" href="https://github.com/QenTerra/elements/releases">Download</a>
-        <a class="btn ghost" href="https://github.com/QenTerra/elements">GitHub</a>
-      </div>
+    <a class="skip-link" href="#main">Skip to content</a>
 
-      <div class="demo">
-        <div class="demo__frame">
-          <div class="demo__chrome" aria-hidden="true"><i></i><i></i><i></i></div>
-          <div class="demo__page">
-            <div class="demo__banner" id="banner">
-              <span>🔥 Limited offer — subscribe today and save 40%</span>
+    <nav class="site-nav" aria-label="Primary">
+      <div class="container nav-inner">
+        <a class="brand" href="#top" aria-label="Elements home">
+          <img src="images/icon-128.png" width="30" height="30" alt="" />
+          <span>Elements</span>
+        </a>
+        <div class="nav-links">
+          <a href="#demo">Demo</a>
+          <a href="#features">Features</a>
+          <a href="#privacy">Privacy</a>
+          <a href="#download">Download</a>
+          <a href="#technical">Developers</a>
+        </div>
+        <a class="nav-github" href="https://github.com/QenTerra/elements">
+          <svg
+            width="17"
+            height="17"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <path
+              d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3.3-.4 6.8-1.6 6.8-7.4A5.8 5.8 0 0 0 19.3 3 5.4 5.4 0 0 0 19.1.1S17.9-.3 15 1.7a13.4 13.4 0 0 0-7 0C5.1-.3 3.9.1 3.9.1A5.4 5.4 0 0 0 3.7 3a5.8 5.8 0 0 0-1.5 4.1c0 5.8 3.5 7 6.8 7.4A4.8 4.8 0 0 0 8 18v4"
+            />
+            <path d="M8 19c-3 .9-3-1.5-4-2" />
+          </svg>
+          <span>View source</span>
+        </a>
+      </div>
+    </nav>
+
+    <main id="main">
+      <header class="hero" id="top">
+        <div class="container hero-grid">
+          <div class="hero-copy-block">
+            <span class="eyebrow hero-reveal">Open source · version 1.2.1</span>
+            <h1 class="hero-reveal">Make the web fit you.</h1>
+            <p class="hero-copy hero-reveal">
+              Point at any element. Hide the noise, rewrite visible text, or reshape the page.
+              Elements remembers your edits when you return.
+            </p>
+            <div class="button-row hero-reveal">
+              <a
+                class="button button-primary js-browser-download"
+                href="https://github.com/QenTerra/elements/releases/latest"
+              >
+                <span>Download Elements</span>
+                <svg
+                  width="17"
+                  height="17"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M12 3v12m0 0 5-5m-5 5-5-5M5 21h14" />
+                </svg>
+              </a>
+              <a class="button button-secondary" href="#demo">Try the demo</a>
             </div>
-            <div class="demo__text">
-              <h3>The article</h3>
+            <ul class="hero-proof hero-reveal" aria-label="Highlights">
+              <li>Chrome, Firefox, Safari</li>
+              <li>No analytics</li>
+              <li>MIT licensed</li>
+            </ul>
+          </div>
+
+          <div class="hero-product hero-reveal" aria-label="Elements picker preview">
+            <div class="hero-orbit" aria-hidden="true"></div>
+            <div class="browser-shot">
+              <img
+                src="images/picker-dark.png"
+                width="2560"
+                height="1600"
+                alt="Elements picker locked to a promotional banner on a sample page"
+              />
+            </div>
+            <div class="hero-note">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <path d="m3 3 7.1 17 2.4-7.5L20 10.1 3 3Z" />
+              </svg>
+              Click once to lock the target. Then choose the edit.
+            </div>
+          </div>
+        </div>
+        <a class="scroll-cue" href="#demo">
+          <span aria-hidden="true"><i></i></span>
+          See how it works
+        </a>
+      </header>
+
+      <section class="section section-rule" id="demo" aria-labelledby="demo-title">
+        <div class="container">
+          <div class="section-heading center" data-reveal>
+            <span class="section-kicker">Hands-on demo</span>
+            <h2 id="demo-title">One target. Several better choices.</h2>
+            <p>
+              This miniature page uses the same mental model as the extension: select an element,
+              apply an edit, undo whenever you want.
+            </p>
+          </div>
+
+          <div class="demo-shell" data-reveal>
+            <div class="demo-canvas" id="demo-canvas" data-state="idle">
+              <div class="mock-browser">
+                <div class="mock-address" aria-hidden="true">
+                  <i></i><i></i><i></i><span></span>
+                </div>
+                <div class="mock-page">
+                  <div class="demo-target">
+                    <span>Limited offer — subscribe now and save 40%</span>
+                    <button type="button" tabindex="-1">Subscribe</button>
+                  </div>
+                  <h3 class="demo-title" id="demo-page-title">Quiet interfaces are coming back.</h3>
+                  <p class="demo-paragraph">
+                    The page is yours to read. Elements lets you remove distractions and make
+                    temporary visual edits without sending page content to the developer.
+                  </p>
+                  <div class="demo-card">
+                    <div class="demo-card-icon">E</div>
+                    <div>
+                      <b>Remembered per site</b>
+                      <span>Your browser reapplies the saved rule on later visits.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <aside class="demo-panel" aria-label="Demo controls">
+              <h3>Edit the selected page</h3>
+              <p>Each action changes one part of the mock page. Undo resets the whole demo.</p>
+              <div class="demo-actions">
+                <button
+                  class="demo-action"
+                  type="button"
+                  data-demo-action="hide"
+                  aria-pressed="false"
+                >
+                  <svg
+                    width="19"
+                    height="19"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 4.2A10.7 10.7 0 0 1 12 4c7 0 10 8 10 8a16 16 0 0 1-2.2 3.2M6.6 6.6C3.6 8.4 2 12 2 12s3 8 10 8c1.7 0 3.2-.5 4.5-1.2"
+                    />
+                  </svg>
+                  Hide banner
+                </button>
+                <button
+                  class="demo-action"
+                  type="button"
+                  data-demo-action="text"
+                  aria-pressed="false"
+                >
+                  <svg
+                    width="19"
+                    height="19"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <path d="M4 7V4h16v3M9 20h6M12 4v16" />
+                  </svg>
+                  Edit heading
+                </button>
+                <button
+                  class="demo-action"
+                  type="button"
+                  data-demo-action="round"
+                  aria-pressed="false"
+                >
+                  <svg
+                    width="19"
+                    height="19"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <path d="M4 20v-6A10 10 0 0 1 14 4h6" />
+                  </svg>
+                  Round card
+                </button>
+              </div>
+              <div class="demo-undo">
+                <button id="demo-undo" type="button" disabled>Undo demo changes</button>
+                <p class="demo-status" id="demo-status" aria-live="polite">No changes yet.</p>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section-rule" id="features" aria-labelledby="features-title">
+        <div class="container">
+          <div class="section-heading" data-reveal>
+            <span class="section-kicker">The useful parts</span>
+            <h2 id="features-title">A page editor that stays out of your way.</h2>
+            <p>
+              Open the picker only when you need it. Your edits remain reviewable, reversible, and
+              scoped to the site where you made them.
+            </p>
+          </div>
+          <div class="feature-grid">
+            <article class="feature-card" data-reveal>
+              <div class="feature-icon">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M2 12s3-8 10-8c2 0 3.7.6 5.1 1.5M22 12s-1.1 3-3.7 5.3M12 20c-7 0-10-8-10-8"
+                  />
+                </svg>
+              </div>
+              <h3>Hide the noise</h3>
               <p>
-                Hover the banner, click to lock it, then hide it. Save the rule and it stays gone on
-                later visits.
+                Remove banners, sticky bars, sidebars, comment blocks, and other visual clutter.
               </p>
+            </article>
+            <article class="feature-card" data-reveal>
+              <div class="feature-icon">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M4 7V4h16v3M9 20h6M12 4v16" />
+                </svg>
+              </div>
+              <h3>Rewrite visible text</h3>
+              <p>
+                Rename a label, fix a typo, or replace a heading without touching the source page.
+              </p>
+            </article>
+            <article class="feature-card" data-reveal>
+              <div class="feature-icon">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M4 20v-6A10 10 0 0 1 14 4h6" />
+                </svg>
+              </div>
+              <h3>Restyle the page</h3>
+              <p>
+                Round, blur, dim, desaturate, or add custom CSS when the built-in actions are not
+                enough.
+              </p>
+            </article>
+            <article class="feature-card" data-reveal>
+              <div class="feature-icon">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+                  <path d="M3 3v5h5M12 7v5l3 2" />
+                </svg>
+              </div>
+              <h3>Undo the whole story</h3>
+              <p>
+                Undo and redo full edits, inspect saved rules, pause them, or remove them
+                individually.
+              </p>
+            </article>
+            <article class="feature-card" data-reveal>
+              <div class="feature-icon">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M12 3v18M3 12h18" />
+                  <circle cx="12" cy="12" r="9" />
+                </svg>
+              </div>
+              <h3>Move through layers</h3>
+              <p>
+                Use Q and W to walk up and down the DOM while the active breadcrumb stays in view.
+              </p>
+            </article>
+            <article class="feature-card" data-reveal>
+              <div class="feature-icon">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="4" width="18" height="16" rx="3" />
+                  <path d="M8 2v4M16 2v4M7 11h10" />
+                </svg>
+              </div>
+              <h3>Keep changes per site</h3>
+              <p>
+                Remembered rules return on later visits and can use your browser's sync storage.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section-rule" aria-labelledby="tour-title">
+        <div class="container">
+          <div class="section-heading center" data-reveal>
+            <span class="section-kicker">Product tour</span>
+            <h2 id="tour-title">The real interface, not a decorative mockup.</h2>
+            <p>
+              Choose a view to inspect the picker, the settings hub, or the compact mobile layout.
+            </p>
+          </div>
+          <div class="tour" data-reveal>
+            <div class="tour-tabs" role="tablist" aria-label="Interface screenshots">
+              <button
+                class="tour-tab"
+                id="tour-picker"
+                type="button"
+                role="tab"
+                aria-selected="true"
+                aria-controls="tour-panel"
+                data-src="images/picker-dark.png"
+                data-alt="Elements picker locked to a selected banner on a sample page"
+                data-label="Picker · desktop"
+              >
+                <span>Pick and edit</span>
+                <small>Lock a page element, move through its layers, and apply an action.</small>
+              </button>
+              <button
+                class="tour-tab"
+                id="tour-options"
+                type="button"
+                role="tab"
+                aria-selected="false"
+                aria-controls="tour-panel"
+                data-src="images/options-dark.png"
+                data-alt="Elements settings page showing saved sites and appearance controls"
+                data-label="Settings · desktop"
+                tabindex="-1"
+              >
+                <span>Review everything</span>
+                <small>Manage saved sites, appearance, backups, and advanced controls.</small>
+              </button>
+              <button
+                class="tour-tab"
+                id="tour-narrow"
+                type="button"
+                role="tab"
+                aria-selected="false"
+                aria-controls="tour-panel"
+                data-src="images/picker-narrow.png"
+                data-alt="Elements picker in its compact narrow-screen layout"
+                data-label="Picker · narrow"
+                tabindex="-1"
+              >
+                <span>Stay compact</span>
+                <small>The picker becomes a bounded bottom sheet on narrow pages.</small>
+              </button>
+            </div>
+            <div
+              class="tour-visual"
+              id="tour-panel"
+              role="tabpanel"
+              aria-labelledby="tour-picker"
+              data-label="Picker · desktop"
+            >
+              <img
+                class="tour-image"
+                id="tour-image"
+                src="images/picker-dark.png"
+                width="2560"
+                height="1600"
+                alt="Elements picker locked to a selected banner on a sample page"
+              />
             </div>
           </div>
-          <div class="demo__actions">
-            <button class="demo__btn accent" id="demoHide" type="button">
-              Try it: hide the banner
-            </button>
-            <button class="demo__btn" id="demoReset" type="button" hidden>Undo</button>
+        </div>
+      </section>
+
+      <section class="section section-rule" id="privacy" aria-labelledby="privacy-title">
+        <div class="container privacy-layout">
+          <div class="privacy-copy" data-reveal>
+            <span class="section-kicker">Private by construction</span>
+            <h2 id="privacy-title">Your page edits do not pass through our server.</h2>
+            <p>
+              There is no developer-operated backend. Rules stay in extension storage managed by
+              your browser and may use the browser's own sync service if available.
+            </p>
+            <ul class="privacy-list">
+              <li>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="m5 12 4 4L19 6" />
+                </svg>
+                No analytics or advertising
+              </li>
+              <li>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="m5 12 4 4L19 6" />
+                </svg>
+                No remote code in the extension
+              </li>
+              <li>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="m5 12 4 4L19 6" />
+                </svg>
+                Open source and independently inspectable
+              </li>
+            </ul>
+          </div>
+          <div class="privacy-map" data-reveal aria-label="How Elements stores data">
+            <div class="privacy-node">
+              <div class="privacy-node-icon">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="4" width="18" height="16" rx="3" />
+                  <path d="M3 9h18" />
+                </svg>
+              </div>
+              <div>
+                <b>The page in your browser</b><small>You select the element locally.</small>
+              </div>
+            </div>
+            <div class="privacy-node">
+              <div class="privacy-node-icon">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M4 7h16v13H4zM7 4h10v3H7z" />
+                </svg>
+              </div>
+              <div>
+                <b>Browser-managed storage</b>
+                <small>Rules stay on-device or use browser sync.</small>
+              </div>
+            </div>
+            <div class="privacy-cut">
+              No Elements account, analytics endpoint, or developer server
+            </div>
           </div>
         </div>
-      </div>
-    </header>
+      </section>
 
-    <section class="features wrap">
-      <h2 class="section">Choose the element. Keep the change.</h2>
-      <div class="grid">
-        <div class="cardF">
-          <h3>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path
-                d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22"
-              /></svg
-            >Hide anything
-          </h3>
-          <p>Banners, popups, sidebars, comment sections — select and press Space.</p>
-        </div>
-        <div class="cardF">
-          <h3>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <polyline points="4 7 4 4 20 4 20 7" />
-              <line x1="9" y1="20" x2="15" y2="20" />
-              <line x1="12" y1="4" x2="12" y2="20" /></svg
-            >Edit text in place
-          </h3>
-          <p>Fix a typo, rename a heading, rewrite a label — right on the page.</p>
-        </div>
-        <div class="cardF">
-          <h3>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M4 20v-6a10 10 0 0 1 10-10h6" /></svg
-            >Restyle blocks
-          </h3>
-          <p>Round corners, blur, dim, or desaturate any element. Custom CSS for power users.</p>
-        </div>
-        <div class="cardF">
-          <h3>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" /></svg
-            >Remembered per site
-          </h3>
-          <p>
-            Rules re-apply on every visit and may sync through your browser account. Pause or undo
-            any time.
+      <section class="section section-rule" id="download" aria-labelledby="download-title">
+        <div class="container">
+          <div class="section-heading center" data-reveal>
+            <span class="section-kicker">Download version 1.2.1</span>
+            <h2 id="download-title">Choose your browser.</h2>
+            <p>
+              Each archive contains the browser-specific production build. Installation is manual
+              while store listings are not available.
+            </p>
+          </div>
+          <div class="download-grid">
+            <article class="download-card" data-reveal>
+              <div class="browser-icon" aria-hidden="true">C</div>
+              <h3>Chrome</h3>
+              <p>Chromium Manifest V3 build for Chrome and compatible Chromium browsers.</p>
+              <a
+                href="https://github.com/QenTerra/elements/releases/latest/download/elements-1.2.1-chrome.zip"
+              >
+                Download ZIP
+                <span aria-hidden="true">↓</span>
+              </a>
+            </article>
+            <article class="download-card" data-reveal>
+              <div class="browser-icon" aria-hidden="true">F</div>
+              <h3>Firefox</h3>
+              <p>Firefox Manifest V3 build with the browser-specific extension manifest.</p>
+              <a
+                href="https://github.com/QenTerra/elements/releases/latest/download/elements-1.2.1-firefox.zip"
+              >
+                Download ZIP
+                <span aria-hidden="true">↓</span>
+              </a>
+            </article>
+            <article class="download-card" data-reveal>
+              <div class="browser-icon" aria-hidden="true">S</div>
+              <h3>Safari</h3>
+              <p>Safari Web Extension build ready for the platform conversion workflow.</p>
+              <a
+                href="https://github.com/QenTerra/elements/releases/latest/download/elements-1.2.1-safari.zip"
+              >
+                Download ZIP
+                <span aria-hidden="true">↓</span>
+              </a>
+            </article>
+          </div>
+          <p class="install-note">
+            Need the steps?
+            <a href="https://github.com/QenTerra/elements#install">Read the installation guide</a>.
+            SHA-256 digests are listed in the
+            <a href="https://github.com/QenTerra/elements/releases/latest">release notes</a>.
           </p>
         </div>
-        <div class="cardF">
-          <h3>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <circle cx="12" cy="12" r="5" />
-              <path
-                d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
-              /></svg
-            >Light and dark
-          </h3>
-          <p>Follows your system theme, or pick one. The picker looks at home on any page.</p>
-        </div>
-        <div class="cardF">
-          <h3>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <rect x="3" y="11" width="18" height="11" rx="2" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg
-            >Keyboard-first
-          </h3>
-          <p>Ctrl/Cmd+Shift+X to open, Q/W to walk the DOM, one key per action, full undo/redo.</p>
-        </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="wrap">
-      <div class="privacy">
-        <h2>Stored by your browser</h2>
-        <p>
-          No analytics. No ads. No remote code. No developer-operated server. Rules stay in
-          browser-managed extension storage and may be processed by your browser's sync service; the
-          developer does not receive them. The source is available under the MIT License.
-        </p>
-      </div>
-    </section>
+      <section class="section section-rule" id="technical" aria-labelledby="technical-title">
+        <div class="container">
+          <div class="technical-panel" data-reveal>
+            <div class="technical-copy">
+              <span class="section-kicker">For developers and careful people</span>
+              <h2 id="technical-title">Small surface area. Inspectable decisions.</h2>
+              <p>
+                Elements is a cross-browser Manifest V3 extension built with TypeScript, React, and
+                WXT. The repository includes automated unit, browser, build, documentation, and
+                release checks.
+              </p>
+              <div class="technical-links">
+                <a href="https://github.com/QenTerra/elements">Browse source</a>
+                <a href="https://github.com/QenTerra/elements/blob/master/SECURITY.md">Security</a>
+                <a href="https://github.com/QenTerra/elements/blob/master/CHANGELOG.md"
+                  >Changelog</a
+                >
+              </div>
+            </div>
+            <div class="technical-facts">
+              <div class="fact">
+                <code>MV3</code>
+                <b>Three browser targets</b>
+                <span>Chrome, Firefox, and Safari builds from one codebase.</span>
+              </div>
+              <div class="fact">
+                <code>LOCAL</code>
+                <b>Browser-owned data</b>
+                <span>Settings and rules use extension storage, not a product backend.</span>
+              </div>
+              <div class="fact">
+                <code>A11Y</code>
+                <b>Keyboard and screen-reader care</b>
+                <span>Focus handling, labels, and serious Axe violations are tested.</span>
+              </div>
+              <div class="fact">
+                <code>MIT</code>
+                <b>Open source</b>
+                <span
+                  >Inspect, learn from, modify, or redistribute the code under the MIT
+                  License.</span
+                >
+              </div>
+            </div>
+          </div>
+          <div class="shortcut-strip" aria-label="Keyboard shortcuts" data-reveal>
+            <span class="shortcut"><kbd>⌘/Ctrl ⇧ X</kbd> Open picker</span>
+            <span class="shortcut"><kbd>Q</kbd> Parent layer</span>
+            <span class="shortcut"><kbd>W</kbd> Child layer</span>
+            <span class="shortcut"><kbd>Space</kbd> Hide</span>
+            <span class="shortcut"><kbd>Esc</kbd> Cancel</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="final-cta">
+        <div class="container">
+          <div class="final-card" data-reveal>
+            <span class="section-kicker">Your browser, your layout</span>
+            <h2>Keep the page. Lose the parts you do not need.</h2>
+            <p>
+              Download Elements, load the build for your browser, and make your first edit in under
+              a minute.
+            </p>
+            <div class="button-row">
+              <a
+                class="button button-primary js-browser-download"
+                href="https://github.com/QenTerra/elements/releases/latest"
+              >
+                <span>Download Elements</span>
+                <span aria-hidden="true">↓</span>
+              </a>
+              <a class="button button-secondary" href="https://github.com/QenTerra/elements">
+                Review the source
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
 
     <footer>
-      <div class="wrap">
+      <div class="container footer-inner">
         <span>© 2026 Nikita Melnychenko (QenTerra) · MIT License</span>
-        <span>
-          <a href="https://github.com/QenTerra/elements/blob/master/PRIVACY.md">Privacy</a> ·
-          <a href="https://github.com/QenTerra/elements/blob/master/TERMS_OF_USE.md">Terms</a> ·
+        <div class="footer-links">
+          <a href="https://github.com/QenTerra/elements/blob/master/PRIVACY.md">Privacy</a>
+          <a href="https://github.com/QenTerra/elements/blob/master/TERMS_OF_USE.md">Terms</a>
+          <a href="https://github.com/QenTerra/elements/blob/master/SECURITY.md">Security</a>
           <a href="https://github.com/QenTerra/elements/issues">Feedback</a>
-        </span>
+        </div>
       </div>
     </footer>
 
+    <noscript>
+      <style>
+        .hero-reveal,
+        [data-reveal] {
+          transform: none !important;
+          opacity: 1 !important;
+        }
+      </style>
+    </noscript>
+    <script
+      src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"
+      integrity="sha384-XmJ9SoHtVOHoQUcKvFAzVXwdkKo1Ie3bhmSoIAkcdsHGaIrVJIkmozyq0FJeb/Ly"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js"
+      integrity="sha384-wl5TeDVvOWt30Pbf8aSo2ZrzsOjddu3avOBvHe+p+OhJt9gP6w9YXmDkN5DK2/dF"
+      crossorigin="anonymous"
+    ></script>
     <script>
-      const banner = document.getElementById('banner')
-      const hideBtn = document.getElementById('demoHide')
-      const resetBtn = document.getElementById('demoReset')
+      ;(() => {
+        const root = document.documentElement
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        root.dataset.motion = reduceMotion ? 'reduced' : 'full'
 
-      hideBtn.addEventListener('click', () => {
-        banner.classList.add('isTargeted')
-        setTimeout(() => {
-          banner.classList.add('isHidden')
-          banner.classList.remove('isTargeted')
-          hideBtn.hidden = true
-          resetBtn.hidden = false
-        }, 550)
-      })
+        const downloads = {
+          chrome: {
+            label: 'Download for Chrome',
+            url: 'https://github.com/QenTerra/elements/releases/latest/download/elements-1.2.1-chrome.zip',
+          },
+          firefox: {
+            label: 'Download for Firefox',
+            url: 'https://github.com/QenTerra/elements/releases/latest/download/elements-1.2.1-firefox.zip',
+          },
+          safari: {
+            label: 'Download for Safari',
+            url: 'https://github.com/QenTerra/elements/releases/latest/download/elements-1.2.1-safari.zip',
+          },
+        }
 
-      resetBtn.addEventListener('click', () => {
-        banner.classList.remove('isHidden')
-        resetBtn.hidden = true
-        hideBtn.hidden = false
-      })
+        const userAgent = navigator.userAgent.toLowerCase()
+        const browser = userAgent.includes('firefox')
+          ? 'firefox'
+          : userAgent.includes('safari') && !userAgent.includes('chrome')
+            ? 'safari'
+            : userAgent.includes('chrome') || userAgent.includes('chromium')
+              ? 'chrome'
+              : null
+
+        if (browser) {
+          document.querySelectorAll('.js-browser-download').forEach((link) => {
+            link.href = downloads[browser].url
+            const label = link.querySelector('span')
+            if (label) label.textContent = downloads[browser].label
+          })
+        }
+
+        const demoCanvas = document.querySelector('#demo-canvas')
+        const demoTitle = document.querySelector('#demo-page-title')
+        const demoUndo = document.querySelector('#demo-undo')
+        const demoStatus = document.querySelector('#demo-status')
+        const demoActions = [...document.querySelectorAll('[data-demo-action]')]
+        const originalTitle = demoTitle.textContent
+
+        const demoMessages = {
+          hide: 'Banner hidden. It would stay hidden after reload.',
+          text: 'Heading replaced locally.',
+          round: 'Card corners rounded.',
+        }
+
+        function setDemoState(state) {
+          demoCanvas.dataset.state = state
+          demoTitle.textContent = state === 'text' ? 'A calmer page, on your terms.' : originalTitle
+          demoActions.forEach((button) => {
+            button.setAttribute('aria-pressed', String(button.dataset.demoAction === state))
+          })
+          demoUndo.disabled = state === 'idle'
+          demoStatus.textContent = state === 'idle' ? 'No changes yet.' : demoMessages[state]
+        }
+
+        demoActions.forEach((button) => {
+          button.addEventListener('click', () => setDemoState(button.dataset.demoAction))
+        })
+        demoUndo.addEventListener('click', () => setDemoState('idle'))
+
+        const tourTabs = [...document.querySelectorAll('[role="tab"]')]
+        const tourPanel = document.querySelector('#tour-panel')
+        const tourImage = document.querySelector('#tour-image')
+
+        function selectTourTab(tab) {
+          tourTabs.forEach((candidate) => {
+            const selected = candidate === tab
+            candidate.setAttribute('aria-selected', String(selected))
+            candidate.tabIndex = selected ? 0 : -1
+          })
+          tourImage.classList.add('is-changing')
+          window.setTimeout(
+            () => {
+              tourImage.src = tab.dataset.src
+              tourImage.alt = tab.dataset.alt
+              tourPanel.dataset.label = tab.dataset.label
+              tourPanel.setAttribute('aria-labelledby', tab.id)
+              tourImage.classList.remove('is-changing')
+            },
+            reduceMotion ? 0 : 170,
+          )
+        }
+
+        tourTabs.forEach((tab, index) => {
+          tab.addEventListener('click', () => selectTourTab(tab))
+          tab.addEventListener('keydown', (event) => {
+            if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+            event.preventDefault()
+            const nextIndex =
+              event.key === 'Home'
+                ? 0
+                : event.key === 'End'
+                  ? tourTabs.length - 1
+                  : event.key === 'ArrowRight'
+                    ? (index + 1) % tourTabs.length
+                    : (index - 1 + tourTabs.length) % tourTabs.length
+            tourTabs[nextIndex].focus()
+            selectTourTab(tourTabs[nextIndex])
+          })
+        })
+
+        const nav = document.querySelector('.site-nav')
+        const navLinks = [...document.querySelectorAll('.nav-links a')]
+        const sections = navLinks
+          .map((link) => document.querySelector(link.getAttribute('href')))
+          .filter(Boolean)
+
+        function updateNav() {
+          nav.classList.toggle('is-scrolled', window.scrollY > 12)
+        }
+        updateNav()
+        window.addEventListener('scroll', updateNav, { passive: true })
+
+        if ('IntersectionObserver' in window) {
+          const sectionObserver = new IntersectionObserver(
+            (entries) => {
+              const visible = entries
+                .filter((entry) => entry.isIntersecting)
+                .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
+              if (!visible) return
+              navLinks.forEach((link) => {
+                link.setAttribute(
+                  'aria-current',
+                  String(link.getAttribute('href') === `#${visible.target.id}`),
+                )
+              })
+            },
+            { rootMargin: '-25% 0px -60%', threshold: [0.05, 0.3, 0.6] },
+          )
+          sections.forEach((section) => sectionObserver.observe(section))
+        }
+
+        if (reduceMotion || !window.gsap || !window.ScrollTrigger) {
+          root.classList.remove('js')
+          return
+        }
+
+        window.gsap.registerPlugin(window.ScrollTrigger)
+        const gsap = window.gsap
+
+        gsap.fromTo(
+          '.hero-reveal',
+          { y: 24, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.78,
+            stagger: 0.09,
+            ease: 'power3.out',
+            clearProps: 'transform',
+          },
+        )
+
+        document.querySelectorAll('[data-reveal]').forEach((element) => {
+          gsap.fromTo(
+            element,
+            { y: 28, opacity: 0 },
+            {
+              y: 0,
+              opacity: 1,
+              duration: 0.72,
+              ease: 'power3.out',
+              clearProps: 'transform',
+              scrollTrigger: {
+                trigger: element,
+                start: 'top 88%',
+                once: true,
+              },
+            },
+          )
+        })
+
+        const heroProduct = document.querySelector('.hero-product')
+        if (window.matchMedia('(pointer: fine)').matches) {
+          const moveX = gsap.quickTo(heroProduct, 'x', { duration: 0.45, ease: 'power3.out' })
+          const moveY = gsap.quickTo(heroProduct, 'y', { duration: 0.45, ease: 'power3.out' })
+          const rotateX = gsap.quickTo(heroProduct, 'rotationX', {
+            duration: 0.45,
+            ease: 'power3.out',
+          })
+          const rotateY = gsap.quickTo(heroProduct, 'rotationY', {
+            duration: 0.45,
+            ease: 'power3.out',
+          })
+
+          heroProduct.addEventListener('pointermove', (event) => {
+            const rect = heroProduct.getBoundingClientRect()
+            const horizontal = (event.clientX - rect.left) / rect.width - 0.5
+            const vertical = (event.clientY - rect.top) / rect.height - 0.5
+            moveX(horizontal * 8)
+            moveY(vertical * 8)
+            rotateX(vertical * -2.2)
+            rotateY(horizontal * 2.2)
+          })
+
+          heroProduct.addEventListener('pointerleave', () => {
+            moveX(0)
+            moveY(0)
+            rotateX(0)
+            rotateY(0)
+          })
+        }
+      })()
     </script>
   </body>
 </html>

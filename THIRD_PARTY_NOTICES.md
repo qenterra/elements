@@ -75,3 +75,17 @@ TypeScript and Playwright are distributed under the
 test and build tools and do not ship in the browser bundle.
 The package distributions contain the corresponding copyright notices and full
 license texts; the pinned versions can be audited from `package-lock.json`.
+
+## GitHub Pages runtime
+
+The public product page loads the following pinned browser script. It is not
+included in the extension archives.
+
+| Package | Version | License                 | Copyright / attribution | Source                                              |
+| ------- | ------: | ----------------------- | ----------------------- | --------------------------------------------------- |
+| `gsap`  |  3.15.0 | GSAP Standard no-charge | GreenSock, Inc.         | [greensock/GSAP](https://github.com/greensock/GSAP) |
+
+GSAP is distributed under the
+[GSAP Standard License](https://gsap.com/standard-license/). The Pages document
+pins both GSAP and ScrollTrigger to version 3.15.0 and verifies their payloads
+with subresource-integrity hashes.
