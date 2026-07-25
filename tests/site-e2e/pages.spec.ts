@@ -17,6 +17,9 @@ test.afterEach(async ({ page }) => {
 })
 
 test('presents the product without layout or serious accessibility failures', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.reload()
+
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Make the web fit you.')
   await expect(page.getByRole('link', { name: /Download for Chrome/ }).first()).toHaveAttribute(
     'href',
