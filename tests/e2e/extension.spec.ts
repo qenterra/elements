@@ -3,6 +3,7 @@ import {
   expect,
   test,
   type BrowserContext,
+  type Locator,
   type Page,
   type Worker,
 } from '@playwright/test'
@@ -118,6 +119,19 @@ async function expectLocatorInsideViewport(page: Page, selector: string): Promis
   expect(box!.y + box!.height).toBeLessThanOrEqual(await page.evaluate(() => window.innerHeight))
 }
 
+async function expectVerticalCentersAligned(
+  first: Locator,
+  second: Locator,
+  tolerance = 2,
+): Promise<void> {
+  const [firstBox, secondBox] = await Promise.all([first.boundingBox(), second.boundingBox()])
+  expect(firstBox).not.toBeNull()
+  expect(secondBox).not.toBeNull()
+  const firstCenter = firstBox!.y + firstBox!.height / 2
+  const secondCenter = secondBox!.y + secondBox!.height / 2
+  expect(Math.abs(firstCenter - secondCenter)).toBeLessThanOrEqual(tolerance)
+}
+
 test.beforeAll(async () => {
   if (!existsSync(extensionPath)) {
     throw new Error('Missing .output/chrome-mv3 — run `npm run build:chrome` before the e2e suite.')
@@ -183,7 +197,17 @@ test('click locks a hovered target before actions become available', async () =>
 
   await page.keyboard.press('Escape')
   await page.locator('#headline').click()
-  await expect(panel.locator('.pathNode.active')).toHaveText('#headline')
+  await expect(hide).toBeDisabled()
+  await expect(panel.locator('.pathNode')).toHaveCount(0)
+  await expect(page.locator('#elements-extension-highlighter-v2')).toHaveCount(0)
+  await expect(page.locator('#elements-extension-root-v2 .miniBar')).toHaveCount(0)
+
+  await page.hover('#paragraph')
+  await expect(hide).toBeDisabled()
+  await expect(panel.locator('.pathNode.active')).toHaveText('#paragraph')
+  await page.locator('#paragraph').click()
+  await expect(hide).toBeEnabled()
+  await expect(panel.locator('.pathNode.active')).toHaveText('#paragraph')
   await page.close()
 })
 
@@ -332,6 +356,27 @@ test('narrow viewports use a bounded bottom sheet', async () => {
   expect(bounds!.x).toBeGreaterThanOrEqual(0)
   expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(320)
   expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(640)
+
+  await picker.getByRole('button', { name: 'Minimize' }).click()
+  await expect(picker).toHaveClass(/minimized/)
+  await expectVerticalCentersAligned(picker, picker.locator('.header__logo_small'))
+  await page.close()
+})
+
+test('onboarding centers every step number against its copy', async () => {
+  const worker = await background()
+  const extensionId = new URL(worker.url()).host
+  const page = await context.newPage()
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto(`chrome-extension://${extensionId}/onboarding.html`)
+
+  const steps = page.locator('.step')
+  await expect(steps).toHaveCount(3)
+  for (let index = 0; index < 3; index += 1) {
+    const step = steps.nth(index)
+    await expectVerticalCentersAligned(step.locator('.step__number'), step.locator(':scope > div'))
+  }
+  await expectNoSeriousAccessibilityViolations(page)
   await page.close()
 })
 

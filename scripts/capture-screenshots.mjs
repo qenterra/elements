@@ -106,9 +106,9 @@ async function capturePicker(
     const tab = tabs.find((candidate) => candidate.url?.startsWith(urlPrefix))
     await chrome.tabs.sendMessage(tab.id, { v: 2, type: 'picker.toggle' })
   }, baseUrl)
-  await page.hover(target)
   await page.locator('#elements-extension-root-v2 .mainWindow').waitFor()
-  if (interaction !== 'hover') await page.locator(target).click()
+  if (interaction !== 'idle') await page.hover(target)
+  if (interaction !== 'hover' && interaction !== 'idle') await page.locator(target).click()
   if (interaction === 'more') {
     await page
       .locator('#elements-extension-root-v2 .mainWindow')
@@ -125,6 +125,15 @@ async function capturePicker(
       .getByRole('button', { name: 'Text' })
       .click()
   }
+  if (interaction === 'deselected') {
+    await page.locator('#newsletter').click()
+  }
+  if (interaction === 'minimized') {
+    await page
+      .locator('#elements-extension-root-v2 .mainWindow')
+      .getByRole('button', { name: 'Minimize' })
+      .click()
+  }
   await page.waitForTimeout(250)
   await page.screenshot({ path: join(outputDirectory, file) })
   await page.close()
@@ -139,6 +148,15 @@ async function captureOptions(theme, file) {
   await page.close()
 }
 
+async function captureOnboarding(theme, file) {
+  await setTheme(theme)
+  const page = await context.newPage()
+  await page.goto(`chrome-extension://${extensionId}/onboarding.html`)
+  await page.waitForTimeout(600)
+  await page.screenshot({ path: join(outputDirectory, file) })
+  await page.close()
+}
+
 await capturePicker('dark', '01-picker-dark.png')
 await capturePicker('light', '02-picker-light.png')
 await captureOptions('dark', '03-options-dark.png')
@@ -148,6 +166,16 @@ await capturePicker('dark', '06-picker-hover-preview.png', undefined, 'hover')
 await capturePicker('dark', '07-picker-more-menu.png', undefined, 'more')
 await capturePicker('dark', '08-picker-ancestor-focus.png', undefined, 'ancestor', '#newsletter')
 await capturePicker('dark', '09-picker-text-editor-narrow.png', { width: 390, height: 844 }, 'text')
+await capturePicker('dark', '10-picker-deselected.png', undefined, 'deselected')
+await capturePicker(
+  'dark',
+  '11-picker-minimized-narrow.png',
+  { width: 390, height: 844 },
+  'minimized',
+)
+await captureOnboarding('dark', '12-onboarding-dark.png')
+await capturePicker('dark', '13-picker-default-wide.png', undefined, 'idle')
+await capturePicker('dark', '14-picker-default-narrow.png', { width: 390, height: 844 }, 'idle')
 
 console.log(`Saved screenshots to ${outputDirectory}`)
 await context.close()

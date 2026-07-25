@@ -37,6 +37,11 @@ All notable changes to Elements are documented in this file.
 
 ### Fixed
 
+- The first page click after locking a target now clears the selection instead
+  of immediately locking the clicked element; a fresh hover and click are
+  required before another action can run.
+- Minimized picker branding and onboarding step numbers now stay vertically
+  centered at narrow widths and high zoom.
 - Overflow menus, history actions, breadcrumbs, text editors, and selector
   popovers now remain visible and usable at narrow widths and viewport edges.
 - Undo and delete snapshots are dispatched to the background immediately, so a

@@ -465,6 +465,11 @@ export class ElementController {
     event.stopPropagation()
     if (event.button !== 0 || !(event.target instanceof Element)) return
 
+    if (this.selectionLocked) {
+      this.unhighlightElement()
+      return
+    }
+
     if (event.target !== this.hoveredElement) {
       this.transpose = 0
       this.hoveredElement = event.target
