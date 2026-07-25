@@ -17,6 +17,7 @@
     "release:archives": "npm run zip:chrome && npm run zip:firefox && npm run zip:safari",
     "release:notes": "node scripts/release-notes.mjs",
     "screenshots": "node scripts/capture-screenshots.mjs",
+    "site:serve": "node scripts/serve-site.mjs",
     "lint": "oxlint --deny-warnings .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

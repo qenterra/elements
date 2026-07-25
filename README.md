@@ -140,12 +140,14 @@ npx playwright install --no-shell chromium
 npm run build:chrome
 npm run test:e2e
 npm run test:site
+npm run site:serve
 ```
 
 `npm run test:site` checks the public product page at desktop and narrow
 viewports, including its demo, product tour, accessibility, and reduced-motion
-fallback. `npm run screenshots` refreshes the product images used by both the
-README and GitHub Pages after the Chrome build.
+fallback. `npm run site:serve` opens the static site at
+`http://127.0.0.1:4173` for local review. `npm run screenshots` refreshes the
+product images used by both the README and GitHub Pages after the Chrome build.
 
 ## Architecture
 
