@@ -12,6 +12,15 @@ describe('protocol validation', () => {
     expect(
       isExtensionRequest({
         v: 2,
+        type: 'site.rules.save',
+        site: 'example.com',
+        rules: [],
+        origin: '2e73000c-06bb-440f-b607-0d7ff7703486',
+      }),
+    ).toBe(true)
+    expect(
+      isExtensionRequest({
+        v: 2,
         type: 'site.rule.delete',
         site: 'example.com',
         ruleId: 'rule_first',
@@ -26,12 +35,29 @@ describe('protocol validation', () => {
       false,
     )
     expect(isExtensionRequest({ v: 2, type: 'site.rule.delete', site: 'example.com' })).toBe(false)
+    expect(
+      isExtensionRequest({
+        v: 2,
+        type: 'site.rules.save',
+        site: 'example.com',
+        rules: [],
+        origin: 42,
+      }),
+    ).toBe(false)
     expect(isExtensionRequest({ v: 2, type: 'future.action' })).toBe(false)
   })
 
   it('validates content commands independently', () => {
     expect(isContentCommand({ v: 2, type: 'picker.toggle' })).toBe(true)
     expect(isContentCommand({ v: 2, type: 'site.changed', site: 'example.com' })).toBe(true)
+    expect(
+      isContentCommand({
+        v: 2,
+        type: 'site.changed',
+        site: 'example.com',
+        origin: '2e73000c-06bb-440f-b607-0d7ff7703486',
+      }),
+    ).toBe(true)
     expect(isContentCommand({ v: 2, type: 'site.changed' })).toBe(false)
   })
 })

@@ -152,15 +152,22 @@ async function toggleActiveTab(): Promise<void> {
   }
 }
 
-async function broadcastSiteChange(site?: string, excludeTabId?: number): Promise<void> {
+async function broadcastSiteChange(site?: string, origin?: string): Promise<void> {
   const tabs = await browser.tabs.query({})
   await Promise.allSettled(
     tabs.flatMap((tab): Array<Promise<unknown>> => {
-      if (tab.id === undefined || tab.id < 0 || tab.id === excludeTabId || !tab.url) return []
+      if (tab.id === undefined || tab.id < 0 || !tab.url) return []
       const tabSite = siteKeyFromUrl(tab.url)
       if (!tabSite || (site && tabSite !== site)) return []
       return [
-        browser.tabs.sendMessage(tab.id, contentCommand({ type: 'site.changed', site: tabSite })),
+        browser.tabs.sendMessage(
+          tab.id,
+          contentCommand({
+            type: 'site.changed',
+            site: tabSite,
+            ...(origin ? { origin } : {}),
+          }),
+        ),
         refreshBadgeFromStorage(tab.id, tab.url),
       ]
     }),
@@ -210,7 +217,7 @@ async function handleRequest(
           return ok({ rules: migratePersistedEdits(request.rules), persisted: false })
         }
         const rules = await repository.saveRules(request.site, request.rules)
-        await broadcastSiteChange(request.site, sender.tab?.id)
+        await broadcastSiteChange(request.site, request.origin)
         return ok({ rules, persisted: true })
       }
       case 'settings.get':
@@ -218,13 +225,13 @@ async function handleRequest(
       case 'settings.save': {
         if (incognito) return ok(normalizeSettings(request.settings))
         const settings = await repository.setSettings(request.settings)
-        await broadcastSiteChange(undefined, sender.tab?.id)
+        await broadcastSiteChange(undefined, request.origin)
         return ok(settings)
       }
       case 'site.pause':
         if (!incognito) {
           await repository.setPaused(request.site, request.paused)
-          await broadcastSiteChange(request.site, sender.tab?.id)
+          await broadcastSiteChange(request.site, request.origin)
         }
         return ok({ persisted: !incognito })
       case 'sites.list':

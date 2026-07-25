@@ -11,10 +11,10 @@ export type ExtensionRequest =
   | { v: 2; type: 'shortcut.get' }
   | { v: 2; type: 'shortcut.open' }
   | { v: 2; type: 'site.snapshot'; site: string }
-  | { v: 2; type: 'site.rules.save'; site: string; rules: PersistedEdit[] }
+  | { v: 2; type: 'site.rules.save'; site: string; rules: PersistedEdit[]; origin?: string }
   | { v: 2; type: 'settings.get' }
-  | { v: 2; type: 'settings.save'; settings: ExtensionSettings }
-  | { v: 2; type: 'site.pause'; site: string; paused: boolean }
+  | { v: 2; type: 'settings.save'; settings: ExtensionSettings; origin?: string }
+  | { v: 2; type: 'site.pause'; site: string; paused: boolean; origin?: string }
   | { v: 2; type: 'sites.list' }
   | { v: 2; type: 'site.delete'; site: string }
   | { v: 2; type: 'site.rule.delete'; site: string; ruleId: string }
@@ -27,7 +27,7 @@ export type ExtensionRequest =
 export type ContentCommand =
   | { v: 2; type: 'picker.toggle' }
   | { v: 2; type: 'picker.getStatus' }
-  | { v: 2; type: 'site.changed'; site: string }
+  | { v: 2; type: 'site.changed'; site: string; origin?: string }
 
 export interface RuntimeSiteSnapshot extends SiteSnapshot {
   hotkey: string
@@ -68,6 +68,13 @@ function hasSite(record: Record<string, unknown>): boolean {
   return typeof record.site === 'string' && record.site.length > 0 && record.site.length <= 255
 }
 
+function hasValidOrigin(record: Record<string, unknown>): boolean {
+  return (
+    record.origin === undefined ||
+    (typeof record.origin === 'string' && record.origin.length > 0 && record.origin.length <= 64)
+  )
+}
+
 export function isExtensionRequest(value: unknown): value is ExtensionRequest {
   if (!isRecord(value) || value.v !== PROTOCOL_VERSION || typeof value.type !== 'string')
     return false
@@ -95,11 +102,11 @@ export function isExtensionRequest(value: unknown): value is ExtensionRequest {
     case 'site.rule.delete':
       return hasSite(value) && typeof value.ruleId === 'string'
     case 'site.rules.save':
-      return hasSite(value) && Array.isArray(value.rules)
+      return hasSite(value) && Array.isArray(value.rules) && hasValidOrigin(value)
     case 'settings.save':
-      return isRecord(value.settings)
+      return isRecord(value.settings) && hasValidOrigin(value)
     case 'site.pause':
-      return hasSite(value) && typeof value.paused === 'boolean'
+      return hasSite(value) && typeof value.paused === 'boolean' && hasValidOrigin(value)
     case 'site.restore':
       return (
         isRecord(value.snapshot) &&
@@ -119,5 +126,5 @@ export function isContentCommand(value: unknown): value is ContentCommand {
   if (!isRecord(value) || value.v !== PROTOCOL_VERSION || typeof value.type !== 'string')
     return false
   if (value.type === 'picker.toggle' || value.type === 'picker.getStatus') return true
-  return value.type === 'site.changed' && typeof value.site === 'string'
+  return value.type === 'site.changed' && typeof value.site === 'string' && hasValidOrigin(value)
 }

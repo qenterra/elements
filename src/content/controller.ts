@@ -111,6 +111,7 @@ export class ElementController {
   private scrollNotifyFrame = 0
   private viewportNotifyFrame = 0
   private readonly suppressedKeyups = new Set<string>()
+  private readonly sessionId = crypto.randomUUID()
   private selectionLocked = false
 
   hoveredElement: Element | null = null
@@ -234,6 +235,7 @@ export class ElementController {
       v: PROTOCOL_VERSION,
       type: 'settings.save',
       settings,
+      origin: this.sessionId,
     }).catch(() => undefined)
   }
 
@@ -882,6 +884,7 @@ export class ElementController {
       type: 'site.pause',
       site: siteKey(),
       paused: this.paused,
+      origin: this.sessionId,
     })
     if (this.paused) this.restoreTextEdits()
     this.updateCSS()
@@ -1221,6 +1224,7 @@ export class ElementController {
       type: 'site.rules.save',
       site: siteKey(),
       rules: saved,
+      origin: this.sessionId,
     }).catch(() => undefined)
   }
 
@@ -1238,7 +1242,7 @@ export class ElementController {
     } else if (message.type === 'picker.getStatus') {
       sendResponse(this.targetingMode)
     } else if (message.type === 'site.changed' && message.site === siteKey()) {
-      void this.reloadSnapshot()
+      if (message.origin !== this.sessionId) void this.reloadSnapshot()
       sendResponse(true)
     }
     return undefined
