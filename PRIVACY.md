@@ -5,7 +5,7 @@
 **Effective date:** 2026-07-24
 
 This policy describes how Elements handles information when it is installed in
-Chrome, Firefox, Safari, or another compatible browser. Elements has no
+Chrome or a compatible Chromium browser. Elements has no
 developer-operated server, analytics service, advertising network, or remote
 code endpoint.
 

@@ -26,10 +26,8 @@ if (!match) {
   )
 }
 
-for (const browserName of ['chrome', 'firefox', 'safari']) {
-  const archive = `elements-${packageJson.version}-${browserName}.zip`
-  if (!readme.includes(archive)) throw new Error(`README.md does not mention ${archive}`)
-}
+const archive = `elements-${packageJson.version}-chrome.zip`
+if (!readme.includes(archive)) throw new Error(`README.md does not mention ${archive}`)
 
 console.log(
   `Release ${tag} matches package version ${packageJson.version} and changelog date ${match[1]}.`,

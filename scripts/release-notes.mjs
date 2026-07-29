@@ -31,24 +31,19 @@ const releaseChanges = changelog
   .slice(headingEnd + 1, nextSection === -1 ? changelog.length : nextSection)
   .trim()
 
-const targets = ['chrome', 'firefox', 'safari']
-const archives = targets.map((target) => `elements-${packageJson.version}-${target}.zip`)
+const archive = `elements-${packageJson.version}-chrome.zip`
 const checksums = []
-for (const archive of archives) {
-  const bytes = await readFile(join(projectRoot, '.output', archive))
-  checksums.push(`${createHash('sha256').update(bytes).digest('hex')}  ${archive}`)
-}
+const bytes = await readFile(join(projectRoot, '.output', archive))
+checksums.push(`${createHash('sha256').update(bytes).digest('hex')}  ${archive}`)
 
 const notes = `${releaseChanges}
 
 ## Downloads
 
-- \`${archives[0]}\`: Chrome and Chromium browsers.
-- \`${archives[1]}\`: Firefox development or self-distribution build.
-- \`${archives[2]}\`: Safari WebExtension input for conversion and signing in Xcode.
+- \`${archive}\`: Chrome and compatible Chromium browsers.
 
-The archives are unsigned. Store distribution requires the signing and review
-process of each browser.
+The archive is unsigned. Chrome Web Store distribution requires its signing and
+review process.
 
 ## SHA-256
 

@@ -203,9 +203,7 @@ async function handleRequest(
       case 'shortcut.open':
         await browser.tabs.create({
           active: true,
-          url: /Firefox/i.test(navigator.userAgent)
-            ? 'about:addons'
-            : 'chrome://extensions/shortcuts',
+          url: 'chrome://extensions/shortcuts',
         })
         return ok(undefined)
       case 'site.snapshot': {

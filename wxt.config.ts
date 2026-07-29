@@ -3,6 +3,9 @@ import { defineConfig } from 'wxt'
 export default defineConfig({
   manifestVersion: 3,
   modules: ['@wxt-dev/module-react'],
+  zip: {
+    zipSources: false,
+  },
   manifest: {
     name: '__MSG_extensionName__',
     description: '__MSG_extensionDescription__',
@@ -31,13 +34,6 @@ export default defineConfig({
     },
     permissions: ['scripting', 'storage'],
     host_permissions: ['*://*/*'],
-    browser_specific_settings: {
-      gecko: {
-        id: 'elements@qenterra.local',
-        strict_min_version: '109.0',
-        data_collection_permissions: { required: ['none'] },
-      },
-    },
     incognito: 'spanning',
   },
 })

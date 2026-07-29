@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
-import { access, readFile, stat } from 'node:fs/promises'
+import { access, readFile, readdir, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 
 const projectRoot = join(import.meta.dirname, '..')
 const packageJson = JSON.parse(await readFile(join(projectRoot, 'package.json'), 'utf8'))
 const packageLock = JSON.parse(await readFile(join(projectRoot, 'package-lock.json'), 'utf8'))
-const targets = ['chrome', 'firefox', 'safari']
+const targets = ['chrome']
 const verifyReleaseArchives = process.argv.includes('--release')
 
 if (
@@ -36,6 +36,16 @@ for (const target of targets) {
 }
 
 if (verifyReleaseArchives) {
+  const expectedArchives = new Set(
+    targets.map((target) => `elements-${packageJson.version}-${target}.zip`),
+  )
+  const actualArchives = (await readdir(join(projectRoot, '.output'))).filter((name) =>
+    name.endsWith('.zip'),
+  )
+  const unexpectedArchives = actualArchives.filter((name) => !expectedArchives.has(name))
+  if (unexpectedArchives.length) {
+    throw new Error(`Unexpected release archives: ${unexpectedArchives.join(', ')}`)
+  }
   for (const target of targets) {
     const archive = join(projectRoot, '.output', `elements-${packageJson.version}-${target}.zip`)
     const archiveStats = await stat(archive)
@@ -70,7 +80,7 @@ if (missingInRussian.length || extraInRussian.length) {
 }
 
 console.log(
-  `Verified ${targets.length} manifests, lazy UI boundary (${contentScriptBytes} B), ` +
+  `Verified Chrome manifest, lazy UI boundary (${contentScriptBytes} B), ` +
     `required assets, version ${packageJson.version}, locale parity` +
     `${verifyReleaseArchives ? ', and release archives' : ''}.`,
 )

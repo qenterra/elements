@@ -6,7 +6,7 @@
     <title>Elements — make the web fit you</title>
     <meta
       name="description"
-      content="Hide distractions, edit visible text, and restyle any page with a private, open-source extension for Chrome, Firefox, and Safari."
+      content="Hide distractions, edit visible text, and restyle any page with a private, open-source extension for Chrome and Chromium."
     />
     <meta name="theme-color" content="#0d0f12" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#f5f7f8" media="(prefers-color-scheme: light)" />
@@ -1132,7 +1132,9 @@
 
       .download-grid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        max-width: 760px;
+        margin: 0 auto;
+        grid-template-columns: 1fr;
         gap: 16px;
       }
 
@@ -1436,8 +1438,7 @@
           text-align: center;
         }
 
-        .feature-grid,
-        .download-grid {
+        .feature-grid {
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
@@ -1522,7 +1523,6 @@
 
         .demo-actions,
         .feature-grid,
-        .download-grid,
         .tour-tabs,
         .technical-facts {
           grid-template-columns: 1fr;
@@ -1627,7 +1627,7 @@
       <header class="hero" id="top">
         <div class="container hero-grid">
           <div class="hero-copy-block">
-            <span class="eyebrow hero-reveal">Open source · version 1.2.1</span>
+            <span class="eyebrow hero-reveal">Open source · version 1.0</span>
             <h1 class="hero-reveal">Make the web fit you.</h1>
             <p class="hero-copy hero-reveal">
               Point at any element. Hide the noise, rewrite visible text, or reshape the page.
@@ -1635,10 +1635,10 @@
             </p>
             <div class="button-row hero-reveal">
               <a
-                class="button button-primary js-browser-download"
-                href="https://github.com/QenTerra/elements/releases/latest"
+                class="button button-primary"
+                href="https://github.com/QenTerra/elements/releases/latest/download/elements-1.0.0-chrome.zip"
               >
-                <span>Download Elements</span>
+                <span>Download for Chrome</span>
                 <svg
                   width="17"
                   height="17"
@@ -1654,7 +1654,7 @@
               <a class="button button-secondary" href="#demo">Try the demo</a>
             </div>
             <ul class="hero-proof hero-reveal" aria-label="Highlights">
-              <li>Chrome, Firefox, Safari</li>
+              <li>Chrome and Chromium</li>
               <li>No analytics</li>
               <li>MIT licensed</li>
             </ul>
@@ -2139,11 +2139,11 @@
       <section class="section section-rule" id="download" aria-labelledby="download-title">
         <div class="container">
           <div class="section-heading center" data-reveal>
-            <span class="section-kicker">Download version 1.2.1</span>
-            <h2 id="download-title">Choose your browser.</h2>
+            <span class="section-kicker">Download version 1.0</span>
+            <h2 id="download-title">Download for Chrome.</h2>
             <p>
-              Each archive contains the browser-specific production build. Installation is manual
-              while store listings are not available.
+              The archive contains the production Manifest V3 build for Chrome and compatible
+              Chromium browsers. Installation is manual while the store listing is unavailable.
             </p>
           </div>
           <div class="download-grid">
@@ -2151,27 +2151,7 @@
               <h3>Chrome</h3>
               <p>Chromium Manifest V3 build for Chrome and compatible Chromium browsers.</p>
               <a
-                href="https://github.com/QenTerra/elements/releases/latest/download/elements-1.2.1-chrome.zip"
-              >
-                Download ZIP
-                <span aria-hidden="true">↓</span>
-              </a>
-            </article>
-            <article class="download-card" data-reveal>
-              <h3>Firefox</h3>
-              <p>Firefox Manifest V3 build with the browser-specific extension manifest.</p>
-              <a
-                href="https://github.com/QenTerra/elements/releases/latest/download/elements-1.2.1-firefox.zip"
-              >
-                Download ZIP
-                <span aria-hidden="true">↓</span>
-              </a>
-            </article>
-            <article class="download-card" data-reveal>
-              <h3>Safari</h3>
-              <p>Safari Web Extension build ready for the platform conversion workflow.</p>
-              <a
-                href="https://github.com/QenTerra/elements/releases/latest/download/elements-1.2.1-safari.zip"
+                href="https://github.com/QenTerra/elements/releases/latest/download/elements-1.0.0-chrome.zip"
               >
                 Download ZIP
                 <span aria-hidden="true">↓</span>
@@ -2194,9 +2174,9 @@
               <span class="section-kicker">For developers and careful people</span>
               <h2 id="technical-title">Small surface area. Inspectable decisions.</h2>
               <p>
-                Elements is a cross-browser Manifest V3 extension built with TypeScript, React, and
-                WXT. The repository includes automated unit, browser, build, documentation, and
-                release checks.
+                Elements is a Chrome Manifest V3 extension built with TypeScript, React, and WXT.
+                The repository includes automated unit, browser, build, documentation, and release
+                checks.
               </p>
               <div class="technical-links">
                 <a href="https://github.com/QenTerra/elements">Browse source</a>
@@ -2209,8 +2189,8 @@
             <div class="technical-facts">
               <div class="fact">
                 <code>MV3</code>
-                <b>Three browser targets</b>
-                <span>Chrome, Firefox, and Safari builds from one codebase.</span>
+                <b>Chrome-native release</b>
+                <span>One focused build for Chrome and compatible Chromium browsers.</span>
               </div>
               <div class="fact">
                 <code>LOCAL</code>
@@ -2248,15 +2228,14 @@
             <span class="section-kicker">Your browser, your layout</span>
             <h2>Keep the page. Lose the parts you do not need.</h2>
             <p>
-              Download Elements, load the build for your browser, and make your first edit in under
-              a minute.
+              Download Elements, load the Chrome build, and make your first edit in under a minute.
             </p>
             <div class="button-row">
               <a
-                class="button button-primary js-browser-download"
-                href="https://github.com/QenTerra/elements/releases/latest"
+                class="button button-primary"
+                href="https://github.com/QenTerra/elements/releases/latest/download/elements-1.0.0-chrome.zip"
               >
-                <span>Download Elements</span>
+                <span>Download for Chrome</span>
                 <span aria-hidden="true">↓</span>
               </a>
               <a class="button button-secondary" href="https://github.com/QenTerra/elements">
@@ -2304,38 +2283,6 @@
         const root = document.documentElement
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
         root.dataset.motion = reduceMotion ? 'reduced' : 'full'
-
-        const downloads = {
-          chrome: {
-            label: 'Download for Chrome',
-            url: 'https://github.com/QenTerra/elements/releases/latest/download/elements-1.2.1-chrome.zip',
-          },
-          firefox: {
-            label: 'Download for Firefox',
-            url: 'https://github.com/QenTerra/elements/releases/latest/download/elements-1.2.1-firefox.zip',
-          },
-          safari: {
-            label: 'Download for Safari',
-            url: 'https://github.com/QenTerra/elements/releases/latest/download/elements-1.2.1-safari.zip',
-          },
-        }
-
-        const userAgent = navigator.userAgent.toLowerCase()
-        const browser = userAgent.includes('firefox')
-          ? 'firefox'
-          : userAgent.includes('safari') && !userAgent.includes('chrome')
-            ? 'safari'
-            : userAgent.includes('chrome') || userAgent.includes('chromium')
-              ? 'chrome'
-              : null
-
-        if (browser) {
-          document.querySelectorAll('.js-browser-download').forEach((link) => {
-            link.href = downloads[browser].url
-            const label = link.querySelector('span')
-            if (label) label.textContent = downloads[browser].label
-          })
-        }
 
         const demoCanvas = document.querySelector('#demo-canvas')
         const demoTitle = document.querySelector('#demo-page-title')

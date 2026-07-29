@@ -66,40 +66,20 @@ system themes throughout the extension.
 ## Download
 
 The [latest release](https://github.com/QenTerra/elements/releases/latest)
-contains separate unsigned builds for Chrome, Firefox, and Safari.
+contains the unsigned Chrome and Chromium build.
 
-| Browser             | Archive                                                                                                                  | Intended use                                               |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
-| Chrome and Chromium | [`elements-1.2.1-chrome.zip`](https://github.com/QenTerra/elements/releases/latest/download/elements-1.2.1-chrome.zip)   | Unpack and load from the extensions page                   |
-| Firefox             | [`elements-1.2.1-firefox.zip`](https://github.com/QenTerra/elements/releases/latest/download/elements-1.2.1-firefox.zip) | Temporary installation or submission for Mozilla signing   |
-| Safari              | [`elements-1.2.1-safari.zip`](https://github.com/QenTerra/elements/releases/latest/download/elements-1.2.1-safari.zip)   | Input for Safari Web Extension Converter and Xcode signing |
+| Browser             | Archive                                                                                                                | Intended use                             |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| Chrome and Chromium | [`elements-1.0.0-chrome.zip`](https://github.com/QenTerra/elements/releases/latest/download/elements-1.0.0-chrome.zip) | Unpack and load from the extensions page |
 
-Store distribution still requires each browser vendor's signing and review
-process.
+Chrome Web Store distribution still requires its signing and review process.
 
 ## Install
-
-### Chrome and Chromium
 
 1. Download and unpack the Chrome archive.
 2. Open `chrome://extensions`.
 3. Enable **Developer mode**.
 4. Select **Load unpacked**, then choose the extracted folder.
-
-### Firefox
-
-1. Download and unpack the Firefox archive.
-2. Open `about:debugging#/runtime/this-firefox`.
-3. Select **Load Temporary Add-on**, then choose `manifest.json`.
-
-Temporary add-ons are removed when Firefox restarts. Permanent distribution
-requires a Mozilla-signed package.
-
-### Safari
-
-Convert the Safari archive with Apple's Safari Web Extension Converter, open
-the generated project in Xcode, and sign the containing app before installation
-or distribution.
 
 ## Permissions and privacy
 
@@ -123,15 +103,12 @@ Requirements: Node.js 22 and npm.
 npm ci
 npm run validate
 npm run build:chrome
-npm run build:firefox
-npm run build:safari
 npm run verify:build
 ```
 
 For local development, run `npm run dev`. WXT generates manifests and build
 directories; the repository intentionally has no root `manifest.json`.
-Load `.output/chrome-mv3` in Chrome, `.output/firefox-mv3` in Firefox, or
-`.output/safari-mv3` for Safari conversion.
+Load `.output/chrome-mv3` from `chrome://extensions`.
 
 The Chromium end-to-end suite drives a built extension:
 
@@ -180,12 +157,11 @@ npm run validate
 npm run audit:all
 npm run release:archives
 npm run verify:build
-npm run verify:release -- v1.2.1
+npm run verify:release -- v1.0.0
 ```
 
 A `v*` tag runs the full release workflow, including Chromium E2E tests, and
-publishes the three browser archives with notes taken from
-[CHANGELOG.md](CHANGELOG.md).
+publishes the Chrome archive with notes taken from [CHANGELOG.md](CHANGELOG.md).
 
 ## Project documents
 

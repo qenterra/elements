@@ -42,7 +42,7 @@ Commit subjects use the Conventional Commits form, for example:
 
 ```text
 fix(picker): keep the locked target while opening actions
-docs(readme): clarify Firefox installation
+docs(readme): clarify Chrome installation
 ```
 
 Use the imperative mood, keep the subject specific, and omit generated

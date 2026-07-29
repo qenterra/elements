@@ -8,6 +8,7 @@ const projectRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 const siteRoot = join(projectRoot, 'site')
 const siteFile = join(siteRoot, 'index.html')
 const html = await readFile(siteFile, 'utf8')
+const packageJson = JSON.parse(await readFile(join(projectRoot, 'package.json'), 'utf8'))
 const errors = []
 
 function requirePattern(pattern, message) {
@@ -50,15 +51,18 @@ requirePattern(
   'ScrollTrigger must be pinned to 3.15.0',
 )
 requirePattern(/integrity="sha384-[^"]+"/, 'External scripts must use subresource integrity')
+const escapedVersion = packageJson.version.replaceAll('.', '\\.')
 requirePattern(
-  /elements-1\.2\.1-chrome\.zip[\s\S]*elements-1\.2\.1-firefox\.zip[\s\S]*elements-1\.2\.1-safari\.zip/,
-  'Missing one or more versioned browser archives',
+  new RegExp(`elements-${escapedVersion}-chrome\\.zip`),
+  `Missing ${packageJson.version} Chrome archive`,
 )
 
-rejectPattern(/\bv1\.1(?!\.0)\b/, 'Found a standalone v1.1 reference')
-rejectPattern(/\belements-1\.1-sources\.zip\b/, 'Found the deleted duplicate source archive')
 rejectPattern(/\b(?:lorem ipsum|placeholder|coming soon|tbd)\b/i, 'Found placeholder copy')
 rejectPattern(/\bbrowser-icon\b/, 'Download cards must not use decorative browser icons')
+rejectPattern(
+  /elements-[^"'<>]*-(?:firefox|safari)\.zip/i,
+  'Pages must publish the supported Chrome archive only',
+)
 
 const localAssets = new Set()
 for (const match of html.matchAll(/\b(?:src|href)="([^"]+)"/g)) {

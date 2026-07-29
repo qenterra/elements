@@ -78,9 +78,10 @@ if (!changelog.includes(`## [${packageJson.version}]`)) {
 if (!security.includes(`| ${shortVersion}.x`)) {
   throw new Error(`SECURITY.md does not mark ${shortVersion}.x as supported`)
 }
-for (const target of ['chrome', 'firefox', 'safari']) {
-  const archive = `elements-${packageJson.version}-${target}.zip`
-  if (!readme.includes(archive)) throw new Error(`README.md does not mention ${archive}`)
+const archive = `elements-${packageJson.version}-chrome.zip`
+if (!readme.includes(archive)) throw new Error(`README.md does not mention ${archive}`)
+if (/\b(?:firefox|safari)\b/i.test(readme)) {
+  throw new Error('README.md must describe the supported Chrome build only')
 }
 
 const dependencies = [
@@ -94,5 +95,5 @@ if (missingNotices.length) {
 
 console.log(
   `Verified ${markdownFiles.length} Markdown files, release version ${packageJson.version}, ` +
-    `browser archive links, and ${dependencies.length} direct dependency notices.`,
+    `Chrome archive link, and ${dependencies.length} direct dependency notices.`,
 )

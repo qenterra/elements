@@ -39,12 +39,6 @@ jobs:
       - name: Build Chrome
         run: npm run build:chrome
 
-      - name: Build Firefox
-        run: npm run build:firefox
-
-      - name: Build Safari
-        run: npm run build:safari
-
       - name: Verify build artifacts
         run: npm run verify:build
 

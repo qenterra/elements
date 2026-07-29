@@ -23,7 +23,7 @@ test('presents the product without layout or serious accessibility failures', as
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Make the web fit you.')
   await expect(page.getByRole('link', { name: /Download for Chrome/ }).first()).toHaveAttribute(
     'href',
-    /elements-1\.2\.1-chrome\.zip$/,
+    /elements-1\.0\.0-chrome\.zip$/,
   )
   await expect
     .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
@@ -156,7 +156,7 @@ test('narrow layout stays inside the viewport', async ({ page }) => {
     }
   })
   expect(heroContainment.contained).toBe(true)
-  await expect(page.locator('.download-card')).toHaveCount(3)
+  await expect(page.locator('.download-card')).toHaveCount(1)
   await expect(page.locator('.download-card svg')).toHaveCount(0)
   const overflow = await page.locator('body *').evaluateAll((elements) =>
     elements
