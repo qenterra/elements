@@ -2,7 +2,7 @@ name: Deploy landing page
 
 on:
   push:
-    branches: [master]
+    branches: [main]
     paths:
       - 'site/**'
       - 'scripts/verify-site.mjs'

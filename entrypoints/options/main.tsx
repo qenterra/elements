@@ -37,7 +37,7 @@ type ToastMessage = {
 type ImportReviewState = { text: string; report: ImportReview }
 
 const SORT_KEY = 'siteListSort'
-const DOCUMENTS_URL = 'https://github.com/QenTerra/elements/blob/master/'
+const DOCUMENTS_URL = 'https://github.com/QenTerra/elements/blob/main/'
 const FEEDBACK_URL = 'https://github.com/QenTerra/elements/issues'
 const SEARCH_THRESHOLD = 8
 

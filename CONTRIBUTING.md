@@ -6,7 +6,7 @@ documentation corrections.
 ## Before opening an issue
 
 - Search existing issues and releases.
-- Confirm the problem with the latest release or current `master`.
+- Confirm the problem with the latest release or current `main` branch.
 - Record the browser name and version, operating system, page URL when it can
   be shared, and exact reproduction steps.
 - Use GitHub's private vulnerability reporting for security issues. Do not put

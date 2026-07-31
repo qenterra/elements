@@ -61,7 +61,7 @@ body:
     attributes:
       label: Checks
       options:
-        - label: I tested the latest release or current master.
+        - label: I tested the latest release or current main branch.
           required: true
         - label: This report does not contain a security vulnerability.
           required: true

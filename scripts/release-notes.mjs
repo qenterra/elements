@@ -51,7 +51,7 @@ review process.
 ${checksums.join('\n')}
 \`\`\`
 
-See the [full changelog](https://github.com/QenTerra/elements/blob/master/CHANGELOG.md).
+See the [full changelog](https://github.com/QenTerra/elements/blob/main/CHANGELOG.md).
 `
 
 await mkdir(dirname(outputPath), { recursive: true })
