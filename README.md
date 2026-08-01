@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/icons/icon_128.png" width="96" height="96" alt="Elements icon">
+  <img src="public/icons/icon_128.png" width="128" height="128" alt="Elements icon">
 </p>
 
 <h1 align="center">Elements</h1>
@@ -12,20 +12,36 @@
 <p align="center">
   <a href="https://github.com/QenTerra/elements/actions/workflows/ci.yml"><img alt="CI status" src="https://github.com/QenTerra/elements/actions/workflows/ci.yml/badge.svg"></a>
   <a href="https://github.com/QenTerra/elements/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/QenTerra/elements?display_name=tag&sort=semver"></a>
-  <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-22d3ee"></a>
-  <img alt="Manifest V3" src="https://img.shields.io/badge/manifest-v3-22d3ee">
+  <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-f2f2f2"></a>
+  <img alt="Manifest V3" src="https://img.shields.io/badge/manifest-v3-f2f2f2">
+  <a href="https://buymeacoffee.com/qenterra"><img alt="Buy Me a Coffee" src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?logo=buymeacoffee&logoColor=000000"></a>
 </p>
 
 <p align="center">
-  <a href="https://qenterra.github.io/elements/">Website</a> ·
-  <a href="https://github.com/QenTerra/elements/releases/latest">Download</a> ·
-  <a href="#install">Install</a> ·
-  <a href="#development">Build from source</a>
+  <a href="#interface">Interface</a> ·
+  <a href="#features">Features</a> ·
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#documentation">Documentation</a>
 </p>
+
+## Interface
 
 ![Elements picker locked to a banner on a sample article](docs/images/picker-dark.png)
 
-## What it does
+![Elements Options page in the dark theme](docs/images/options-dark.png)
+
+<table>
+  <tr>
+    <td width="38%" valign="top">
+      <img src="docs/images/picker-narrow.png" alt="Elements picker in a narrow mobile-sized viewport">
+    </td>
+    <td width="62%" valign="top">
+      <img src="docs/images/onboarding-dark.png" alt="Elements onboarding page in the dark theme">
+    </td>
+  </tr>
+</table>
+
+## Features
 
 <table>
   <tr>
@@ -48,22 +64,9 @@ The picker opens from the toolbar or with `Ctrl/Cmd+Shift+X`. Its layout adapts
 from a desktop corner panel to a touch-sized bottom sheet, with light, dark, and
 system themes throughout the extension.
 
-## Interface
+## Quick start
 
-![Elements Options page in the dark theme](docs/images/options-dark.png)
-
-<table>
-  <tr>
-    <td width="38%" valign="top">
-      <img src="docs/images/picker-narrow.png" alt="Elements picker in a narrow mobile-sized viewport">
-    </td>
-    <td width="62%" valign="top">
-      <img src="docs/images/onboarding-dark.png" alt="Elements onboarding page in the dark theme">
-    </td>
-  </tr>
-</table>
-
-## Download
+### Download
 
 The [latest release](https://github.com/QenTerra/elements/releases/latest)
 contains the unsigned Chrome and Chromium build.
@@ -74,7 +77,7 @@ contains the unsigned Chrome and Chromium build.
 
 Chrome Web Store distribution still requires its signing and review process.
 
-## Install
+### Install
 
 1. Download and unpack the Chrome archive.
 2. Open `chrome://extensions`.
@@ -163,8 +166,20 @@ npm run verify:release -- v1.0.0
 A `v*` tag runs the full release workflow, including Chromium E2E tests, and
 publishes the Chrome archive with notes taken from [CHANGELOG.md](CHANGELOG.md).
 
-## Project documents
+## Current limitations
 
+- The published build targets Chrome and compatible Chromium browsers only.
+- Chrome Web Store distribution still requires its signing and review process.
+- Installation from GitHub uses an unsigned archive and Chrome's developer mode.
+
+## Documentation
+
+- [Product and user Wiki](https://github.com/QenTerra/elements/wiki)
+- [Documentation index](docs/README.md)
+- [Building from source](docs/BUILDING.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Dependencies](docs/DEPENDENCIES.md)
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
 - [Contributing guide](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)
 - [Privacy Policy](PRIVACY.md)
@@ -173,5 +188,18 @@ publishes the Chrome archive with notes taken from [CHANGELOG.md](CHANGELOG.md).
 - [Third-party notices](THIRD_PARTY_NOTICES.md)
 - [MIT License](LICENSE)
 
+## Support
+
 Elements is maintained by
-[Nikita Melnychenko (QenTerra)](https://github.com/QenTerra).
+[Nikita Melnychenko (QenTerra)](https://github.com/QenTerra). If it saves you
+time, you can [buy me a coffee](https://buymeacoffee.com/qenterra).
+
+Bug reports and focused pull requests are welcome. Read
+[CONTRIBUTING.md](CONTRIBUTING.md) before opening one and use
+[SECURITY.md](SECURITY.md) for private vulnerability reports.
+
+## License
+
+Elements source code is available under the [MIT License](LICENSE). Runtime,
+build, and website dependencies remain subject to their own licenses; see
+[Third-party notices](THIRD_PARTY_NOTICES.md).
