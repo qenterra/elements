@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { assignedShortcut } from '../src/core/shortcut'
 import { initialGuidedTrialState, reduceGuidedTrial } from '../src/onboarding/guided-trial'
 import { shortcutKeycaps } from '../src/onboarding/shortcut'
 
@@ -31,15 +32,26 @@ describe('onboarding redesign', () => {
     expect(steps).toBeGreaterThan(startEditing)
     expect(onboarding).toContain('data-testid="start-editing"')
     expect(onboarding).toContain('data-testid="onboarding-ready"')
+    expect(onboarding).toContain('scrollIntoView')
+    expect(onboarding).toContain('.focus()')
+    expect(onboarding).toContain("dispatch({ type: 'select' })")
   })
 
-  it('renders the actual registered shortcut as QDS keycaps or an explicit no-shortcut state', () => {
+  it('keeps an unassigned command raw through background and localizes it only in onboarding', () => {
     const onboarding = source(onboardingPath)
+    const background = source(resolve(projectRoot, 'entrypoints/background.ts'))
 
     expect(onboarding).toContain("type: 'shortcut.get'")
-    expect(onboarding).toContain('shortcutKeycaps(shortcut)')
+    expect(onboarding).toContain('shortcutKeycaps(shortcut, platform)')
     expect(onboarding).toContain("t('onboardNoShortcut')")
-    expect(shortcutKeycaps('Command+Shift+X')).toEqual(['Command', 'Shift', 'X'])
+    expect(background).toContain('return ok(await getAssignedShortcut())')
+    expect(assignedShortcut([])).toBe('')
+    expect(shortcutKeycaps(assignedShortcut([]), 'mac')).toEqual([])
+  })
+
+  it('canonicalizes command keycaps for macOS and non-macOS shortcuts', () => {
+    expect(shortcutKeycaps('Shift+Command+Alt+MacCtrl+X', 'mac')).toEqual(['⌘', '⌃', '⌥', '⇧', 'X'])
+    expect(shortcutKeycaps('Shift+Ctrl+Alt+X', 'windows')).toEqual(['Ctrl', 'Alt', 'Shift', 'X'])
     expect(shortcutKeycaps('')).toEqual([])
   })
 
@@ -98,9 +110,16 @@ describe('onboarding redesign', () => {
     expect(onboarding).toContain('qds-button')
     expect(existsSync(iconVerifierPath)).toBe(true)
     expect(source(iconVerifierPath)).toContain('Elements mark')
+    expect(source(iconVerifierPath)).toContain('Resvg')
+    expect(source(iconVerifierPath)).toContain('rendered.pixels')
+    expect(source(iconVerifierPath)).toContain('action_unavailable_16.svg')
     expect(existsSync(siteAdapterPath)).toBe(true)
     expect(source(siteAdapterPath)).toContain('QenTerra Design System 1.8.1')
     expect(site).toContain('<link rel="stylesheet" href="qds-web.css"')
+    expect(site).toContain('<link rel="stylesheet" href="product-illustration.css"')
     expect(site).not.toMatch(/animation:\s*[^;]*\binfinite\b/i)
+    expect(source(resolve(projectRoot, 'qds-exceptions.json'))).not.toContain(
+      '"path": "site/index.html"',
+    )
   })
 })

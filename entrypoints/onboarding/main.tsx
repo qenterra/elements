@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useState } from 'react'
+import { useEffect, useReducer, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { browser } from 'wxt/browser'
 import {
@@ -6,7 +6,7 @@ import {
   reduceGuidedTrial,
   type GuidedTrialAction,
 } from '../../src/onboarding/guided-trial'
-import { shortcutKeycaps } from '../../src/onboarding/shortcut'
+import { shortcutKeycaps, type ShortcutPlatform } from '../../src/onboarding/shortcut'
 import { DEFAULT_SETTINGS, normalizeSettings, type ThemePreference } from '../../src/core/model'
 import { PROTOCOL_VERSION } from '../../src/core/protocol'
 import { resolveTheme, watchSystemTheme } from '../../src/core/theme'
@@ -18,8 +18,16 @@ function t(key: string): string {
   return getMessage.call(browser.i18n, key) || key
 }
 
-function ShortcutKeycaps({ shortcut }: { shortcut: string }) {
-  const keycaps = shortcutKeycaps(shortcut)
+function shortcutPlatform(os: string | undefined): ShortcutPlatform {
+  if (os === 'mac') return 'mac'
+  if (os === 'win') return 'windows'
+  if (os === 'cros') return 'cros'
+  if (os === 'linux') return 'linux'
+  return undefined
+}
+
+function ShortcutKeycaps({ shortcut, platform }: { shortcut: string; platform: ShortcutPlatform }) {
+  const keycaps = shortcutKeycaps(shortcut, platform)
   if (!keycaps.length) return <span className="shortcut__empty">{t('onboardNoShortcut')}</span>
 
   return (
@@ -46,9 +54,22 @@ function trialStatusKey(action: GuidedTrialAction | null) {
   }
 }
 
-function GuidedTrial() {
+function GuidedTrial({ startNonce }: { startNonce: number }) {
   const [trial, dispatch] = useReducer(reduceGuidedTrial, initialGuidedTrialState)
+  const targetRef = useRef<HTMLButtonElement>(null)
   const status = trial.selected ? trialStatusKey(trial.action) : 'onboardTrialIdle'
+
+  useEffect(() => {
+    if (!startNonce) return
+    dispatch({ type: 'select' })
+    const target = targetRef.current
+    if (!target) return
+    target.scrollIntoView({
+      block: 'center',
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+    })
+    target.focus()
+  }, [startNonce])
 
   return (
     <section className="guided-trial qds-group" aria-labelledby="guided-trial-title">
@@ -64,6 +85,7 @@ function GuidedTrial() {
         <button
           type="button"
           className="trial-target"
+          ref={targetRef}
           aria-pressed={trial.selected}
           onClick={() => dispatch({ type: 'select' })}
         >
@@ -111,8 +133,17 @@ function GuidedTrial() {
   )
 }
 
-function OnboardingApp({ theme, shortcut }: { theme: ThemePreference; shortcut: string }) {
+function OnboardingApp({
+  theme,
+  shortcut,
+  platform,
+}: {
+  theme: ThemePreference
+  shortcut: string
+  platform: ShortcutPlatform
+}) {
   const [started, setStarted] = useState(false)
+  const [trialStartNonce, setTrialStartNonce] = useState(0)
   useEffect(() => {
     document.documentElement.dataset.theme = resolveTheme(theme)
     if (theme !== 'system') return
@@ -142,7 +173,10 @@ function OnboardingApp({ theme, shortcut }: { theme: ThemePreference; shortcut: 
             type="button"
             className="qds-button qds-button--primary"
             data-testid="start-editing"
-            onClick={() => setStarted(true)}
+            onClick={() => {
+              setStarted(true)
+              setTrialStartNonce((nonce) => nonce + 1)
+            }}
           >
             {t('onboardStartEditing')}
           </button>
@@ -150,7 +184,7 @@ function OnboardingApp({ theme, shortcut }: { theme: ThemePreference; shortcut: 
         </div>
         <div className="shortcut" aria-label={t('onboardShortcutLabel')}>
           <span>{t('onboardShortcutLabel')}</span>
-          <ShortcutKeycaps shortcut={shortcut} />
+          <ShortcutKeycaps shortcut={shortcut} platform={platform} />
         </div>
         {started ? (
           <div className="ready" data-testid="onboarding-ready" role="status">
@@ -190,7 +224,7 @@ function OnboardingApp({ theme, shortcut }: { theme: ThemePreference; shortcut: 
         </section>
       </section>
 
-      <GuidedTrial />
+      <GuidedTrial startNonce={trialStartNonce} />
 
       <section className="privacy">
         <p className="privacy__title">{t('onboardPrivacyTitle')}</p>
@@ -216,7 +250,7 @@ if (!root) throw new Error('Onboarding root is missing')
 async function bootstrapOnboarding(container: HTMLElement): Promise<void> {
   document.title = t('onboardTitle')
   document.documentElement.lang = browser.i18n.getUILanguage().split('-')[0] || 'en'
-  const [result, shortcutResult] = await Promise.all([
+  const [result, shortcutResult, platformResult] = await Promise.all([
     sendProtocolMessage({
       v: PROTOCOL_VERSION,
       type: 'settings.get',
@@ -225,11 +259,15 @@ async function bootstrapOnboarding(container: HTMLElement): Promise<void> {
       v: PROTOCOL_VERSION,
       type: 'shortcut.get',
     }),
+    browser.runtime.getPlatformInfo().catch(() => undefined),
   ])
   const theme = result.ok ? normalizeSettings(result.data).theme : DEFAULT_SETTINGS.theme
   const shortcut = shortcutResult.ok ? shortcutResult.data : ''
+  const platform = shortcutPlatform(platformResult?.os)
   document.documentElement.dataset.theme = resolveTheme(theme)
-  createRoot(container).render(<OnboardingApp theme={theme} shortcut={shortcut} />)
+  createRoot(container).render(
+    <OnboardingApp theme={theme} shortcut={shortcut} platform={platform} />,
+  )
 }
 
 void bootstrapOnboarding(root)

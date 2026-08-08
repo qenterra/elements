@@ -23,10 +23,10 @@
       "reviewTrigger": "When the host highlighter receives a QDS-safe adapter."
     },
     {
-      "id": "legacy-product-site-colors",
+      "id": "product-illustration-colors",
       "rule": "raw-color",
-      "path": "site/index.html",
-      "reason": "QDS semantic aliases now govern the site shell; the inline interactive product illustration retains a small documented set of local fixture colors.",
+      "path": "site/product-illustration.css",
+      "reason": "The interactive promotional-banner fixture retains its own vivid local color treatment; the public site shell resolves through QDS semantic aliases.",
       "reviewTrigger": "When the product illustration is extracted into QDS composition primitives."
     },
     {

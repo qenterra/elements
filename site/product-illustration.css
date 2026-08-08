@@ -1,0 +1,6 @@
+/* Local color treatment for the interactive promotional-banner fixture only. */
+:root {
+  --elements-illustration-promo-gradient: linear-gradient(135deg, #f55067, #e77226);
+  --elements-illustration-promo-ink: #ffffff;
+  --elements-illustration-promo-action: #d3484e;
+}

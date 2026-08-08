@@ -9,6 +9,7 @@
   --qds-action-primary-content: #ffffff;
   --qds-border-default: rgba(15, 15, 17, 0.12);
   --qds-border-strong: rgba(15, 15, 17, 0.22);
+  --qds-border-subtle: rgba(15, 15, 17, 0.08);
   --qds-fill-hover: rgba(15, 15, 17, 0.045);
   --qds-fill-pressed: rgba(15, 15, 17, 0.085);
   --qds-fill-scrim: rgba(15, 15, 17, 0.46);
@@ -35,6 +36,25 @@
   --qds-motion-hover: 100ms;
   --qds-motion-press: 80ms;
   --qds-motion-disclosure: 180ms;
+  --qds-space-2: 8px;
+  --qds-space-3: 12px;
+  --qds-space-4: 16px;
+  --qds-space-5: 20px;
+  --qds-space-6: 24px;
+  --qds-space-8: 32px;
+  --qds-space-10: 40px;
+  --qds-space-12: 48px;
+  --qds-space-16: 64px;
+  --qds-type-body-size: 14px;
+  --qds-type-body-line: 20px;
+  --qds-type-body-weight: 400;
+  --qds-type-body-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+  --qds-type-display-weight: 650;
+  --qds-type-display-family:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+  --qds-type-screen-title-weight: 600;
+  --qds-type-screen-title-family:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -43,6 +63,7 @@
     --qds-action-primary-content: #171719;
     --qds-border-default: rgba(255, 255, 255, 0.13);
     --qds-border-strong: rgba(255, 255, 255, 0.24);
+    --qds-border-subtle: rgba(255, 255, 255, 0.07);
     --qds-fill-hover: rgba(255, 255, 255, 0.045);
     --qds-fill-pressed: rgba(255, 255, 255, 0.085);
     --qds-fill-scrim: rgba(0, 0, 0, 0.46);

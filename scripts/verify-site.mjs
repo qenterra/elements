@@ -30,6 +30,10 @@ if (headingCount !== 1) errors.push(`Expected one h1, found ${headingCount}`)
 
 requirePattern(/class="skip-link"/, 'Missing skip link')
 requirePattern(/<link rel="stylesheet" href="qds-web\.css"/, 'Missing QDS Web token bridge')
+requirePattern(
+  /<link rel="stylesheet" href="product-illustration\.css"/,
+  'Missing isolated product illustration stylesheet',
+)
 if (!qdsWeb.includes('QenTerra Design System 1.8.1')) {
   errors.push('QDS Web bridge does not declare the pinned 1.8.1 source')
 }

@@ -409,6 +409,8 @@ test('onboarding centers every step number against its copy', async () => {
   await expect(page.getByText('Your shortcut')).toBeVisible()
   await page.getByTestId('start-editing').click()
   await expect(page.getByTestId('onboarding-ready')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Select this sample' })).toBeFocused()
+  await expect(page.getByText('Sample selected. Choose an edit to preview it.')).toBeVisible()
 
   const steps = page.locator('.step')
   await expect(steps).toHaveCount(3)
@@ -417,10 +419,7 @@ test('onboarding centers every step number against its copy', async () => {
     await expectVerticalCentersAligned(step.locator('.step__number'), step.locator(':scope > div'))
   }
 
-  const practiceTarget = page.getByRole('button', { name: 'Select this sample' })
   const hidePractice = page.getByRole('button', { name: 'Hide', exact: true })
-  await expect(hidePractice).toBeDisabled()
-  await practiceTarget.click()
   await expect(hidePractice).toBeEnabled()
   await hidePractice.click()
   await expect(page.getByText('Preview: the sample is hidden. Nothing was saved.')).toBeVisible()

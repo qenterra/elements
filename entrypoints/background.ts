@@ -10,6 +10,7 @@ import {
 } from '../src/core/protocol'
 import { RuleRepository, repositoryErrorCode } from '../src/core/repository'
 import { siteKeyFromUrl } from '../src/core/site'
+import { assignedShortcut } from '../src/core/shortcut'
 import { hybridStorage } from '../src/core/storage'
 
 const ACTION_ICONS = {
@@ -45,16 +46,19 @@ function contentCommand(command: ContentCommandBody): ContentCommand {
   return { ...command, v: PROTOCOL_VERSION } as ContentCommand
 }
 
-async function getHotkey(): Promise<string> {
+async function getAssignedShortcut(): Promise<string> {
   try {
     const commands = await browser.commands.getAll()
-    return (
-      commands.find((command) => command.name === '_execute_action')?.shortcut ||
-      getLocalizedMessage('pickerNoShortcut', 'No shortcut set')
-    )
+    return assignedShortcut(commands)
   } catch {
-    return getLocalizedMessage('pickerNoShortcut', 'No shortcut set')
+    return ''
   }
+}
+
+async function getHotkey(): Promise<string> {
+  return getAssignedShortcut().then(
+    (shortcut) => shortcut || getLocalizedMessage('pickerNoShortcut', 'No shortcut set'),
+  )
 }
 
 async function setBadge(tabId: number, count: number, paused: boolean): Promise<void> {
@@ -199,7 +203,7 @@ async function handleRequest(
         await browser.runtime.openOptionsPage()
         return ok(undefined)
       case 'shortcut.get':
-        return ok(await getHotkey())
+        return ok(await getAssignedShortcut())
       case 'shortcut.open':
         await browser.tabs.create({
           active: true,
