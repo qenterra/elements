@@ -183,8 +183,10 @@ test('click locks a hovered target before actions become available', async () =>
 
   await page.hover('#promo-banner')
   await expect(hide).toBeDisabled()
+  await expect(panel.getByText('Previewing — click to select')).toBeVisible()
   await page.locator('#promo-banner').click()
   await expect(hide).toBeEnabled()
+  await expect(panel.getByText('Selected — actions are ready')).toBeVisible()
   await expect(page.locator('#elements-extension-highlighter-v2 .elements_bracket')).toHaveCount(0)
   const [targetBox, toolbarBox] = await Promise.all([
     page.locator('#promo-banner').boundingBox(),
@@ -233,6 +235,27 @@ test('Q and W keep the active breadcrumb layer in view', async () => {
   await page.close()
 })
 
+test('breadcrumb levels and Arrow Up/Down navigate a locked selection', async () => {
+  const page = await openFixture()
+  await togglePicker()
+  await lockTarget(page, '#deep-target')
+
+  const panel = page.locator('#elements-extension-root-v2 .mainWindow')
+  const nodes = panel.locator('.pathNode')
+  const rootNode = nodes.first()
+  const rootLabel = await rootNode.textContent()
+  await rootNode.click()
+  await expect(panel.locator('.pathNode.active')).toHaveText(rootLabel ?? '')
+  await expect(panel.getByRole('button', { name: 'Hide' })).toBeEnabled()
+
+  await page.keyboard.press('ArrowDown')
+  await expect(panel.locator('.pathNode.active')).not.toHaveText(rootLabel ?? '')
+  await expectActivePathVisible(page)
+  await page.keyboard.press('ArrowUp')
+  await expect(panel.locator('.pathNode.active')).toHaveText(rootLabel ?? '')
+  await page.close()
+})
+
 test('menus, history controls, and the text editor stay inside their visible bounds', async () => {
   const page = await openFixture({ width: 600, height: 480 })
   await togglePicker()
@@ -253,6 +276,7 @@ test('menus, history controls, and the text editor stay inside their visible bou
     }),
   ).toBe(true)
   await page.keyboard.press('Escape')
+  await expect(panel.getByRole('button', { name: 'More actions' })).toBeFocused()
 
   await panel.getByRole('button', { name: 'Round' }).click()
   const row = panel.locator('.editRow').first()

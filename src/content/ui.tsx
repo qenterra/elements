@@ -667,6 +667,7 @@ function PickerPanel({ controller }: { controller: ElementController }) {
   const [snapshot, setSnapshot] = useState(controller.getSnapshot())
   const [popover, setPopover] = useState<PopoverState | null>(null)
   const [moreOpen, setMoreOpen] = useState(false)
+  const [showAllHistory, setShowAllHistory] = useState(false)
   const pathRef = useRef<HTMLDivElement>(null)
   const moreButtonRef = useRef<HTMLButtonElement>(null)
   const moreMenuRef = useRef<HTMLDivElement>(null)
@@ -764,28 +765,40 @@ function PickerPanel({ controller }: { controller: ElementController }) {
     ? snapshot.path.flatMap((token, index) =>
         index === 0
           ? [
-              <span
+              <button
+                type="button"
                 key={`${index}:${token.label}`}
                 className={`pathNode${token.active ? ' active' : ''}`}
+                aria-current={token.active ? 'true' : undefined}
+                aria-label={t('pickerSelectPathToken', [token.label])}
+                disabled={snapshot.selectionState === 'idle'}
+                onClick={() => controller.selectPathToken(index)}
               >
                 {token.label}
-              </span>,
+              </button>,
             ]
           : [
               <span key={`${index}:${token.label}:separator`} className="pathSeparator">
                 &gt;
               </span>,
-              <span
+              <button
+                type="button"
                 key={`${index}:${token.label}`}
                 className={`pathNode${token.active ? ' active' : ''}`}
+                aria-current={token.active ? 'true' : undefined}
+                aria-label={t('pickerSelectPathToken', [token.label])}
+                disabled={snapshot.selectionState === 'idle'}
+                onClick={() => controller.selectPathToken(index)}
               >
                 {token.label}
-              </span>,
+              </button>,
             ],
       )
     : t('pickerHoverHint')
 
-  const hasSelection = Boolean(snapshot.marked)
+  const hasSelection = snapshot.selectionState === 'selected' && !snapshot.textEditRect
+  const visibleEdits = showAllHistory ? snapshot.edits : snapshot.edits.slice(0, 3)
+  const canCollapseHistory = snapshot.edits.length > 3
   const openCreateCss = (anchor: Rect) => {
     const selector = controller.draftSelector()
     if (selector) setPopover({ kind: 'create-css', selector, anchor })
@@ -869,14 +882,29 @@ function PickerPanel({ controller }: { controller: ElementController }) {
 
           {snapshot.showCoachmark && <Coachmark controller={controller} />}
 
-          <div id="elements_current_elm" ref={pathRef}>
+          <p className={`selectionStatus selectionStatus_${snapshot.selectionState}`} role="status">
+            {t(
+              snapshot.selectionState === 'selected'
+                ? 'pickerSelected'
+                : snapshot.selectionState === 'previewing'
+                  ? 'pickerPreviewing'
+                  : 'pickerSelectionIdle',
+            )}
+          </p>
+
+          <div
+            id="elements_current_elm"
+            ref={pathRef}
+            role="navigation"
+            aria-label={t('pickerSelectionPath')}
+          >
             {path}
           </div>
 
           <div className="actionBar" role="toolbar" aria-label={t('pickerActions')}>
             <button
               type="button"
-              className="actionBtn"
+              className="actionBtn qds-button qds-button--primary"
               aria-label={t('pickerActionHide')}
               disabled={!hasSelection}
               onClick={() => runAction('hide')}
@@ -887,7 +915,7 @@ function PickerPanel({ controller }: { controller: ElementController }) {
             </button>
             <button
               type="button"
-              className="actionBtn"
+              className="actionBtn qds-button qds-button--primary"
               aria-label={t('pickerActionText')}
               disabled={!hasSelection}
               onClick={() => runAction('text')}
@@ -898,7 +926,7 @@ function PickerPanel({ controller }: { controller: ElementController }) {
             </button>
             <button
               type="button"
-              className="actionBtn"
+              className="actionBtn qds-button qds-button--primary"
               aria-label={t('pickerActionRound')}
               disabled={!hasSelection}
               onClick={() => runAction('round')}
@@ -911,7 +939,7 @@ function PickerPanel({ controller }: { controller: ElementController }) {
               <button
                 ref={moreButtonRef}
                 type="button"
-                className="actionBtn actionBtn_icon"
+                className="actionBtn actionBtn_icon qds-icon-button"
                 title={t('pickerMore')}
                 aria-label={t('pickerMore')}
                 aria-haspopup="menu"
@@ -924,7 +952,7 @@ function PickerPanel({ controller }: { controller: ElementController }) {
             <span className="actionBar__rule" />
             <button
               type="button"
-              className="actionBtn actionBtn_icon"
+              className="actionBtn actionBtn_icon qds-icon-button"
               disabled={!snapshot.canUndo}
               title={`${t('pickerUndoButton')} (Ctrl+Z)`}
               aria-label={t('pickerUndoButton')}
@@ -934,7 +962,7 @@ function PickerPanel({ controller }: { controller: ElementController }) {
             </button>
             <button
               type="button"
-              className="actionBtn actionBtn_icon"
+              className="actionBtn actionBtn_icon qds-icon-button"
               disabled={!snapshot.canRedo}
               title={`${t('pickerRedoButton')} (Ctrl+Shift+Z)`}
               aria-label={t('pickerRedoButton')}
@@ -960,7 +988,7 @@ function PickerPanel({ controller }: { controller: ElementController }) {
             )}
             {snapshot.edits.length > 0 && (
               <div className="editList" role="list">
-                {snapshot.edits.map((edit) => (
+                {visibleEdits.map((edit) => (
                   <EditRow
                     key={`${edit.action ?? 'hide'}:${edit.selector}`}
                     edit={edit}
@@ -969,6 +997,18 @@ function PickerPanel({ controller }: { controller: ElementController }) {
                   />
                 ))}
               </div>
+            )}
+            {canCollapseHistory && (
+              <button
+                type="button"
+                className="historyDisclosure qds-button qds-button--quiet"
+                aria-expanded={showAllHistory}
+                onClick={() => setShowAllHistory((showAll) => !showAll)}
+              >
+                {t(showAllHistory ? 'pickerShowRecentChanges' : 'pickerShowAllChanges', [
+                  String(snapshot.edits.length),
+                ])}
+              </button>
             )}
           </div>
 
@@ -1012,6 +1052,13 @@ function PickerPanel({ controller }: { controller: ElementController }) {
               {t('pickerPause')}
             </button>
           </div>
+          <p className="persistenceStatus qds-status" role="status">
+            {t(
+              snapshot.incognito || !snapshot.settings.remember
+                ? 'pickerPersistenceTemporary'
+                : 'pickerPersistenceSaved',
+            )}
+          </p>
           <div className="hotkeyHints">
             <button
               type="button"
@@ -1027,6 +1074,7 @@ function PickerPanel({ controller }: { controller: ElementController }) {
               {t('pickerToggleOverlay')}
             </button>
             <span className="hotkeyHint hotkeyHint_static">
+              <span className="key">↑</span>/<span className="key">↓</span> ·{' '}
               <span className="key">Q</span>/<span className="key">W</span>{' '}
               {t('pickerMoveSelection')}
             </span>

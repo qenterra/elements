@@ -300,6 +300,27 @@
   "pickerHoverHint": {
     "message": "Наведите курсор на элемент и кликните, чтобы закрепить его."
   },
+  "pickerPreviewing": {
+    "message": "Предпросмотр — кликните, чтобы выбрать"
+  },
+  "pickerSelected": {
+    "message": "Выбрано — действия доступны"
+  },
+  "pickerSelectionIdle": {
+    "message": "Выберите элемент, чтобы начать"
+  },
+  "pickerSelectionPath": {
+    "message": "Путь к элементу"
+  },
+  "pickerSelectPathToken": {
+    "message": "Выбрать $NODE$",
+    "placeholders": {
+      "node": {
+        "content": "$1",
+        "example": "#article"
+      }
+    }
+  },
   "pickerAriaLabel": {
     "message": "Панель Elements"
   },
@@ -381,6 +402,18 @@
   "pickerChangesEmpty": {
     "message": "Пока нет изменений — выберите элемент."
   },
+  "pickerShowAllChanges": {
+    "message": "Показать все изменения: $COUNT$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "pickerShowRecentChanges": {
+    "message": "Показать последние изменения"
+  },
   "pickerRememberDefault": {
     "message": "Запоминать правки"
   },
@@ -389,6 +422,12 @@
   },
   "pickerIncognitoTemporary": {
     "message": "Инкогнито: правки остаются временными"
+  },
+  "pickerPersistenceSaved": {
+    "message": "Новые правки сохраняются для этого сайта"
+  },
+  "pickerPersistenceTemporary": {
+    "message": "Новые правки временные до перезагрузки"
   },
   "pickerShowOriginal": {
     "message": "Показать оригинал"

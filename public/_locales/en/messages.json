@@ -375,6 +375,32 @@
     "message": "Hover an element, then click to lock it.",
     "description": "Hint shown before the user selects an element."
   },
+  "pickerPreviewing": {
+    "message": "Previewing — click to select",
+    "description": "Selection state shown while the pointer previews an element."
+  },
+  "pickerSelected": {
+    "message": "Selected — actions are ready",
+    "description": "Selection state shown after an element is locked."
+  },
+  "pickerSelectionIdle": {
+    "message": "Choose an element to begin",
+    "description": "Selection state before an element is hovered."
+  },
+  "pickerSelectionPath": {
+    "message": "Element path",
+    "description": "Accessible label for the interactive element breadcrumb."
+  },
+  "pickerSelectPathToken": {
+    "message": "Select $NODE$",
+    "description": "Accessible label of a selectable breadcrumb level.",
+    "placeholders": {
+      "node": {
+        "content": "$1",
+        "example": "#article"
+      }
+    }
+  },
   "pickerAriaLabel": {
     "message": "Elements picker",
     "description": "Accessible label for the picker overlay."
@@ -481,6 +507,20 @@
     "message": "No changes yet — select an element to start.",
     "description": "Empty state of the list of edits."
   },
+  "pickerShowAllChanges": {
+    "message": "Show all $COUNT$ changes",
+    "description": "Expands a long change history in the picker.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "8"
+      }
+    }
+  },
+  "pickerShowRecentChanges": {
+    "message": "Show recent changes",
+    "description": "Collapses a long change history in the picker."
+  },
   "pickerRememberDefault": {
     "message": "Remember new edits",
     "description": "Label for the default remember setting."
@@ -492,6 +532,14 @@
   "pickerIncognitoTemporary": {
     "message": "Incognito: edits stay temporary",
     "description": "Explains why remembering edits is disabled in a private window."
+  },
+  "pickerPersistenceSaved": {
+    "message": "New edits are saved for this site",
+    "description": "Honest status when new picker edits will be persisted."
+  },
+  "pickerPersistenceTemporary": {
+    "message": "New edits are temporary until reload",
+    "description": "Status when new picker edits will not be persisted."
   },
   "pickerShowOriginal": {
     "message": "Show original",

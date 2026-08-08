@@ -150,8 +150,8 @@ hr {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  width: 28px;
-  height: 28px;
+  width: var(--qds-size-control-standard);
+  height: var(--qds-size-control-standard);
   border-radius: 8px;
   color: var(--el-text-muted);
   padding: 0;
@@ -270,6 +270,32 @@ hr {
   color: var(--el-text-muted);
 }
 
+.selectionStatus {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  margin: 0 0 6px;
+  padding: 3px 8px;
+  border: solid 1px var(--el-border);
+  border-radius: var(--qds-radius-pill);
+  font-size: 11px;
+  font-weight: 650;
+  color: var(--el-text-muted);
+  background: var(--el-surface-alt);
+}
+
+.selectionStatus_previewing {
+  border-style: dashed;
+  color: var(--el-accent-hover);
+  background: var(--qds-fill-hover);
+}
+
+.selectionStatus_selected {
+  border-color: var(--qds-border-focus);
+  color: var(--qds-action-primary-content);
+  background: var(--qds-action-primary);
+}
+
 #elements_current_elm::-webkit-scrollbar {
   display: none;
 }
@@ -288,17 +314,29 @@ hr {
 }
 
 #elements_current_elm .pathNode {
+  box-sizing: border-box;
+  min-height: var(--qds-size-control-standard);
   max-width: 180px;
+  padding: 3px 5px;
+  border: 0;
+  border-bottom: solid 2px rgba(0, 0, 0, 0);
+  border-radius: 5px;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+#elements_current_elm .pathNode:disabled {
+  cursor: default;
 }
 
 #elements_current_elm .pathNode.active {
   color: var(--el-accent-hover);
   font-weight: 600;
   background: var(--el-accent-soft);
-  border-radius: 5px;
-  padding: 1px 5px;
   margin: 0 2px;
 }
 
@@ -477,6 +515,12 @@ hr {
   text-align: center;
 }
 
+.historyDisclosure {
+  width: calc(100% - 32px);
+  margin: 8px 16px 12px;
+  justify-content: center;
+}
+
 .bracket {
   position: relative;
   width: 9px;
@@ -557,8 +601,8 @@ hr {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: var(--qds-size-control-standard);
+  height: var(--qds-size-control-standard);
   flex: none;
   cursor: pointer;
 }
@@ -567,8 +611,8 @@ hr {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: var(--qds-size-control-standard);
+  height: var(--qds-size-control-standard);
   flex: none;
   border-radius: 7px;
   border: 0;
@@ -632,11 +676,17 @@ hr {
   color: var(--el-text-muted);
 }
 
+.persistenceStatus {
+  margin: -2px 0 10px;
+  font-size: 11px;
+}
+
 .footerToggle {
   display: inline-flex;
   align-items: center;
   gap: 7px;
   min-width: 0;
+  min-height: var(--qds-size-control-standard);
   padding: 2px 0;
   border: 0;
   background: transparent;
@@ -1013,8 +1063,8 @@ hr {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: var(--qds-size-control-standard);
+  height: var(--qds-size-control-standard);
   border-radius: 8px;
   border: 0;
   background: transparent;
@@ -1213,21 +1263,23 @@ hr {
 
 /* --- Touch: larger hit targets ------------------------------------------------ */
 
-@media (hover: none) {
+@media (pointer: coarse) {
   .editRow__btn,
-  .editRow__remember {
-    width: 38px;
-    height: 38px;
+  .editRow__remember,
+  .miniBar__btn,
+  .topButton,
+  #elements_current_elm .pathNode,
+  .footerToggle {
+    min-width: var(--qds-size-target-touch);
+    min-height: var(--qds-size-target-touch);
   }
 
-  .miniBar__btn {
-    width: 40px;
-    height: 40px;
-  }
-
+  .editRow__btn,
+  .editRow__remember,
+  .miniBar__btn,
   .topButton {
-    width: 34px;
-    height: 34px;
+    width: var(--qds-size-target-touch);
+    height: var(--qds-size-target-touch);
   }
 }
 
@@ -1237,7 +1289,7 @@ hr {
   .mainWindow {
     width: 100%;
     max-width: none;
-    max-height: min(72vh, 560px);
+    max-height: min(68vh, 520px);
     padding: 0 14px;
     border-radius: 16px;
     transform-origin: bottom center;
@@ -1293,6 +1345,14 @@ hr {
   .actionBtn {
     min-height: 40px;
     justify-content: center;
+  }
+
+  .selectionStatus {
+    margin-bottom: 4px;
+  }
+
+  #elements_current_elm {
+    margin-bottom: 10px;
   }
 
   .actionBtn kbd {
@@ -1366,6 +1426,28 @@ hr {
 
   .footerToggle {
     flex: 1 1 120px;
+  }
+}
+
+@media (max-width: 560px) and (pointer: coarse) {
+  .topButton,
+  .editRow__btn,
+  .editRow__remember,
+  .footerToggle {
+    min-width: var(--qds-size-target-touch);
+    min-height: var(--qds-size-target-touch);
+  }
+
+  .topButton,
+  .editRow__btn,
+  .editRow__remember {
+    width: var(--qds-size-target-touch);
+    height: var(--qds-size-target-touch);
+  }
+
+  .actionBtn,
+  .moreMenu__item {
+    min-height: var(--qds-size-target-touch);
   }
 }
 

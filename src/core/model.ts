@@ -61,6 +61,8 @@ export interface OverlaySnapshot {
   showCoachmark: boolean
   canUndo: boolean
   canRedo: boolean
+  /** Previewing follows hover; Selected is the explicit locked action target. */
+  selectionState: 'idle' | 'previewing' | 'selected'
 }
 
 export const DEFAULT_SETTINGS: ExtensionSettings = {

@@ -162,6 +162,11 @@ export class ElementController {
   }
 
   getSnapshot(): OverlaySnapshot {
+    const selectionState = this.selectionLocked
+      ? 'selected'
+      : this.markedElement
+        ? 'previewing'
+        : 'idle'
     return {
       minimized: this.minimized,
       incognito: this.incognito,
@@ -180,6 +185,7 @@ export class ElementController {
       showCoachmark: this.targetingMode && !this.settings.coachmarkSeen,
       canUndo: this.history.canUndo,
       canRedo: this.history.canRedo,
+      selectionState,
     }
   }
 
@@ -314,6 +320,16 @@ export class ElementController {
       label: this.elementLabel(node),
       active: path.length - 1 - index === this.transpose,
     }))
+  }
+
+  /** Selects a displayed breadcrumb level without changing the original hover root. */
+  selectPathToken(index: number): void {
+    const path = this.getPathTokens()
+    if (!path.length || index < 0 || index >= path.length) return
+    this.transpose = path.length - 1 - index
+    this.highlightElement(true)
+    this.styleHighlighter()
+    this.notify()
   }
 
   private elementLabel(element: Element): string {
@@ -502,10 +518,10 @@ export class ElementController {
     else if (event.code === 'KeyE' && this.selectionLocked && this.markedElement)
       this.startTextEdit(this.markedElement)
     else if (event.code === 'KeyC' && this.selectionLocked) this.applyAction('round')
-    else if (event.code === 'KeyW') {
+    else if (event.code === 'KeyW' || event.code === 'ArrowDown') {
       this.transpose = Math.max(0, this.transpose - 1)
       this.highlightElement()
-    } else if (event.code === 'KeyQ') {
+    } else if (event.code === 'KeyQ' || event.code === 'ArrowUp') {
       this.transpose += 1
       this.highlightElement()
     } else if (event.code === 'KeyZ' && (event.ctrlKey || event.metaKey) && event.shiftKey) {
