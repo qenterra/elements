@@ -11,6 +11,17 @@ const manifestPath = resolve(projectRoot, 'qds-consumer.json')
 const exceptionsPath = resolve(projectRoot, 'qds-exceptions.json')
 const profilePath = resolve(projectRoot, 'docs/qds-product-profile.md')
 
+type DocumentedException = { id: string; path: string }
+
+function documentedExceptions(profile: string): DocumentedException[] {
+  const afterHeading = profile.split(/^## Exceptions\n/m)[1] ?? ''
+  const section = afterHeading.split(/^## /m)[0] ?? ''
+  return [...section.matchAll(/^- `([^`]+)` — `([^`]+)`$/gm)].map((match) => ({
+    id: match[1],
+    path: match[2],
+  }))
+}
+
 describe('QDS Shadow DOM adoption', () => {
   it('ships a local QDS adapter and mounts it in the isolated picker', () => {
     expect(existsSync(adapterPath)).toBe(true)
@@ -41,11 +52,12 @@ describe('QDS Shadow DOM adoption', () => {
       exceptions: Array<{ id: string; path: string }>
     }
     const profile = readFileSync(profilePath, 'utf8')
+    const documented = documentedExceptions(profile)
+    const documentedPairs = new Set(documented.map(({ id, path }) => `${id}\u0000${path}`))
+    const registry = exceptions.exceptions.map(({ id, path }) => ({ id, path }))
 
     expect(profile).toContain('`qds-exceptions.json`')
-    for (const exception of exceptions.exceptions) {
-      expect(profile).toContain(`\`${exception.id}\``)
-      expect(profile).toContain(`\`${exception.path}\``)
-    }
+    expect(documentedPairs.size).toBe(documented.length)
+    expect(documented).toEqual(registry)
   })
 })
