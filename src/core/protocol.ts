@@ -116,22 +116,26 @@ function hasRecoveryRule(record: Record<string, unknown>): boolean {
   const action = record.action
   if (action !== undefined && (typeof action !== 'string' || !RECOVERY_ACTIONS.has(action)))
     return false
-  if (record.text !== undefined && (action !== 'text' || typeof record.text !== 'string'))
-    return false
-  if (record.value === undefined) {
-    return (
-      (record.createdAt === undefined || hasTimestamp(record.createdAt)) &&
-      (record.updatedAt === undefined || hasTimestamp(record.updatedAt))
-    )
-  }
-  if (typeof record.value !== 'string') return false
-  if (action === 'round' && !/^\d{1,3}$/.test(record.value)) return false
-  if (action === 'css' && !sanitizeCssDeclarations(record.value)) return false
-  if (action !== 'round' && action !== 'css') return false
-  return (
+  const hasValidTimestamps =
     (record.createdAt === undefined || hasTimestamp(record.createdAt)) &&
     (record.updatedAt === undefined || hasTimestamp(record.updatedAt))
-  )
+  if (!hasValidTimestamps) return false
+
+  if (action === undefined) return record.text === undefined && record.value === undefined
+  if (action === 'text') return typeof record.text === 'string' && record.value === undefined
+  if (action === 'round')
+    return (
+      record.text === undefined &&
+      typeof record.value === 'string' &&
+      /^\d{1,3}$/.test(record.value)
+    )
+  if (action === 'css')
+    return (
+      record.text === undefined &&
+      typeof record.value === 'string' &&
+      Boolean(sanitizeCssDeclarations(record.value))
+    )
+  return record.text === undefined && record.value === undefined
 }
 
 function hasSiteRecord(value: unknown): boolean {

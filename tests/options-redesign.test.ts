@@ -65,7 +65,7 @@ describe('options redesign contract', () => {
     expect(english.optionsSearchResultsOne?.message).toBe('$COUNT$ site shown')
     expect(english.optionsSearchResultsFew?.message).toBe('$COUNT$ sites shown')
     expect(english.optionsSearchResultsMany?.message).toBe('$COUNT$ sites shown')
-    expect(russian.optionsSearchResultsOne?.message).toBe('Показано $COUNT$ сайт')
+    expect(russian.optionsSearchResultsOne?.message).toBe('Показан $COUNT$ сайт')
     expect(russian.optionsSearchResultsFew?.message).toBe('Показано $COUNT$ сайта')
     expect(russian.optionsSearchResultsMany?.message).toBe('Показано $COUNT$ сайтов')
     expect(english.optionsSearchResults).toBeUndefined()

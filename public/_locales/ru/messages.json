@@ -275,7 +275,7 @@
     "placeholders": { "count": { "content": "$1", "example": "12" } }
   },
   "optionsSearchResultsOne": {
-    "message": "Показано $COUNT$ сайт",
+    "message": "Показан $COUNT$ сайт",
     "placeholders": { "count": { "content": "$1", "example": "1" } }
   },
   "optionsSearchResultsFew": {

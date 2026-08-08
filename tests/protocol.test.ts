@@ -100,6 +100,30 @@ describe('protocol validation', () => {
           ...validRuleRecovery.recovery,
           recovery: {
             ...validRuleRecovery.recovery.recovery,
+            rule: { ...validRule, action: 'text', text: 'Edited text', value: 'unexpected' },
+          },
+        },
+      }),
+    ).toBe(false)
+    expect(
+      isExtensionRequest({
+        ...validRuleRecovery,
+        recovery: {
+          ...validRuleRecovery.recovery,
+          recovery: {
+            ...validRuleRecovery.recovery.recovery,
+            rule: { ...validRule, action: 'gray', text: 'unexpected' },
+          },
+        },
+      }),
+    ).toBe(false)
+    expect(
+      isExtensionRequest({
+        ...validRuleRecovery,
+        recovery: {
+          ...validRuleRecovery.recovery,
+          recovery: {
+            ...validRuleRecovery.recovery.recovery,
             rule: { ...validRule, id: 'short' },
           },
         },
@@ -141,6 +165,90 @@ describe('protocol validation', () => {
         },
       }),
     ).toBe(false)
+    expect(
+      isExtensionRequest({
+        ...validRuleRecovery,
+        recovery: {
+          ...validRuleRecovery.recovery,
+          recovery: {
+            ...validRuleRecovery.recovery.recovery,
+            rule: { ...validRule, action: 'css' },
+          },
+        },
+      }),
+    ).toBe(false)
+    expect(
+      isExtensionRequest({
+        ...validRuleRecovery,
+        recovery: {
+          ...validRuleRecovery.recovery,
+          recovery: {
+            ...validRuleRecovery.recovery.recovery,
+            rule: { ...validRule, action: 'text' },
+          },
+        },
+      }),
+    ).toBe(false)
+    expect(
+      isExtensionRequest({
+        ...validRuleRecovery,
+        recovery: {
+          ...validRuleRecovery.recovery,
+          recovery: {
+            ...validRuleRecovery.recovery.recovery,
+            rule: { ...validRule, action: 'round' },
+          },
+        },
+      }),
+    ).toBe(false)
+    expect(
+      isExtensionRequest({
+        ...validRuleRecovery,
+        recovery: {
+          ...validRuleRecovery.recovery,
+          recovery: {
+            ...validRuleRecovery.recovery.recovery,
+            rule: { ...validRule, action: 'blur', value: '12' },
+          },
+        },
+      }),
+    ).toBe(false)
+    expect(
+      isExtensionRequest({
+        ...validRuleRecovery,
+        recovery: {
+          ...validRuleRecovery.recovery,
+          recovery: {
+            ...validRuleRecovery.recovery.recovery,
+            rule: { ...validRule, action: 'text', text: 'Edited text' },
+          },
+        },
+      }),
+    ).toBe(true)
+    expect(
+      isExtensionRequest({
+        ...validRuleRecovery,
+        recovery: {
+          ...validRuleRecovery.recovery,
+          recovery: {
+            ...validRuleRecovery.recovery.recovery,
+            rule: { ...validRule, action: 'css', value: 'color: red' },
+          },
+        },
+      }),
+    ).toBe(true)
+    expect(
+      isExtensionRequest({
+        ...validRuleRecovery,
+        recovery: {
+          ...validRuleRecovery.recovery,
+          recovery: {
+            ...validRuleRecovery.recovery.recovery,
+            rule: { ...validRule, action: 'blur' },
+          },
+        },
+      }),
+    ).toBe(true)
 
     const validSiteRecovery = {
       v: 2,
