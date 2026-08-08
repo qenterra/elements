@@ -200,7 +200,46 @@ describe('protocol validation', () => {
           },
         },
       }),
-    ).toBe(false)
+    ).toBe(true)
+    expect(
+      isExtensionRequest({
+        ...validRuleRecovery,
+        recovery: {
+          ...validRuleRecovery.recovery,
+          recovery: {
+            ...validRuleRecovery.recovery.recovery,
+            rule: { ...validRule, action: 'round', value: '2' },
+          },
+        },
+      }),
+    ).toBe(true)
+    expect(
+      isExtensionRequest({
+        ...validRuleRecovery,
+        recovery: {
+          ...validRuleRecovery.recovery,
+          recovery: {
+            ...validRuleRecovery.recovery.recovery,
+            rule: { ...validRule, action: 'round', value: '32' },
+          },
+        },
+      }),
+    ).toBe(true)
+    for (const value of ['1', '33', '02', '2.0']) {
+      expect(
+        isExtensionRequest({
+          ...validRuleRecovery,
+          recovery: {
+            ...validRuleRecovery.recovery,
+            recovery: {
+              ...validRuleRecovery.recovery.recovery,
+              rule: { ...validRule, action: 'round', value },
+            },
+          },
+        }),
+        `expected noncanonical round radius ${value} to be rejected`,
+      ).toBe(false)
+    }
     expect(
       isExtensionRequest({
         ...validRuleRecovery,

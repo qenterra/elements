@@ -1,4 +1,6 @@
 import {
+  MAX_RADIUS,
+  MIN_RADIUS,
   isSafeSelectorText,
   sanitizeCssDeclarations,
   type ExtensionSettings,
@@ -104,6 +106,13 @@ function hasTimestamp(value: unknown, allowZero = false): boolean {
   )
 }
 
+/** Accept only a stored radius that model normalization would preserve exactly. */
+function hasCanonicalRoundValue(value: unknown): value is string {
+  if (typeof value !== 'string' || !/^\d{1,2}$/.test(value)) return false
+  const radius = Number(value)
+  return radius >= MIN_RADIUS && radius <= MAX_RADIUS && String(radius) === value
+}
+
 function hasRecoveryRule(record: Record<string, unknown>): boolean {
   if (
     typeof record.id !== 'string' ||
@@ -126,8 +135,7 @@ function hasRecoveryRule(record: Record<string, unknown>): boolean {
   if (action === 'round')
     return (
       record.text === undefined &&
-      typeof record.value === 'string' &&
-      /^\d{1,3}$/.test(record.value)
+      (record.value === undefined || hasCanonicalRoundValue(record.value))
     )
   if (action === 'css')
     return (
