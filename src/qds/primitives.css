@@ -109,6 +109,15 @@
   transform: scale(0.98);
 }
 
+.qds-button--quiet:hover:not(:disabled) {
+  background: var(--qds-fill-hover);
+}
+
+.qds-button--quiet:active:not(:disabled) {
+  background: var(--qds-fill-pressed);
+  transform: scale(0.98);
+}
+
 .qds-icon-button {
   display: inline-grid;
   width: var(--qds-size-control-standard);
@@ -154,6 +163,13 @@
 .qds-dialog__close:active:not(:disabled) {
   background: var(--qds-fill-pressed);
   transform: scale(0.98);
+}
+
+.qds-dialog__close:disabled {
+  color: var(--qds-text-disabled);
+  background: var(--qds-fill-disabled);
+  cursor: default;
+  opacity: var(--qds-opacity-disabled);
 }
 
 .qds-dialog__close > svg {
@@ -321,7 +337,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .qds-button,
-  .qds-icon-button {
+  .qds-icon-button,
+  .qds-dialog__close {
     transition-duration: var(--qds-motion-instant);
   }
 }

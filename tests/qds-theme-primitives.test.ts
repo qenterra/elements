@@ -51,28 +51,36 @@ describe('QDS shared theme and primitives', () => {
     expect(source(shadowAdapterPath)).toContain('../../qds/primitives.css?raw')
   })
 
-  it('keeps filled button variants opaque through hover and press states', () => {
+  it('gives every button variant an intentional hover and press state without losing filled contrast', () => {
     const primitives = source(primitivesPath)
 
-    expect(cssRule(primitives, '.qds-button--primary:hover:not(:disabled)')).toContain(
-      'background: var(--qds-action-primary)',
+    for (const [variant, surface] of [
+      ['.qds-button--primary', '--qds-action-primary'],
+      ['.qds-button--secondary', '--qds-action-secondary'],
+      ['.qds-button--destructive', '--qds-state-destructive'],
+    ]) {
+      expect(cssRule(primitives, `${variant}:hover:not(:disabled)`)).toContain(
+        `background: var(${surface})`,
+      )
+      const pressed = cssRule(primitives, `${variant}:active:not(:disabled)`)
+      expect(pressed).toContain(`background: var(${surface})`)
+      expect(pressed).toContain('transform: scale(0.98)')
+    }
+
+    expect(cssRule(primitives, '.qds-button--quiet:hover:not(:disabled)')).toContain(
+      'background: var(--qds-fill-hover)',
     )
-    expect(cssRule(primitives, '.qds-button--primary:active:not(:disabled)')).toContain(
-      'background: var(--qds-action-primary)',
-    )
-    expect(cssRule(primitives, '.qds-button--destructive:hover:not(:disabled)')).toContain(
-      'background: var(--qds-state-destructive)',
-    )
-    expect(cssRule(primitives, '.qds-button--destructive:active:not(:disabled)')).toContain(
-      'background: var(--qds-state-destructive)',
-    )
+    const quietPressed = cssRule(primitives, '.qds-button--quiet:active:not(:disabled)')
+    expect(quietPressed).toContain('background: var(--qds-fill-pressed)')
+    expect(quietPressed).toContain('transform: scale(0.98)')
     expect(cssRule(primitives, '.qds-button:hover:not(:disabled)')).not.toContain(
       'background: var(--qds-fill-hover)',
     )
   })
 
-  it('gives dialog close controls the same complete fine-pointer base as icon buttons', () => {
-    const closeControl = cssRule(source(primitivesPath), '.qds-dialog__close')
+  it('gives dialog close controls complete icon-control parity across input and motion states', () => {
+    const primitives = source(primitivesPath)
+    const closeControl = cssRule(primitives, '.qds-dialog__close')
 
     expect(closeControl).toContain('display: inline-grid')
     expect(closeControl).toContain('width: var(--qds-size-control-standard)')
@@ -81,6 +89,21 @@ describe('QDS shared theme and primitives', () => {
     expect(closeControl).toContain('border: var(--qds-stroke-default) solid transparent')
     expect(closeControl).toContain('background: transparent')
     expect(closeControl).toContain('cursor: pointer')
+
+    const closeDisabled = cssRule(primitives, '.qds-dialog__close:disabled')
+    expect(closeDisabled).toContain('color: var(--qds-text-disabled)')
+    expect(closeDisabled).toContain('background: var(--qds-fill-disabled)')
+    expect(closeDisabled).toContain('cursor: default')
+
+    expect(cssRule(primitives, '.qds-dialog__close:focus-visible')).toContain(
+      'outline: var(--qds-stroke-focus) solid var(--qds-border-focus)',
+    )
+    expect(primitives).toMatch(
+      /@media \(pointer: coarse\)[\s\S]*\.qds-dialog__close[\s\S]*min-width: var\(--qds-size-target-touch\)[\s\S]*min-height: var\(--qds-size-target-touch\)/,
+    )
+    expect(primitives).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.qds-dialog__close[\s\S]*transition-duration: var\(--qds-motion-instant\)/,
+    )
   })
 
   it('loads the pinned tokens, document adapter, and primitives before each extension page', () => {
