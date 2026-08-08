@@ -21,6 +21,21 @@ describe('protocol validation', () => {
     expect(
       isExtensionRequest({
         v: 2,
+        type: 'site.restore',
+        recovery: {
+          kind: 'rule',
+          recovery: {
+            site: 'example.com',
+            rule: { id: 'rule_deleted', selector: '.deleted', permanent: true },
+            modified: 1,
+            paused: false,
+          },
+        },
+      }),
+    ).toBe(true)
+    expect(
+      isExtensionRequest({
+        v: 2,
         type: 'site.rule.delete',
         site: 'example.com',
         ruleId: 'rule_first',
@@ -35,6 +50,13 @@ describe('protocol validation', () => {
       false,
     )
     expect(isExtensionRequest({ v: 2, type: 'site.rule.delete', site: 'example.com' })).toBe(false)
+    expect(
+      isExtensionRequest({
+        v: 2,
+        type: 'site.restore',
+        recovery: { kind: 'rule', recovery: { site: 'example.com' } },
+      }),
+    ).toBe(false)
     expect(
       isExtensionRequest({
         v: 2,

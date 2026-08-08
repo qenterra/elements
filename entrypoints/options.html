@@ -307,6 +307,16 @@
         transition: background-color 0.15s ease;
       }
 
+      .toast__undo:disabled {
+        cursor: default;
+        opacity: var(--qds-opacity-disabled);
+      }
+
+      .toast__undoError {
+        color: var(--qds-state-destructive);
+        font-size: var(--qds-type-supporting-size);
+      }
+
       .sortSwitch,
       .segment {
         display: inline-flex;
@@ -323,6 +333,7 @@
 
       .sortSwitch__btn,
       .segment__btn {
+        min-height: var(--qds-size-control-standard);
         font: inherit;
         font-size: 11.5px;
         font-weight: 600;
@@ -679,9 +690,11 @@
         display: inline-flex;
         align-items: center;
         position: relative;
-        width: 34px;
-        height: 19px;
-        padding: 2px;
+        width: var(--qds-size-target-touch);
+        height: var(--qds-size-control-standard);
+        min-width: var(--qds-size-control-standard);
+        min-height: var(--qds-size-control-standard);
+        padding: var(--qds-space-1);
         border: 0;
         border-radius: 99px;
         background-color: var(--el-border);
@@ -693,8 +706,8 @@
       }
 
       .switch__knob {
-        width: 15px;
-        height: 15px;
+        width: 24px;
+        height: 24px;
         border-radius: 50%;
         background-color: var(--el-knob);
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.42);
@@ -711,7 +724,7 @@
 
       .switch[aria-checked='true'] .switch__knob {
         background-color: var(--el-accent-contrast);
-        transform: translateX(15px);
+        transform: translateX(12px);
       }
 
       .modalOverlay {
@@ -1285,6 +1298,14 @@
         .modal__actions button {
           min-height: 44px;
           flex: 1;
+        }
+      }
+
+      @media (pointer: coarse) {
+        .sortSwitch__btn,
+        .switch,
+        .optionsNav__links a {
+          min-height: var(--qds-size-target-touch);
         }
       }
 

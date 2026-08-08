@@ -245,8 +245,12 @@ async function handleRequest(
         return ok(snapshot)
       }
       case 'site.restore':
-        await repository.restoreSite(request.snapshot)
-        await broadcastSiteChange(request.snapshot.site)
+        await repository.restoreRecovery(request.recovery)
+        await broadcastSiteChange(
+          request.recovery.kind === 'site'
+            ? request.recovery.snapshot.site
+            : request.recovery.recovery.site,
+        )
         return ok(undefined)
       case 'backup.export':
         return ok(await repository.exportBackup())

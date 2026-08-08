@@ -42,7 +42,10 @@ describe('options redesign contract', () => {
     expect(options).toContain('optionsSearchResults')
     expect(options).toContain('optionsSearchClear')
     expect(options).toContain("onClick={() => setSearch('')}")
-    expect(options).toContain("search ? t('optionsSearchEmpty') : t('optionsSitesEmpty')")
+    expect(options).toContain(
+      'const hasActiveSearch = sites.length > 0 && search.trim().length > 0',
+    )
+    expect(options).toContain("hasActiveSearch ? t('optionsSearchEmpty') : t('optionsSitesEmpty')")
     expectLocalized([
       'optionsSearchScope',
       'optionsSearchResults',
@@ -57,11 +60,27 @@ describe('options redesign contract', () => {
     expect(options).toContain('const [recovery, setRecovery]')
     expect(options).toContain('<RecoveryNotice')
     expect(options).toContain('recovery={recovery}')
-    expect(options).toContain(
-      "setRecovery({ snapshot, message: t('optionsSiteDeleted', [domain]) })",
-    )
-    expect(options).toContain("setRecovery({ snapshot, message: t('optionsRuleDeleted') })")
+    expect(options).toContain("kind: 'site'")
+    expect(options).toContain("kind: 'rule'")
+    expect(options).toContain('recovery: recovery.recovery')
     expectLocalized(['optionsRecoveryTitle', 'optionsRecoveryRestore', 'optionsRecoveryDismiss'])
+  })
+
+  it('keeps fine and coarse pointer targets valid for sort, switches, and navigation', () => {
+    for (const selector of ['.sortSwitch__btn', '.switch', '.optionsNav__links a']) {
+      expect(stylesheet).toContain(selector)
+    }
+    expect(stylesheet).toContain('min-height: var(--qds-size-control-standard)')
+    expect(stylesheet).toMatch(
+      /@media \(pointer: coarse\)[\s\S]*(?:\.sortSwitch__btn|\.switch|\.optionsNav__links a)[\s\S]*min-height: var\(--qds-size-target-touch\)/,
+    )
+  })
+
+  it('waits for import undo, reports failure, and only dismisses the notice after success', () => {
+    expect(options).toContain('const restored = await notice.undo?.()')
+    expect(options).toContain("t('optionsImportUndoFailed')")
+    expect(options).toContain('if (restored) onDismiss(notice.id)')
+    expectLocalized(['optionsImportUndoFailed'])
   })
 
   it('reports export and settings operations with operation-specific errors rather than swallowing them', () => {

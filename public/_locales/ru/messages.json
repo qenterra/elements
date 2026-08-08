@@ -278,6 +278,18 @@
     "message": "Показано сайтов: $COUNT$",
     "placeholders": { "count": { "content": "$1", "example": "3" } }
   },
+  "optionsSearchResultsOne": {
+    "message": "Показан $COUNT$ сайт",
+    "placeholders": { "count": { "content": "$1", "example": "1" } }
+  },
+  "optionsSearchResultsFew": {
+    "message": "Показано сайта: $COUNT$",
+    "placeholders": { "count": { "content": "$1", "example": "2" } }
+  },
+  "optionsSearchResultsMany": {
+    "message": "Показано сайтов: $COUNT$",
+    "placeholders": { "count": { "content": "$1", "example": "12" } }
+  },
   "optionsSearchClear": {
     "message": "Очистить поиск"
   },
@@ -313,6 +325,12 @@
   },
   "optionsExportFailed": {
     "message": "Не удалось экспортировать резервную копию. Попробуйте ещё раз."
+  },
+  "optionsUndoWorking": {
+    "message": "Отмена…"
+  },
+  "optionsImportUndoFailed": {
+    "message": "Не удалось отменить импорт. Попробуйте ещё раз."
   },
   "optionsErrorGeneric": {
     "message": "Что-то пошло не так."

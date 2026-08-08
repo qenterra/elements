@@ -1,5 +1,13 @@
 import type { ExtensionSettings, PersistedEdit } from './model'
-import type { BackupV2, ImportMode, ImportReview, SiteRecord, SiteSnapshot } from './repository'
+import type {
+  BackupV2,
+  ImportMode,
+  ImportReview,
+  RuleDeletion,
+  SiteRecord,
+  SiteRecovery,
+  SiteSnapshot,
+} from './repository'
 
 export const PROTOCOL_VERSION = 2 as const
 
@@ -18,7 +26,7 @@ export type ExtensionRequest =
   | { v: 2; type: 'sites.list' }
   | { v: 2; type: 'site.delete'; site: string }
   | { v: 2; type: 'site.rule.delete'; site: string; ruleId: string }
-  | { v: 2; type: 'site.restore'; snapshot: SiteRecord }
+  | { v: 2; type: 'site.restore'; recovery: SiteRecovery }
   | { v: 2; type: 'backup.export' }
   | { v: 2; type: 'backup.review'; data: string }
   | { v: 2; type: 'backup.import'; data: string; mode: ImportMode }
@@ -48,7 +56,7 @@ export interface ProtocolResponses {
   'site.pause': { persisted: boolean }
   'sites.list': SiteRecord[]
   'site.delete': SiteRecord | null
-  'site.rule.delete': SiteRecord | null
+  'site.rule.delete': RuleDeletion | null
   'site.restore': undefined
   'backup.export': BackupV2
   'backup.review': ImportReview
@@ -72,6 +80,34 @@ function hasValidOrigin(record: Record<string, unknown>): boolean {
   return (
     record.origin === undefined ||
     (typeof record.origin === 'string' && record.origin.length > 0 && record.origin.length <= 64)
+  )
+}
+
+function hasRule(record: Record<string, unknown>): boolean {
+  return (
+    typeof record.selector === 'string' &&
+    typeof record.permanent === 'boolean' &&
+    (record.id === undefined || typeof record.id === 'string')
+  )
+}
+
+function hasRecovery(value: unknown): boolean {
+  if (!isRecord(value) || typeof value.kind !== 'string') return false
+  if (value.kind === 'site') {
+    return (
+      isRecord(value.snapshot) &&
+      typeof value.snapshot.site === 'string' &&
+      Array.isArray(value.snapshot.rules)
+    )
+  }
+  return (
+    value.kind === 'rule' &&
+    isRecord(value.recovery) &&
+    typeof value.recovery.site === 'string' &&
+    isRecord(value.recovery.rule) &&
+    hasRule(value.recovery.rule) &&
+    typeof value.recovery.modified === 'number' &&
+    typeof value.recovery.paused === 'boolean'
   )
 }
 
@@ -108,11 +144,7 @@ export function isExtensionRequest(value: unknown): value is ExtensionRequest {
     case 'site.pause':
       return hasSite(value) && typeof value.paused === 'boolean' && hasValidOrigin(value)
     case 'site.restore':
-      return (
-        isRecord(value.snapshot) &&
-        typeof value.snapshot.site === 'string' &&
-        Array.isArray(value.snapshot.rules)
-      )
+      return hasRecovery(value.recovery)
     case 'backup.review':
       return typeof value.data === 'string'
     case 'backup.import':

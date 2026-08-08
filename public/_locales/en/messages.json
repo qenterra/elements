@@ -345,6 +345,21 @@
     "description": "Live result count for the saved-site search.",
     "placeholders": { "count": { "content": "$1", "example": "3" } }
   },
+  "optionsSearchResultsOne": {
+    "message": "$COUNT$ site shown",
+    "description": "Singular live result count for the saved-site search.",
+    "placeholders": { "count": { "content": "$1", "example": "1" } }
+  },
+  "optionsSearchResultsFew": {
+    "message": "$COUNT$ sites shown",
+    "description": "Few-form live result count for the saved-site search.",
+    "placeholders": { "count": { "content": "$1", "example": "2" } }
+  },
+  "optionsSearchResultsMany": {
+    "message": "$COUNT$ sites shown",
+    "description": "Plural live result count for the saved-site search.",
+    "placeholders": { "count": { "content": "$1", "example": "12" } }
+  },
   "optionsSearchClear": {
     "message": "Clear search",
     "description": "Clears the saved-site search query."
@@ -392,6 +407,14 @@
   "optionsExportFailed": {
     "message": "The backup could not be exported. Try again.",
     "description": "Error shown when creating or downloading an export fails."
+  },
+  "optionsUndoWorking": {
+    "message": "Undoing…",
+    "description": "Progress label while an import undo is running."
+  },
+  "optionsImportUndoFailed": {
+    "message": "The import could not be undone. Try again.",
+    "description": "Error shown when no import undo is available or it fails."
   },
   "optionsErrorGeneric": {
     "message": "Something went wrong.",

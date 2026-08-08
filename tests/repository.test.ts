@@ -97,8 +97,8 @@ describe('RuleRepository', () => {
       repository.deleteRule('example.com', 'rule_second'),
     ])
 
-    expect(firstSnapshot?.rules).toHaveLength(2)
-    expect(secondSnapshot?.rules).toHaveLength(1)
+    expect(firstSnapshot?.rule.id).toBe('rule_first')
+    expect(secondSnapshot?.rule.id).toBe('rule_second')
     await expect(repository.listSites()).resolves.toEqual([])
   })
 
@@ -115,9 +115,49 @@ describe('RuleRepository', () => {
     await expect(repository.listSites()).resolves.toMatchObject([
       { rules: [{ id: 'rule_second' }] },
     ])
-    await repository.restoreSite(snapshot!)
+    await repository.restoreRule(snapshot!)
     await expect(repository.listSites()).resolves.toMatchObject([
-      { rules: [{ id: 'rule_first' }, { id: 'rule_second' }] },
+      { rules: [{ id: 'rule_second' }, { id: 'rule_first' }] },
+    ])
+  })
+
+  it('merges a restored deleted site with rules saved after the deletion', async () => {
+    const { repository } = setup({
+      'web:example.com': JSON.stringify([
+        { id: 'rule_before', selector: '.before', permanent: true },
+      ]),
+    })
+
+    const snapshot = await repository.deleteSite('example.com')
+    await repository.saveRules('example.com', [
+      { id: 'rule_later', selector: '.later', permanent: true },
+    ])
+    await repository.restoreSite(snapshot!)
+
+    const [site] = await repository.listSites()
+    expect(site.rules.map((rule) => rule.id)).toEqual(['rule_later', 'rule_before'])
+  })
+
+  it('restores only the deleted rule and preserves later edits on that site', async () => {
+    const { repository } = setup({
+      'web:example.com': JSON.stringify([
+        { id: 'rule_delete', selector: '.delete', permanent: true },
+        { id: 'rule_keep', selector: '.keep', permanent: true },
+      ]),
+    })
+
+    const recovery = await repository.deleteRule('example.com', 'rule_delete')
+    await repository.saveRules('example.com', [
+      { id: 'rule_keep', selector: '.keep-updated', permanent: true },
+      { id: 'rule_later', selector: '.later', permanent: true },
+    ])
+    await repository.restoreRule(recovery!)
+
+    const [site] = await repository.listSites()
+    expect(site.rules.map((rule) => [rule.id, rule.selector])).toEqual([
+      ['rule_keep', '.keep-updated'],
+      ['rule_later', '.later'],
+      ['rule_delete', '.delete'],
     ])
   })
 

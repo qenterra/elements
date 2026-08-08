@@ -22,7 +22,13 @@ import {
   type ThemePreference,
 } from '../../src/core/model'
 import { PROTOCOL_VERSION, type ExtensionRequest, type ResponseFor } from '../../src/core/protocol'
-import type { ImportReview, SiteRecord } from '../../src/core/repository'
+import type {
+  ImportReview,
+  RuleDeletion,
+  SiteRecord,
+  SiteRecovery,
+} from '../../src/core/repository'
+import { SettingsWriteQueue } from '../../src/core/settings-write-queue'
 import { resolveTheme, watchSystemTheme } from '../../src/core/theme'
 import { sendProtocolMessage } from '../../src/core/transport'
 
@@ -32,10 +38,10 @@ type ToastMessage = {
   id: number
   message: string
   error: boolean
-  undo?: () => void | Promise<void>
+  undo?: () => Promise<boolean>
 }
 type ImportReviewState = { text: string; report: ImportReview }
-type RecoveryState = { snapshot: SiteRecord; message: string }
+type RecoveryState = { recovery: SiteRecovery; message: string }
 
 const SORT_KEY = 'siteListSort'
 const DOCUMENTS_URL = 'https://github.com/QenTerra/elements/blob/main/'
@@ -239,12 +245,17 @@ function ToastNotice({
   onDismiss: (id: number) => void
 }) {
   const [visible, setVisible] = useState(false)
+  const [undoing, setUndoing] = useState(false)
+  const [undoFailed, setUndoFailed] = useState(false)
 
   useEffect(() => {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const enterFrame = requestAnimationFrame(() => setVisible(true))
     let exitTimer = 0
-    const lifetime = notice.error ? 5000 : notice.undo ? 5000 : 2500
+    const lifetime = notice.error ? 5000 : notice.undo ? 0 : 2500
+    if (!lifetime) {
+      return () => cancelAnimationFrame(enterFrame)
+    }
     const visibleTimer = window.setTimeout(() => {
       setVisible(false)
       exitTimer = window.setTimeout(() => onDismiss(notice.id), reduceMotion ? 0 : 180)
@@ -269,14 +280,27 @@ function ToastNotice({
         <button
           type="button"
           className="toast__undo"
-          onClick={() => {
-            void notice.undo?.()
-            onDismiss(notice.id)
-          }}
+          disabled={undoing}
+          onClick={() =>
+            void (async () => {
+              setUndoing(true)
+              setUndoFailed(false)
+              try {
+                const restored = await notice.undo?.()
+                if (restored) onDismiss(notice.id)
+                else setUndoFailed(true)
+              } catch {
+                setUndoFailed(true)
+              } finally {
+                setUndoing(false)
+              }
+            })()
+          }
         >
-          {t('optionsUndo')}
+          {undoing ? t('optionsUndoWorking') : t('optionsUndo')}
         </button>
       )}
+      {undoFailed && <span className="toast__undoError">{t('optionsImportUndoFailed')}</span>}
     </div>
   )
 }
@@ -351,6 +375,17 @@ function importRuleCount(count: number): string {
       : category === 'few'
         ? 'optionsImportRuleCountFew'
         : 'optionsImportRuleCountMany'
+  return t(key, [String(count)])
+}
+
+function searchResultCount(count: number): string {
+  const category = new Intl.PluralRules(browser.i18n.getUILanguage()).select(count)
+  const key =
+    category === 'one'
+      ? 'optionsSearchResultsOne'
+      : category === 'few'
+        ? 'optionsSearchResultsFew'
+        : 'optionsSearchResultsMany'
   return t(key, [String(count)])
 }
 
@@ -503,20 +538,29 @@ function OptionsApp({
   const importInput = useRef<HTMLInputElement>(null)
   const importDialog = useRef<HTMLDivElement>(null)
   const importFirstChoice = useRef<HTMLButtonElement>(null)
-  const settingsRevision = useRef(0)
-  const settingsWrite = useRef<Promise<void>>(Promise.resolve())
   useFocusTrap(importDialog, importFirstChoice, () => setReview(null), review !== null)
 
-  const showToast = useCallback(
-    (message: string, error = false, undo?: () => void | Promise<void>) => {
-      toastId.current += 1
-      setToast({ id: toastId.current, message, error, undo })
-    },
-    [],
-  )
+  const showToast = useCallback((message: string, error = false, undo?: () => Promise<boolean>) => {
+    toastId.current += 1
+    setToast({ id: toastId.current, message, error, undo })
+  }, [])
   const dismissToast = useCallback((id: number) => {
     setToast((current) => (current?.id === id ? null : current))
   }, [])
+  const settingsWriter = useRef<SettingsWriteQueue | null>(null)
+  if (!settingsWriter.current) {
+    settingsWriter.current = new SettingsWriteQueue(
+      initialSettings,
+      (next) =>
+        callBackground({
+          v: PROTOCOL_VERSION,
+          type: 'settings.save',
+          settings: next,
+        }),
+      setSettings,
+      () => showToast(t('optionsSettingsSaveFailed'), true),
+    )
+  }
 
   const reloadSites = useCallback(async () => setSites(await readSites()), [])
   useEffect(() => {
@@ -557,26 +601,9 @@ function OptionsApp({
     }
   }, [reloadSites, showToast])
 
-  const updateSettings = useCallback(
-    (next: Partial<ExtensionSettings>) => {
-      setSettings((current) => {
-        const merged = { ...current, ...next }
-        const revision = ++settingsRevision.current
-        settingsWrite.current = settingsWrite.current
-          .then(async () => {
-            if (revision !== settingsRevision.current) return
-            await callBackground({
-              v: PROTOCOL_VERSION,
-              type: 'settings.save',
-              settings: merged,
-            })
-          })
-          .catch(() => showToast(t('optionsSettingsSaveFailed'), true))
-        return merged
-      })
-    },
-    [showToast],
-  )
+  const updateSettings = useCallback((next: Partial<ExtensionSettings>) => {
+    settingsWriter.current?.update(next)
+  }, [])
 
   const filteredSites = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -589,6 +616,10 @@ function OptionsApp({
         : left.domain.localeCompare(right.domain),
     )
   }, [sites, sortMode, search])
+  const hasActiveSearch = sites.length > 0 && search.trim().length > 0
+  useEffect(() => {
+    if (!sites.length && search) setSearch('')
+  }, [search, sites.length])
   const siteAnimationOrder = useMemo(
     () => new Map(sites.map((site, index) => [site.domain, index])),
     [sites],
@@ -634,36 +665,54 @@ function OptionsApp({
   }
 
   const deleteSite = async (domain: string) => {
+    let snapshot: SiteRecord | null
     try {
-      const snapshot = await callBackground({
+      snapshot = await callBackground({
         v: PROTOCOL_VERSION,
         type: 'site.delete',
         site: domain,
       })
-      if (!snapshot) return
-      setRecovery({ snapshot, message: t('optionsSiteDeleted', [domain]) })
-      showToast(t('optionsSiteDeleted', [domain]))
-      await reloadSites()
     } catch {
       showToast(t('optionsSiteDeleteFailed'), true)
+      return
+    }
+    if (!snapshot) return
+    setRecovery({
+      recovery: { kind: 'site', snapshot },
+      message: t('optionsSiteDeleted', [domain]),
+    })
+    showToast(t('optionsSiteDeleted', [domain]))
+    try {
+      await reloadSites()
+    } catch {
+      showToast(t('optionsSitesLoadFailed'), true)
     }
   }
 
   const deleteRule = async (domain: string, rule: PersistedEdit) => {
     if (!rule.id) return
+    let deletedRule: RuleDeletion | null
     try {
-      const snapshot = await callBackground({
+      deletedRule = await callBackground({
         v: PROTOCOL_VERSION,
         type: 'site.rule.delete',
         site: domain,
         ruleId: rule.id,
       })
-      if (!snapshot) return
-      setRecovery({ snapshot, message: t('optionsRuleDeleted') })
-      showToast(t('optionsRuleDeleted'))
-      await reloadSites()
     } catch {
       showToast(t('optionsRuleDeleteFailed'), true)
+      return
+    }
+    if (!deletedRule) return
+    setRecovery({
+      recovery: { kind: 'rule', recovery: deletedRule },
+      message: t('optionsRuleDeleted'),
+    })
+    showToast(t('optionsRuleDeleted'))
+    try {
+      await reloadSites()
+    } catch {
+      showToast(t('optionsSitesLoadFailed'), true)
     }
   }
 
@@ -675,9 +724,14 @@ function OptionsApp({
         site: domain,
         paused,
       })
-      await reloadSites()
     } catch {
       showToast(t('optionsSitePauseFailed'), true)
+      return
+    }
+    try {
+      await reloadSites()
+    } catch {
+      showToast(t('optionsSitesLoadFailed'), true)
     }
   }
 
@@ -732,8 +786,14 @@ function OptionsApp({
       })
       setReview(null)
       showToast(t('optionsImportSuccess'), false, async () => {
-        await callBackground({ v: PROTOCOL_VERSION, type: 'backup.undo' })
-        await reloadSites()
+        const restored = await callBackground({ v: PROTOCOL_VERSION, type: 'backup.undo' })
+        if (!restored) return false
+        try {
+          await reloadSites()
+        } catch {
+          showToast(t('optionsSitesLoadFailed'), true)
+        }
+        return true
       })
       await reloadSites()
     } catch (error) {
@@ -750,13 +810,18 @@ function OptionsApp({
       await callBackground({
         v: PROTOCOL_VERSION,
         type: 'site.restore',
-        snapshot: recovery.snapshot,
+        recovery: recovery.recovery,
       })
       setRecovery(null)
+    } catch {
+      showToast(t('optionsRecoveryRestoreFailed'), true)
+      return
+    }
+    try {
       await reloadSites()
       showToast(t('optionsRecoveryRestored'))
     } catch {
-      showToast(t('optionsRecoveryRestoreFailed'), true)
+      showToast(t('optionsSitesLoadFailed'), true)
     }
   }
 
@@ -828,7 +893,7 @@ function OptionsApp({
                     aria-label={t('optionsSearchPlaceholder')}
                     onChange={(event) => setSearch(event.target.value)}
                   />
-                  {search && (
+                  {hasActiveSearch && (
                     <button
                       type="button"
                       className="qds-button qds-button--quiet searchClear"
@@ -839,7 +904,7 @@ function OptionsApp({
                   )}
                 </div>
                 <p className="searchStatus" aria-live="polite">
-                  {t('optionsSearchResults', [String(filteredSites.length)])}
+                  {searchResultCount(filteredSites.length)}
                 </p>
               </div>
             )}
@@ -936,7 +1001,7 @@ function OptionsApp({
                 {!filteredSites.length && (
                   <p className="siteList__empty">
                     <span className="bracket" aria-hidden="true" />
-                    {search ? t('optionsSearchEmpty') : t('optionsSitesEmpty')}
+                    {hasActiveSearch ? t('optionsSearchEmpty') : t('optionsSitesEmpty')}
                     <span className="bracket bracket_r" aria-hidden="true" />
                   </p>
                 )}

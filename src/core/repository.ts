@@ -21,6 +21,17 @@ export interface SiteRecord {
   paused: boolean
 }
 
+/** The minimal recovery payload for one deleted rule. */
+export interface RuleDeletion {
+  site: string
+  rule: PersistedEdit
+  modified: number
+  paused: boolean
+}
+
+export type SiteRecovery =
+  { kind: 'site'; snapshot: SiteRecord } | { kind: 'rule'; recovery: RuleDeletion }
+
 export interface SiteSnapshot {
   site: string
   rules: PersistedEdit[]
@@ -452,37 +463,66 @@ export class RuleRepository {
     })
   }
 
-  async deleteRule(siteValue: string, ruleId: string): Promise<SiteRecord | null> {
+  async deleteRule(siteValue: string, ruleId: string): Promise<RuleDeletion | null> {
     const site = normalizeSite(siteValue)
     if (!site || !RULE_ID_PATTERN.test(ruleId)) throw new RepositoryError('RULE_INVALID')
     return this.mutate(async () => {
       const existing =
         (await this.listSitesNow()).find((candidate) => candidate.site === site) ?? null
-      if (!existing || !existing.rules.some((rule) => rule.id === ruleId)) return null
+      const rule = existing?.rules.find((candidate) => candidate.id === ruleId)
+      if (!existing || !rule) return null
       await this.saveRulesNow(
         site,
-        existing.rules.filter((rule) => rule.id !== ruleId),
+        existing.rules.filter((candidate) => candidate.id !== ruleId),
         this.now(),
       )
-      return existing
+      return { site, rule, modified: existing.modified, paused: existing.paused }
     })
   }
 
+  /**
+   * Restores a deleted site by merging only rules absent from the current
+   * site. A later save always wins for an already-known rule identity.
+   */
   async restoreSite(snapshot: SiteRecord): Promise<void> {
     const site = normalizeSite(snapshot.site)
     if (!site) throw new RepositoryError('SITE_INVALID')
-    await this.mutate(() =>
-      this.transaction(async () => {
-        const rules = migratePersistedEdits(snapshot.rules, this.now())
-        if (rules.length) await this.storage.set(`web:${site}`, serializeRules(rules))
-        else await this.storage.remove(`web:${site}`)
-        const meta = parseMeta(await this.storage.get<unknown>(META_KEY, {}))
-        if (rules.length) meta[site] = snapshot.modified || this.now()
-        else delete meta[site]
-        await this.storage.set(META_KEY, meta)
-        await this.setPausedNow(site, Boolean(rules.length && snapshot.paused))
-      }),
-    )
+    await this.mutate(async () => {
+      await this.transaction(async () => {
+        const current = (await this.listSitesNow()).find((candidate) => candidate.site === site)
+        const restored = migratePersistedEdits(snapshot.rules, this.now())
+        const currentKeys = new Set(current?.rules.map(ruleIdentity) ?? [])
+        const rules = [
+          ...(current?.rules ?? []),
+          ...restored.filter((rule) => !currentKeys.has(ruleIdentity(rule))),
+        ]
+        if (!rules.length) return
+        await this.saveRulesNow(site, rules, this.now())
+        if (!current) await this.setPausedNow(site, snapshot.paused)
+      })
+    })
+  }
+
+  /** Restores exactly one deleted rule without replaying a stale site snapshot. */
+  async restoreRule(recovery: RuleDeletion): Promise<void> {
+    const site = normalizeSite(recovery.site)
+    if (!site) throw new RepositoryError('SITE_INVALID')
+    await this.mutate(async () => {
+      await this.transaction(async () => {
+        const current = (await this.listSitesNow()).find((candidate) => candidate.site === site)
+        const rule = migratePersistedEdits([recovery.rule], this.now())[0]
+        if (!rule) throw new RepositoryError('RULE_INVALID')
+        const currentRules = current?.rules ?? []
+        if (currentRules.some((candidate) => ruleIdentity(candidate) === ruleIdentity(rule))) return
+        await this.saveRulesNow(site, [...currentRules, rule], this.now())
+        if (!current) await this.setPausedNow(site, recovery.paused)
+      })
+    })
+  }
+
+  async restoreRecovery(recovery: SiteRecovery): Promise<void> {
+    if (recovery.kind === 'site') return this.restoreSite(recovery.snapshot)
+    return this.restoreRule(recovery.recovery)
   }
 
   async exportBackup(): Promise<BackupV2> {
