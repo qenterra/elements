@@ -383,6 +383,10 @@
     "message": "Selected — actions are ready",
     "description": "Selection state shown after an element is locked."
   },
+  "pickerEditing": {
+    "message": "Editing text — finish or cancel to continue",
+    "description": "Selection state while the transactional text editor is open."
+  },
   "pickerSelectionIdle": {
     "message": "Choose an element to begin",
     "description": "Selection state before an element is hovered."
@@ -534,11 +538,11 @@
     "description": "Explains why remembering edits is disabled in a private window."
   },
   "pickerPersistenceSaved": {
-    "message": "New edits are saved for this site",
+    "message": "New edits will be saved for this site",
     "description": "Honest status when new picker edits will be persisted."
   },
   "pickerPersistenceTemporary": {
-    "message": "New edits are temporary until reload",
+    "message": "New edits will stay temporary until reload",
     "description": "Status when new picker edits will not be persisted."
   },
   "pickerShowOriginal": {

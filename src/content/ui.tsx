@@ -13,6 +13,7 @@ import {
   type RuntimeEdit,
 } from '../core/model'
 import { ElementController } from './controller'
+import { canUsePickerActions, pickerSelectionStatusKey, recentHistory } from './picker-state'
 
 type I18nApi = { getMessage: (name: string, substitutions?: string | string[]) => string }
 
@@ -390,13 +391,9 @@ function SelectorPopover({
 function MiniToolbar({
   marked,
   controller,
-  advanced,
-  onCreateCss,
 }: {
   marked: MarkedInfo
   controller: ElementController
-  advanced: boolean
-  onCreateCss: (anchor: Rect) => void
 }) {
   const barRef = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState<{ width: number; height: number } | null>(null)
@@ -405,7 +402,7 @@ function MiniToolbar({
   useLayoutEffect(() => {
     const bar = barRef.current
     if (bar) setSize({ width: bar.offsetWidth, height: bar.offsetHeight })
-  }, [advanced, marked.label, viewportRevision])
+  }, [marked.label, viewportRevision])
 
   useEffect(() => {
     const update = () => setViewportRevision((revision) => revision + 1)
@@ -464,47 +461,6 @@ function MiniToolbar({
       >
         <RoundIcon />
       </button>
-      <span className="miniBar__rule" />
-      <button
-        type="button"
-        className="miniBar__btn"
-        title={t('pickerBlurElement')}
-        aria-label={t('pickerBlurElement')}
-        onClick={() => controller.applyAction('blur')}
-      >
-        <BlurIcon />
-      </button>
-      <button
-        type="button"
-        className="miniBar__btn"
-        title={t('pickerDimElement')}
-        aria-label={t('pickerDimElement')}
-        onClick={() => controller.applyAction('dim')}
-      >
-        <DimIcon />
-      </button>
-      <button
-        type="button"
-        className="miniBar__btn"
-        title={t('pickerGrayElement')}
-        aria-label={t('pickerGrayElement')}
-        onClick={() => controller.applyAction('gray')}
-      >
-        <GrayIcon />
-      </button>
-      {advanced && (
-        <button
-          type="button"
-          className="miniBar__btn"
-          title={t('pickerCustomCss')}
-          aria-label={t('pickerCustomCss')}
-          onClick={(event) =>
-            onCreateCss((event.currentTarget as HTMLElement).getBoundingClientRect())
-          }
-        >
-          <CodeIcon />
-        </button>
-      )}
     </div>
   )
 }
@@ -669,6 +625,7 @@ function PickerPanel({ controller }: { controller: ElementController }) {
   const [moreOpen, setMoreOpen] = useState(false)
   const [showAllHistory, setShowAllHistory] = useState(false)
   const pathRef = useRef<HTMLDivElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
   const moreButtonRef = useRef<HTMLButtonElement>(null)
   const moreMenuRef = useRef<HTMLDivElement>(null)
   const [morePosition, setMorePosition] = useState<{ left: number; top: number } | null>(null)
@@ -735,7 +692,14 @@ function PickerPanel({ controller }: { controller: ElementController }) {
       ?.focus()
     return () => {
       controller.setModal(false)
-      moreButtonRef.current?.focus()
+      if (!moreButtonRef.current?.disabled) moreButtonRef.current?.focus()
+      else {
+        const pathNode = pathRef.current?.querySelector<HTMLButtonElement>(
+          '.pathNode:not(:disabled)',
+        )
+        if (pathNode) pathNode.focus()
+        else panelRef.current?.focus()
+      }
     }
   }, [moreOpen, controller])
 
@@ -796,9 +760,17 @@ function PickerPanel({ controller }: { controller: ElementController }) {
       )
     : t('pickerHoverHint')
 
-  const hasSelection = snapshot.selectionState === 'selected' && !snapshot.textEditRect
-  const visibleEdits = showAllHistory ? snapshot.edits : snapshot.edits.slice(0, 3)
+  const hasSelection = canUsePickerActions(snapshot.selectionState, Boolean(snapshot.textEditRect))
+  const selectionStatusKey = pickerSelectionStatusKey(
+    snapshot.selectionState,
+    Boolean(snapshot.textEditRect),
+  )
+  const visibleEdits = recentHistory(snapshot.edits, showAllHistory)
   const canCollapseHistory = snapshot.edits.length > 3
+
+  useEffect(() => {
+    if (!hasSelection && moreOpen) setMoreOpen(false)
+  }, [hasSelection, moreOpen])
   const openCreateCss = (anchor: Rect) => {
     const selector = controller.draftSelector()
     if (selector) setPopover({ kind: 'create-css', selector, anchor })
@@ -812,8 +784,10 @@ function PickerPanel({ controller }: { controller: ElementController }) {
   return (
     <>
       <div
+        ref={panelRef}
         className={`mainWindow mainWindow_animated${snapshot.minimized ? ' minimized' : ''}`}
         role="region"
+        tabIndex={-1}
         aria-label={t('pickerAriaLabel')}
         data-keep-highlight=""
       >
@@ -882,14 +856,11 @@ function PickerPanel({ controller }: { controller: ElementController }) {
 
           {snapshot.showCoachmark && <Coachmark controller={controller} />}
 
-          <p className={`selectionStatus selectionStatus_${snapshot.selectionState}`} role="status">
-            {t(
-              snapshot.selectionState === 'selected'
-                ? 'pickerSelected'
-                : snapshot.selectionState === 'previewing'
-                  ? 'pickerPreviewing'
-                  : 'pickerSelectionIdle',
-            )}
+          <p
+            className={`selectionStatus selectionStatus_${snapshot.textEditRect ? 'editing' : snapshot.selectionState}`}
+            role="status"
+          >
+            {t(selectionStatusKey)}
           </p>
 
           <div
@@ -944,6 +915,7 @@ function PickerPanel({ controller }: { controller: ElementController }) {
                 aria-label={t('pickerMore')}
                 aria-haspopup="menu"
                 aria-expanded={moreOpen}
+                disabled={!hasSelection}
                 onClick={() => setMoreOpen((open) => !open)}
               >
                 <MoreIcon />
@@ -1145,14 +1117,7 @@ function PickerPanel({ controller }: { controller: ElementController }) {
       )}
 
       {snapshot.marked && !snapshot.minimized && (
-        <MiniToolbar
-          marked={snapshot.marked}
-          controller={controller}
-          advanced={snapshot.settings.advanced}
-          onCreateCss={(anchor) =>
-            setPopover({ kind: 'create-css', selector: controller.draftSelector() ?? '', anchor })
-          }
-        />
+        <MiniToolbar marked={snapshot.marked} controller={controller} />
       )}
       {snapshot.textEditRect && <TextEditor rect={snapshot.textEditRect} controller={controller} />}
       {popover && (

@@ -255,11 +255,12 @@ hr {
   background: var(--el-surface-alt);
   border: solid 1px var(--el-border);
   border-radius: 10px;
-  padding: 10px 12px;
+  padding: 5px 12px;
   margin: 0 0 12px;
   /* Keep the panel stable while following the selected element, but reveal
 	   the terminal selector instead of clipping the beginning of the path. */
-  height: 44px;
+  height: auto;
+  min-height: 44px;
   display: flex;
   align-items: center;
   overflow-x: auto;
@@ -294,6 +295,12 @@ hr {
   border-color: var(--qds-border-focus);
   color: var(--qds-action-primary-content);
   background: var(--qds-action-primary);
+}
+
+.selectionStatus_editing {
+  border-color: var(--qds-border-focus);
+  color: var(--qds-text-primary);
+  background: var(--qds-fill-selected);
 }
 
 #elements_current_elm::-webkit-scrollbar {
@@ -1280,6 +1287,10 @@ hr {
   .topButton {
     width: var(--qds-size-target-touch);
     height: var(--qds-size-target-touch);
+  }
+
+  .moreMenu__item {
+    min-height: var(--qds-size-target-touch);
   }
 }
 

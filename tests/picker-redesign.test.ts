@@ -25,11 +25,10 @@ describe('picker redesign contract', () => {
     expect(controller).toContain('const selectionState = this.selectionLocked')
     expect(controller).toContain("? 'selected'")
     expect(controller).toContain("? 'previewing'")
-    expect(overlay).toContain("snapshot.selectionState === 'selected'")
-    expect(overlay).toContain("? 'pickerSelected'")
-    expect(overlay).toContain("? 'pickerPreviewing'")
+    expect(overlay).toContain('pickerSelectionStatusKey')
+    expect(overlay).toContain('selectionStatusKey')
     expect(stylesheet).toContain('.selectionStatus_selected')
-    expectLocalized(['pickerPreviewing', 'pickerSelected', 'pickerSelectionIdle'])
+    expectLocalized(['pickerPreviewing', 'pickerSelected', 'pickerEditing', 'pickerSelectionIdle'])
   })
 
   it('makes breadcrumb levels interactive and supports Arrow Up/Down with Q/W compatibility', () => {
@@ -51,18 +50,30 @@ describe('picker redesign contract', () => {
     for (const action of ['blur', 'dim', 'gray']) {
       expect(overlay).toContain(`runAction('${action}')`)
     }
+    const miniToolbar = overlay.slice(
+      overlay.indexOf('function MiniToolbar'),
+      overlay.indexOf('function TextEditor'),
+    )
+    expect(miniToolbar).not.toContain("applyAction('blur')")
+    expect(miniToolbar).not.toContain("applyAction('dim')")
+    expect(miniToolbar).not.toContain("applyAction('gray')")
+    expect(miniToolbar).not.toContain('onCreateCss')
   })
 
   it('uses progressive history, an honest new-edit persistence status, and a bounded compact sheet', () => {
-    expect(overlay).toContain(
-      'const visibleEdits = showAllHistory ? snapshot.edits : snapshot.edits.slice(0, 3)',
-    )
+    expect(overlay).toContain('const visibleEdits = recentHistory(snapshot.edits, showAllHistory)')
+    expect(overlay).toContain('disabled={!hasSelection}')
+    expect(overlay).toContain('if (!hasSelection && moreOpen) setMoreOpen(false)')
     expect(overlay).toContain('pickerShowAllChanges')
     expect(overlay).toContain('pickerPersistenceSaved')
     expect(overlay).toContain('pickerPersistenceTemporary')
     expect(stylesheet).toContain('.historyDisclosure')
     expect(stylesheet).toContain('.persistenceStatus')
     expect(stylesheet).toContain('max-height: min(68vh, 520px)')
+    expect(stylesheet).toMatch(
+      /@media \(pointer: coarse\)[\s\S]*\.moreMenu__item\s*\{[\s\S]*min-height: var\(--qds-size-target-touch\)/,
+    )
+    expect(stylesheet).toMatch(/#elements_current_elm\s*\{[\s\S]*height: auto/)
     expectLocalized([
       'pickerShowAllChanges',
       'pickerShowRecentChanges',

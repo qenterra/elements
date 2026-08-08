@@ -180,12 +180,15 @@ test('click locks a hovered target before actions become available', async () =>
   await togglePicker()
   const panel = page.locator('#elements-extension-root-v2 .mainWindow')
   const hide = panel.getByRole('button', { name: 'Hide' })
+  const more = panel.getByRole('button', { name: 'More actions' })
 
   await page.hover('#promo-banner')
   await expect(hide).toBeDisabled()
+  await expect(more).toBeDisabled()
   await expect(panel.getByText('Previewing — click to select')).toBeVisible()
   await page.locator('#promo-banner').click()
   await expect(hide).toBeEnabled()
+  await expect(more).toBeEnabled()
   await expect(panel.getByText('Selected — actions are ready')).toBeVisible()
   await expect(page.locator('#elements-extension-highlighter-v2 .elements_bracket')).toHaveCount(0)
   const [targetBox, toolbarBox] = await Promise.all([
@@ -321,9 +324,12 @@ test('text editing is transactional and undo restores the original DOM node', as
   await togglePicker()
 
   await lockTarget(page, '#headline')
+  const panel = page.locator('#elements-extension-root-v2 .mainWindow')
   await page.getByRole('button', { name: "Edit the element's text" }).last().click()
   const editor = page.getByRole('dialog', { name: 'Edit visible text' })
   await expect(editor).toBeVisible()
+  await expect(page.getByRole('button', { name: 'More actions' })).toBeDisabled()
+  await expect(panel.getByText('Editing text — finish or cancel to continue')).toBeVisible()
   await editor.getByRole('textbox').fill('Cancelled headline')
   await editor.getByRole('button', { name: 'Cancel' }).click()
   await expect(page.locator('#headline')).toHaveText('Original headline')
