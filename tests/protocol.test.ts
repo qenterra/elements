@@ -69,6 +69,127 @@ describe('protocol validation', () => {
     expect(isExtensionRequest({ v: 2, type: 'future.action' })).toBe(false)
   })
 
+  it('rejects incomplete and malformed recovery payloads at the protocol boundary', () => {
+    const validRule = { id: 'rule_deleted', selector: '.deleted', permanent: true }
+    const validRuleRecovery = {
+      v: 2,
+      type: 'site.restore',
+      recovery: {
+        kind: 'rule',
+        recovery: { site: 'example.com', rule: validRule, modified: 1, paused: false },
+      },
+    }
+
+    expect(isExtensionRequest(validRuleRecovery)).toBe(true)
+    expect(
+      isExtensionRequest({
+        ...validRuleRecovery,
+        recovery: {
+          ...validRuleRecovery.recovery,
+          recovery: {
+            ...validRuleRecovery.recovery.recovery,
+            rule: { selector: '.deleted', permanent: true },
+          },
+        },
+      }),
+    ).toBe(false)
+    expect(
+      isExtensionRequest({
+        ...validRuleRecovery,
+        recovery: {
+          ...validRuleRecovery.recovery,
+          recovery: {
+            ...validRuleRecovery.recovery.recovery,
+            rule: { ...validRule, id: 'short' },
+          },
+        },
+      }),
+    ).toBe(false)
+    expect(
+      isExtensionRequest({
+        ...validRuleRecovery,
+        recovery: {
+          ...validRuleRecovery.recovery,
+          recovery: {
+            ...validRuleRecovery.recovery.recovery,
+            rule: { ...validRule, action: 'unknown' },
+          },
+        },
+      }),
+    ).toBe(false)
+    expect(
+      isExtensionRequest({
+        ...validRuleRecovery,
+        recovery: {
+          ...validRuleRecovery.recovery,
+          recovery: {
+            ...validRuleRecovery.recovery.recovery,
+            rule: { ...validRule, action: 'css', value: 'background: url(https://bad.example)' },
+          },
+        },
+      }),
+    ).toBe(false)
+    expect(
+      isExtensionRequest({
+        ...validRuleRecovery,
+        recovery: {
+          ...validRuleRecovery.recovery,
+          recovery: {
+            ...validRuleRecovery.recovery.recovery,
+            rule: { ...validRule, action: 'round', value: '12px' },
+          },
+        },
+      }),
+    ).toBe(false)
+
+    const validSiteRecovery = {
+      v: 2,
+      type: 'site.restore',
+      recovery: {
+        kind: 'site',
+        snapshot: {
+          site: 'example.com',
+          rules: [validRule],
+          modified: 1,
+          paused: false,
+        },
+      },
+    }
+    expect(isExtensionRequest(validSiteRecovery)).toBe(true)
+    expect(
+      isExtensionRequest({
+        ...validSiteRecovery,
+        recovery: {
+          kind: 'site',
+          snapshot: { site: 'Example.com', rules: [validRule], modified: 1, paused: false },
+        },
+      }),
+    ).toBe(false)
+    expect(
+      isExtensionRequest({
+        ...validSiteRecovery,
+        recovery: {
+          kind: 'site',
+          snapshot: { site: 'example.com', rules: [validRule], modified: 1 },
+        },
+      }),
+    ).toBe(false)
+    expect(
+      isExtensionRequest({
+        ...validSiteRecovery,
+        recovery: {
+          kind: 'site',
+          snapshot: {
+            site: 'example.com',
+            rules: [{ selector: '.nested', permanent: true }],
+            modified: 1,
+            paused: false,
+          },
+        },
+      }),
+    ).toBe(false)
+  })
+
   it('validates content commands independently', () => {
     expect(isContentCommand({ v: 2, type: 'picker.toggle' })).toBe(true)
     expect(isContentCommand({ v: 2, type: 'site.changed', site: 'example.com' })).toBe(true)

@@ -340,11 +340,6 @@
     "description": "Explains the scope of the saved-site search.",
     "placeholders": { "count": { "content": "$1", "example": "12" } }
   },
-  "optionsSearchResults": {
-    "message": "$COUNT$ sites shown",
-    "description": "Live result count for the saved-site search.",
-    "placeholders": { "count": { "content": "$1", "example": "3" } }
-  },
   "optionsSearchResultsOne": {
     "message": "$COUNT$ site shown",
     "description": "Singular live result count for the saved-site search.",
@@ -352,7 +347,7 @@
   },
   "optionsSearchResultsFew": {
     "message": "$COUNT$ sites shown",
-    "description": "Few-form live result count for the saved-site search.",
+    "description": "Non-singular live result count for the saved-site search.",
     "placeholders": { "count": { "content": "$1", "example": "2" } }
   },
   "optionsSearchResultsMany": {

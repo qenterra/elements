@@ -507,6 +507,8 @@ export class RuleRepository {
   async restoreRule(recovery: RuleDeletion): Promise<void> {
     const site = normalizeSite(recovery.site)
     if (!site) throw new RepositoryError('SITE_INVALID')
+    if (!recovery.rule.id || !RULE_ID_PATTERN.test(recovery.rule.id))
+      throw new RepositoryError('RULE_INVALID')
     await this.mutate(async () => {
       await this.transaction(async () => {
         const current = (await this.listSitesNow()).find((candidate) => candidate.site === site)

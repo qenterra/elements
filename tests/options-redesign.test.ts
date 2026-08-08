@@ -48,11 +48,28 @@ describe('options redesign contract', () => {
     expect(options).toContain("hasActiveSearch ? t('optionsSearchEmpty') : t('optionsSitesEmpty')")
     expectLocalized([
       'optionsSearchScope',
-      'optionsSearchResults',
+      'optionsSearchResultsOne',
+      'optionsSearchResultsFew',
+      'optionsSearchResultsMany',
       'optionsSearchClear',
       'optionsSitesEmpty',
       'optionsSearchEmpty',
     ])
+  })
+
+  it('uses locale plural categories and grammatical result-count messages', () => {
+    const russianRules = new Intl.PluralRules('ru')
+    expect(russianRules.select(1)).toBe('one')
+    expect(russianRules.select(2)).toBe('few')
+    expect(russianRules.select(12)).toBe('many')
+    expect(english.optionsSearchResultsOne?.message).toBe('$COUNT$ site shown')
+    expect(english.optionsSearchResultsFew?.message).toBe('$COUNT$ sites shown')
+    expect(english.optionsSearchResultsMany?.message).toBe('$COUNT$ sites shown')
+    expect(russian.optionsSearchResultsOne?.message).toBe('Показано $COUNT$ сайт')
+    expect(russian.optionsSearchResultsFew?.message).toBe('Показано $COUNT$ сайта')
+    expect(russian.optionsSearchResultsMany?.message).toBe('Показано $COUNT$ сайтов')
+    expect(english.optionsSearchResults).toBeUndefined()
+    expect(russian.optionsSearchResults).toBeUndefined()
   })
 
   it('keeps deletion recovery available beyond a transient toast until the next destructive operation', () => {

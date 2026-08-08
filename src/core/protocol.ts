@@ -1,4 +1,9 @@
-import type { ExtensionSettings, PersistedEdit } from './model'
+import {
+  isSafeSelectorText,
+  sanitizeCssDeclarations,
+  type ExtensionSettings,
+  type PersistedEdit,
+} from './model'
 import type {
   BackupV2,
   ImportMode,
@@ -10,6 +15,9 @@ import type {
 } from './repository'
 
 export const PROTOCOL_VERSION = 2 as const
+const RECOVERY_SITE_PATTERN = /^(?=.{1,255}$)(?:[a-z0-9[\].:_-]+)$/
+const RECOVERY_RULE_ID_PATTERN = /^[A-Za-z0-9_-]{8,128}$/
+const RECOVERY_ACTIONS = new Set(['round', 'text', 'blur', 'dim', 'gray', 'css'])
 
 export type ExtensionRequest =
   | { v: 2; type: 'picker.status'; active: boolean }
@@ -83,30 +91,72 @@ function hasValidOrigin(record: Record<string, unknown>): boolean {
   )
 }
 
-function hasRule(record: Record<string, unknown>): boolean {
+function hasStoredSite(value: unknown): value is string {
+  return typeof value === 'string' && RECOVERY_SITE_PATTERN.test(value) && !value.includes('..')
+}
+
+function hasTimestamp(value: unknown, allowZero = false): boolean {
   return (
-    typeof record.selector === 'string' &&
-    typeof record.permanent === 'boolean' &&
-    (record.id === undefined || typeof record.id === 'string')
+    typeof value === 'number' &&
+    Number.isFinite(value) &&
+    Number.isInteger(value) &&
+    (allowZero ? value >= 0 : value > 0)
+  )
+}
+
+function hasRecoveryRule(record: Record<string, unknown>): boolean {
+  if (
+    typeof record.id !== 'string' ||
+    !RECOVERY_RULE_ID_PATTERN.test(record.id) ||
+    !isSafeSelectorText(record.selector) ||
+    typeof record.permanent !== 'boolean'
+  )
+    return false
+
+  const action = record.action
+  if (action !== undefined && (typeof action !== 'string' || !RECOVERY_ACTIONS.has(action)))
+    return false
+  if (record.text !== undefined && (action !== 'text' || typeof record.text !== 'string'))
+    return false
+  if (record.value === undefined) {
+    return (
+      (record.createdAt === undefined || hasTimestamp(record.createdAt)) &&
+      (record.updatedAt === undefined || hasTimestamp(record.updatedAt))
+    )
+  }
+  if (typeof record.value !== 'string') return false
+  if (action === 'round' && !/^\d{1,3}$/.test(record.value)) return false
+  if (action === 'css' && !sanitizeCssDeclarations(record.value)) return false
+  if (action !== 'round' && action !== 'css') return false
+  return (
+    (record.createdAt === undefined || hasTimestamp(record.createdAt)) &&
+    (record.updatedAt === undefined || hasTimestamp(record.updatedAt))
+  )
+}
+
+function hasSiteRecord(value: unknown): boolean {
+  return (
+    isRecord(value) &&
+    hasStoredSite(value.site) &&
+    Array.isArray(value.rules) &&
+    value.rules.every((rule) => isRecord(rule) && hasRecoveryRule(rule)) &&
+    hasTimestamp(value.modified, true) &&
+    typeof value.paused === 'boolean'
   )
 }
 
 function hasRecovery(value: unknown): boolean {
   if (!isRecord(value) || typeof value.kind !== 'string') return false
   if (value.kind === 'site') {
-    return (
-      isRecord(value.snapshot) &&
-      typeof value.snapshot.site === 'string' &&
-      Array.isArray(value.snapshot.rules)
-    )
+    return hasSiteRecord(value.snapshot)
   }
   return (
     value.kind === 'rule' &&
     isRecord(value.recovery) &&
-    typeof value.recovery.site === 'string' &&
+    hasStoredSite(value.recovery.site) &&
     isRecord(value.recovery.rule) &&
-    hasRule(value.recovery.rule) &&
-    typeof value.recovery.modified === 'number' &&
+    hasRecoveryRule(value.recovery.rule) &&
+    hasTimestamp(value.recovery.modified, true) &&
     typeof value.recovery.paused === 'boolean'
   )
 }

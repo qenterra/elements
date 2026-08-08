@@ -274,20 +274,16 @@
     "message": "Поиск по $COUNT$ сохранённым сайтам",
     "placeholders": { "count": { "content": "$1", "example": "12" } }
   },
-  "optionsSearchResults": {
-    "message": "Показано сайтов: $COUNT$",
-    "placeholders": { "count": { "content": "$1", "example": "3" } }
-  },
   "optionsSearchResultsOne": {
-    "message": "Показан $COUNT$ сайт",
+    "message": "Показано $COUNT$ сайт",
     "placeholders": { "count": { "content": "$1", "example": "1" } }
   },
   "optionsSearchResultsFew": {
-    "message": "Показано сайта: $COUNT$",
+    "message": "Показано $COUNT$ сайта",
     "placeholders": { "count": { "content": "$1", "example": "2" } }
   },
   "optionsSearchResultsMany": {
-    "message": "Показано сайтов: $COUNT$",
+    "message": "Показано $COUNT$ сайтов",
     "placeholders": { "count": { "content": "$1", "example": "12" } }
   },
   "optionsSearchClear": {

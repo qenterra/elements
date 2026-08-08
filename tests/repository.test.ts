@@ -161,6 +161,24 @@ describe('RuleRepository', () => {
     ])
   })
 
+  it('keeps a later same-identity replacement instead of replaying a deleted rule', async () => {
+    const { repository } = setup({
+      'web:example.com': JSON.stringify([
+        { id: 'rule_same', selector: '.before', permanent: true },
+      ]),
+    })
+
+    const recovery = await repository.deleteRule('example.com', 'rule_same')
+    await repository.saveRules('example.com', [
+      { id: 'rule_same', selector: '.after', permanent: true },
+    ])
+    await repository.restoreRule(recovery!)
+
+    await expect(repository.listSites()).resolves.toMatchObject([
+      { rules: [{ id: 'rule_same', selector: '.after' }] },
+    ])
+  })
+
   it('reviews and imports a v1 backup while reporting invalid rules', async () => {
     const { repository } = setup()
     const backup = JSON.stringify({
