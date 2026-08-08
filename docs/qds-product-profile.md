@@ -30,7 +30,13 @@ The element highlighter, selector breadcrumb, edit-history controls, and picker 
 
 ## Exceptions
 
-The doctor audits `src`, `entrypoints`, and `site`. Four narrow `raw-color` exceptions record the canonical generated QDS snapshot, toolbar badges, host-page highlighter, and public-site styles. Each exception names its exact path and a migration trigger; none masks a whole root.
+The doctor audits `src`, `entrypoints`, and `site`. [`qds-exceptions.json`](../qds-exceptions.json) is the authoritative registry; each entry names one exact path and a migration trigger, so none masks a whole root. Its current narrow entries are:
+
+- `qds-generated-css-snapshot` — `src/qds/qds-tokens.css`
+- `legacy-toolbar-badge-colors` — `entrypoints/background.ts`
+- `legacy-host-highlighter-colors` — `src/content/controller.ts`
+- `product-illustration-colors` — `site/product-illustration.css`
+- `qds-web-token-bridge` — `site/qds-web.css`
 
 ## Migration order
 

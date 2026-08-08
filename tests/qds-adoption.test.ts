@@ -35,4 +35,17 @@ describe('QDS Shadow DOM adoption', () => {
     expect(exceptionPaths).toContain('src/qds/qds-tokens.css')
     expect(exceptionPaths).not.toContain('src/theme/tokens.css')
   })
+
+  it('keeps the product profile aligned with the authoritative exception registry', () => {
+    const exceptions = JSON.parse(readFileSync(exceptionsPath, 'utf8')) as {
+      exceptions: Array<{ id: string; path: string }>
+    }
+    const profile = readFileSync(profilePath, 'utf8')
+
+    expect(profile).toContain('`qds-exceptions.json`')
+    for (const exception of exceptions.exceptions) {
+      expect(profile).toContain(`\`${exception.id}\``)
+      expect(profile).toContain(`\`${exception.path}\``)
+    }
+  })
 })
