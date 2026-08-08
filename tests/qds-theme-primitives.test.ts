@@ -11,6 +11,12 @@ function source(path: string): string {
   return readFileSync(path, 'utf8')
 }
 
+function cssRule(stylesheet: string, selector: string): string {
+  const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const match = stylesheet.match(new RegExp(`${escapedSelector}\\s*\\{([^}]*)\\}`, 's'))
+  return match?.[1] ?? ''
+}
+
 describe('QDS shared theme and primitives', () => {
   it('adapts the pinned QDS tokens for document pages without retaining a local palette', () => {
     expect(existsSync(documentAdapterPath)).toBe(true)
@@ -43,6 +49,38 @@ describe('QDS shared theme and primitives', () => {
     expect(primitives).toContain('@media (pointer: coarse)')
     expect(primitives).toContain(':focus-visible')
     expect(source(shadowAdapterPath)).toContain('../../qds/primitives.css?raw')
+  })
+
+  it('keeps filled button variants opaque through hover and press states', () => {
+    const primitives = source(primitivesPath)
+
+    expect(cssRule(primitives, '.qds-button--primary:hover:not(:disabled)')).toContain(
+      'background: var(--qds-action-primary)',
+    )
+    expect(cssRule(primitives, '.qds-button--primary:active:not(:disabled)')).toContain(
+      'background: var(--qds-action-primary)',
+    )
+    expect(cssRule(primitives, '.qds-button--destructive:hover:not(:disabled)')).toContain(
+      'background: var(--qds-state-destructive)',
+    )
+    expect(cssRule(primitives, '.qds-button--destructive:active:not(:disabled)')).toContain(
+      'background: var(--qds-state-destructive)',
+    )
+    expect(cssRule(primitives, '.qds-button:hover:not(:disabled)')).not.toContain(
+      'background: var(--qds-fill-hover)',
+    )
+  })
+
+  it('gives dialog close controls the same complete fine-pointer base as icon buttons', () => {
+    const closeControl = cssRule(source(primitivesPath), '.qds-dialog__close')
+
+    expect(closeControl).toContain('display: inline-grid')
+    expect(closeControl).toContain('width: var(--qds-size-control-standard)')
+    expect(closeControl).toContain('height: var(--qds-size-control-standard)')
+    expect(closeControl).toContain('place-items: center')
+    expect(closeControl).toContain('border: var(--qds-stroke-default) solid transparent')
+    expect(closeControl).toContain('background: transparent')
+    expect(closeControl).toContain('cursor: pointer')
   })
 
   it('loads the pinned tokens, document adapter, and primitives before each extension page', () => {
