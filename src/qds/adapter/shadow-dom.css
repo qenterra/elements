@@ -1,0 +1,34 @@
+/* Maps Elements' existing picker semantics to the local, pinned QDS CSS contract. */
+:host {
+  --el-motion-fast: var(--qds-motion-floating-fast);
+  --el-motion-base: var(--qds-motion-disclosure);
+  --el-motion-slow: var(--qds-motion-spatial-long);
+  --el-ease-out: var(--qds-ease-enter);
+  --el-ease-drawer: var(--qds-ease-standard);
+  --el-radius-panel: var(--qds-radius-panel);
+  --el-radius-control: var(--qds-radius-control);
+  --el-bg: var(--qds-surface-content);
+  --el-surface: var(--qds-surface-overlay);
+  --el-surface-alt: var(--qds-surface-secondary);
+  --el-border: var(--qds-border-default);
+  --el-text-strong: var(--qds-text-primary);
+  --el-text: var(--qds-text-secondary);
+  --el-text-muted: var(--qds-text-tertiary);
+  --el-accent: var(--qds-action-primary);
+  --el-accent-hover: var(--qds-text-link);
+  --el-accent-contrast: var(--qds-action-primary-content);
+  --el-accent-soft: var(--qds-fill-selected-strong);
+  --el-danger: var(--qds-state-destructive);
+  --el-danger-hover: var(--qds-state-destructive);
+  --el-danger-soft: var(--qds-fill-pressed);
+  --el-success: var(--qds-state-success);
+  --el-knob: var(--qds-action-primary-content);
+  --el-shadow-card:
+    0 1px 2px color-mix(in srgb, var(--qds-text-primary) 14%, transparent),
+    0 12px 32px color-mix(in srgb, var(--qds-text-primary) 20%, transparent);
+  --el-shadow-panel:
+    0 2px 6px color-mix(in srgb, var(--qds-text-primary) 18%, transparent),
+    0 20px 45px color-mix(in srgb, var(--qds-text-primary) 24%, transparent);
+  --el-highlight-fill: var(--qds-fill-selected-strong);
+  --el-highlight-outline: var(--qds-border-focus);
+}

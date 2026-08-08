@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "product": "Elements",
+  "platforms": ["browser-extension"],
+  "adapters": { "swift": false, "css": true },
+  "sourceRoots": ["src/qds/adapter"],
+  "exceptions": "qds-exceptions.json"
+}

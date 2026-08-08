@@ -1,10 +1,10 @@
 import { createRoot, type Root } from 'react-dom/client'
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { browser } from 'wxt/browser'
-import tokensCss from '../theme/tokens.css?raw'
 import contentCss from '../../content.css?raw'
 import { BrandMark } from '../components/BrandMark'
 import { useFocusTrap } from '../components/useFocusTrap'
+import { qdsShadowDomStyles } from '../qds/adapter/shadow-dom'
 import {
   MAX_RADIUS,
   MIN_RADIUS,
@@ -1216,7 +1216,7 @@ export function mountOverlay(
   controller: ElementController,
 ): { unmount: () => void } {
   const style = document.createElement('style')
-  style.textContent = `${tokensCss}\n${contentCss}`
+  style.textContent = `${qdsShadowDomStyles}\n${contentCss}`
   shadowRoot.appendChild(style)
   const mountPoint = document.createElement('div')
   shadowRoot.appendChild(mountPoint)
