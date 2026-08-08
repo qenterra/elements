@@ -1,7 +1,7 @@
 import { createRoot, type Root } from 'react-dom/client'
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { browser } from 'wxt/browser'
-import contentCss from '../../content.css?raw'
+import contentCss from './content.css?raw'
 import { BrandMark } from '../components/BrandMark'
 import { useFocusTrap } from '../components/useFocusTrap'
 import { qdsShadowDomStyles } from '../qds/adapter/shadow-dom'

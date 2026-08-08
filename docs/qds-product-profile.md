@@ -30,14 +30,14 @@ The element highlighter, selector breadcrumb, edit-history controls, and picker 
 
 ## Exceptions
 
-None in the declared QDS adapter root. Product migration outside that root is intentionally deferred and must be declared before it joins the doctor audit.
+The doctor audits `src`, `entrypoints`, and `site`. Five narrow `raw-color` exceptions record the canonical generated QDS snapshot plus legacy options/onboarding tokens, toolbar badges, host-page highlighter, and public-site styles. Each exception names its exact path and a migration trigger; none masks a whole root.
 
 ## Migration order
 
-1. Establish the isolated picker adapter and audit boundary.
+1. Establish the isolated picker adapter and product-wide audit boundary.
 2. Migrate picker component geometry and states.
-3. Declare and migrate options/onboarding surfaces.
-4. Remove remaining legacy token sources only after their consumers are covered.
+3. Migrate options/onboarding and remove their legacy stylesheet exception.
+4. Migrate badge/highlighter integrations and the public site, removing each path exception as its consumer adopts QDS.
 
 ## Verification matrix
 

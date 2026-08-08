@@ -3,6 +3,6 @@
   "product": "Elements",
   "platforms": ["browser-extension"],
   "adapters": { "swift": false, "css": true },
-  "sourceRoots": ["src/qds/adapter"],
+  "sourceRoots": ["src", "entrypoints", "site"],
   "exceptions": "qds-exceptions.json"
 }

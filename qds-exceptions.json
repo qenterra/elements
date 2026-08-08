@@ -1,4 +1,40 @@
 {
   "schemaVersion": 1,
-  "exceptions": []
+  "exceptions": [
+    {
+      "id": "qds-generated-css-snapshot",
+      "rule": "raw-color",
+      "path": "src/qds/qds-tokens.css",
+      "reason": "Pinned generated QDS output necessarily contains the canonical token values.",
+      "reviewTrigger": "When the pinned QDS version or hash changes."
+    },
+    {
+      "id": "legacy-options-onboarding-tokens",
+      "rule": "raw-color",
+      "path": "src/theme/tokens.css",
+      "reason": "Options and onboarding still load this legacy stylesheet outside the picker slice.",
+      "reviewTrigger": "Before the options and onboarding QDS migration."
+    },
+    {
+      "id": "legacy-toolbar-badge-colors",
+      "rule": "raw-color",
+      "path": "entrypoints/background.ts",
+      "reason": "The service-worker badge API accepts direct colors and has no CSS token context.",
+      "reviewTrigger": "When a typed QDS extension badge adapter is added."
+    },
+    {
+      "id": "legacy-host-highlighter-colors",
+      "rule": "raw-color",
+      "path": "src/content/controller.ts",
+      "reason": "The host-page highlighter stays outside the picker Shadow DOM and its CSS token scope.",
+      "reviewTrigger": "When the host highlighter receives a QDS-safe adapter."
+    },
+    {
+      "id": "legacy-product-site-colors",
+      "rule": "raw-color",
+      "path": "site/index.html",
+      "reason": "The public product site remains on its legacy inline stylesheet in this first migration slice.",
+      "reviewTrigger": "Before the public site QDS migration begins."
+    }
+  ]
 }
