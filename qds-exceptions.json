@@ -9,13 +9,6 @@
       "reviewTrigger": "When the pinned QDS version or hash changes."
     },
     {
-      "id": "legacy-options-onboarding-tokens",
-      "rule": "raw-color",
-      "path": "src/theme/tokens.css",
-      "reason": "Options and onboarding still load this legacy stylesheet outside the picker slice.",
-      "reviewTrigger": "Before the options and onboarding QDS migration."
-    },
-    {
       "id": "legacy-toolbar-badge-colors",
       "rule": "raw-color",
       "path": "entrypoints/background.ts",

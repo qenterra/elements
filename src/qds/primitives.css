@@ -1,0 +1,259 @@
+/*
+ * Cross-surface QDS primitives. They deliberately expose style roles rather
+ * than a product component framework: the picker keeps its Shadow DOM and
+ * the extension pages keep their independent React roots.
+ */
+.qds-button,
+.qds-icon-button,
+.qds-interactive-row,
+.qds-radio-group__option,
+.qds-dialog__close {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.qds-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--qds-component-button-icon-gap);
+  min-height: var(--qds-size-control-standard);
+  padding: 0 var(--qds-component-button-padding-x-standard);
+  border: var(--qds-stroke-default) solid transparent;
+  border-radius: var(--qds-component-button-radius);
+  background: var(--qds-action-primary);
+  color: var(--qds-action-primary-content);
+  font-family: var(--qds-type-body-emphasized-family);
+  font-size: var(--qds-type-body-emphasized-size);
+  font-weight: var(--qds-type-body-emphasized-weight);
+  line-height: var(--qds-type-body-emphasized-line);
+  cursor: pointer;
+  transition:
+    background-color var(--qds-motion-hover) var(--qds-ease-standard),
+    color var(--qds-motion-hover) var(--qds-ease-standard),
+    transform var(--qds-motion-press) var(--qds-ease-standard);
+}
+
+.qds-button:hover:not(:disabled),
+.qds-icon-button:hover:not(:disabled),
+.qds-interactive-row:hover:not(:disabled),
+.qds-radio-group__option:hover:not(:disabled) {
+  background: var(--qds-fill-hover);
+}
+
+.qds-button:active:not(:disabled),
+.qds-icon-button:active:not(:disabled) {
+  background: var(--qds-fill-pressed);
+  transform: scale(0.98);
+}
+
+.qds-button:disabled,
+.qds-icon-button:disabled,
+.qds-interactive-row:disabled,
+.qds-radio-group__option:disabled {
+  color: var(--qds-text-disabled);
+  background: var(--qds-fill-disabled);
+  cursor: default;
+  opacity: var(--qds-opacity-disabled);
+}
+
+.qds-button--secondary {
+  background: var(--qds-action-secondary);
+  border-color: var(--qds-border-default);
+  color: var(--qds-action-secondary-content);
+}
+
+.qds-button--quiet,
+.qds-icon-button {
+  background: transparent;
+  color: var(--qds-action-quiet-content);
+}
+
+.qds-button--destructive {
+  background: var(--qds-state-destructive);
+  color: var(--qds-text-inverted);
+}
+
+.qds-icon-button {
+  display: inline-grid;
+  width: var(--qds-size-control-standard);
+  height: var(--qds-size-control-standard);
+  place-items: center;
+  padding: 0;
+  border: var(--qds-stroke-default) solid transparent;
+  border-radius: var(--qds-component-button-radius);
+  cursor: pointer;
+  transition:
+    background-color var(--qds-motion-hover) var(--qds-ease-standard),
+    color var(--qds-motion-hover) var(--qds-ease-standard),
+    transform var(--qds-motion-press) var(--qds-ease-standard);
+}
+
+.qds-icon-button > svg {
+  width: var(--qds-size-icon-m);
+  height: var(--qds-size-icon-m);
+}
+
+.qds-group {
+  display: grid;
+  gap: var(--qds-component-group-gap);
+  padding: var(--qds-component-group-padding);
+  border: var(--qds-stroke-default) solid var(--qds-border-default);
+  border-radius: var(--qds-component-group-radius);
+  background: var(--qds-surface-overlay);
+}
+
+.qds-interactive-row {
+  display: flex;
+  align-items: center;
+  gap: var(--qds-component-interactive-row-gap);
+  width: 100%;
+  min-height: var(--qds-component-interactive-row-heights-compact);
+  padding: 0 var(--qds-component-interactive-row-padding-x);
+  border: var(--qds-stroke-default) solid transparent;
+  border-radius: var(--qds-component-interactive-row-radius);
+  background: transparent;
+  color: var(--qds-text-primary);
+  font: inherit;
+  text-align: start;
+}
+
+.qds-interactive-row[aria-current='true'],
+.qds-interactive-row[aria-pressed='true'] {
+  background: var(--qds-fill-selected);
+}
+
+.qds-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--qds-component-status-gap);
+  color: var(--qds-text-secondary);
+  font-family: var(--qds-type-supporting-family);
+  font-size: var(--qds-type-supporting-size);
+  font-weight: var(--qds-type-supporting-weight);
+  line-height: var(--qds-type-supporting-line);
+}
+
+.qds-status::before {
+  width: var(--qds-component-status-icon-size);
+  height: var(--qds-component-status-icon-size);
+  border-radius: var(--qds-radius-pill);
+  background: currentColor;
+  content: '';
+}
+
+.qds-status--success {
+  color: var(--qds-state-success);
+}
+
+.qds-status--warning {
+  color: var(--qds-state-warning);
+}
+
+.qds-status--destructive {
+  color: var(--qds-state-destructive);
+}
+
+.qds-radio-group {
+  display: grid;
+  gap: var(--qds-space-1);
+}
+
+.qds-radio-group__option {
+  display: flex;
+  align-items: center;
+  gap: var(--qds-space-2);
+  min-height: var(--qds-component-interactive-row-heights-compact);
+  padding: 0 var(--qds-component-interactive-row-padding-x);
+  border: var(--qds-stroke-default) solid transparent;
+  border-radius: var(--qds-component-interactive-row-radius);
+  color: var(--qds-text-primary);
+  cursor: pointer;
+}
+
+.qds-radio-group__option:has(input:checked) {
+  background: var(--qds-fill-selected);
+}
+
+.qds-radio-group__option input {
+  width: var(--qds-size-icon-m);
+  height: var(--qds-size-icon-m);
+  margin: 0;
+  accent-color: var(--qds-action-primary);
+}
+
+.qds-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--qds-space-4);
+  background: var(--qds-fill-scrim);
+}
+
+.qds-dialog {
+  width: min(var(--qds-component-overlay-dialog-readable-width), 100%);
+  max-height: min(720px, calc(100vh - var(--qds-space-8)));
+  overflow: auto;
+  padding: var(--qds-component-panel-padding);
+  border: var(--qds-stroke-default) solid var(--qds-border-default);
+  border-radius: var(--qds-component-panel-radius);
+  background: var(--qds-surface-overlay);
+  color: var(--qds-text-primary);
+  box-shadow: 0 var(--qds-space-2) var(--qds-space-12) var(--qds-fill-scrim);
+}
+
+.qds-tooltip {
+  position: absolute;
+  z-index: var(--qds-z-index-tooltip);
+  max-width: var(--qds-component-overlay-popover-max-width);
+  padding: var(--qds-space-2) var(--qds-space-3);
+  border-radius: var(--qds-radius-control);
+  background: var(--qds-surface-inverted);
+  color: var(--qds-text-inverted);
+  font-family: var(--qds-type-supporting-family);
+  font-size: var(--qds-type-supporting-size);
+  line-height: var(--qds-type-supporting-line);
+}
+
+.qds-keycap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--qds-component-keycap-height);
+  padding: 0 var(--qds-component-keycap-padding-x);
+  border: var(--qds-stroke-default) solid var(--qds-border-strong);
+  border-radius: var(--qds-component-keycap-radius);
+  background: var(--qds-surface-secondary);
+  color: var(--qds-text-secondary);
+  font-family: var(--qds-type-keycap-family);
+  font-size: var(--qds-type-keycap-size);
+  font-weight: var(--qds-type-keycap-weight);
+  line-height: var(--qds-type-keycap-line);
+}
+
+.qds-button:focus-visible,
+.qds-icon-button:focus-visible,
+.qds-interactive-row:focus-visible,
+.qds-radio-group__option:has(input:focus-visible),
+.qds-dialog__close:focus-visible {
+  outline: var(--qds-stroke-focus) solid var(--qds-border-focus);
+  outline-offset: var(--qds-space-1);
+}
+
+@media (pointer: coarse) {
+  .qds-button,
+  .qds-icon-button,
+  .qds-interactive-row,
+  .qds-radio-group__option,
+  .qds-dialog__close {
+    min-width: var(--qds-size-target-touch);
+    min-height: var(--qds-size-target-touch);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qds-button,
+  .qds-icon-button {
+    transition-duration: var(--qds-motion-instant);
+  }
+}

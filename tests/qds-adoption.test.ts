@@ -29,8 +29,10 @@ describe('QDS Shadow DOM adoption', () => {
     expect(manifest.sourceRoots).toEqual(['src', 'entrypoints', 'site'])
     expect(existsSync(pickerStylesheetPath)).toBe(true)
     expect(readFileSync(overlayPath, 'utf8')).toContain('./content.css?raw')
-    expect(exceptions.exceptions.map((exception: { path: string }) => exception.path)).toEqual(
-      expect.arrayContaining(['src/qds/qds-tokens.css', 'src/theme/tokens.css']),
+    const exceptionPaths = exceptions.exceptions.map(
+      (exception: { path: string }) => exception.path,
     )
+    expect(exceptionPaths).toContain('src/qds/qds-tokens.css')
+    expect(exceptionPaths).not.toContain('src/theme/tokens.css')
   })
 })

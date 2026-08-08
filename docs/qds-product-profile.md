@@ -18,11 +18,11 @@ The picker consumes pinned QDS semantic color, spacing, radius, typography, moti
 
 ## Adapted components and patterns
 
-`src/qds/adapter/shadow-dom.ts` scopes the generated QDS CSS to the picker host. `shadow-dom.css` maps legacy picker variable names to QDS semantic roles without raw color values.
+`src/qds/adapter/shadow-dom.ts` scopes the generated QDS CSS to the picker host. `document.css` maps the same semantic roles for options and onboarding, while `primitives.css` provides shared button, row, status, radio, dialog, tooltip, and keycap contracts across both surfaces.
 
 ## Replaced legacy behavior
 
-The picker no longer mounts the hand-authored `src/theme/tokens.css`; it mounts the pinned QDS document plus its Shadow DOM adapter.
+The picker and document pages no longer mount the hand-authored `src/theme/tokens.css`; they mount the pinned QDS output with platform-specific semantic adapters.
 
 ## Product-specific components
 
@@ -30,14 +30,14 @@ The element highlighter, selector breadcrumb, edit-history controls, and picker 
 
 ## Exceptions
 
-The doctor audits `src`, `entrypoints`, and `site`. Five narrow `raw-color` exceptions record the canonical generated QDS snapshot plus legacy options/onboarding tokens, toolbar badges, host-page highlighter, and public-site styles. Each exception names its exact path and a migration trigger; none masks a whole root.
+The doctor audits `src`, `entrypoints`, and `site`. Four narrow `raw-color` exceptions record the canonical generated QDS snapshot, toolbar badges, host-page highlighter, and public-site styles. Each exception names its exact path and a migration trigger; none masks a whole root.
 
 ## Migration order
 
 1. Establish the isolated picker adapter and product-wide audit boundary.
-2. Migrate picker component geometry and states.
-3. Migrate options/onboarding and remove their legacy stylesheet exception.
-4. Migrate badge/highlighter integrations and the public site, removing each path exception as its consumer adopts QDS.
+2. Migrate shared document theme and primitives.
+3. Migrate picker component geometry and states.
+4. Migrate options/onboarding composition, badge/highlighter integrations, and the public site, removing each remaining exception as its consumer adopts QDS.
 
 ## Verification matrix
 

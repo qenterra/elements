@@ -1,4 +1,5 @@
 import qdsTokensCss from '../qds-tokens.css?raw'
+import qdsPrimitivesCss from '../../qds/primitives.css?raw'
 import qdsShadowDomAdapterCss from './shadow-dom.css?raw'
 
 function scopeQdsTokensForShadowDom(tokens: string): string {
@@ -12,4 +13,4 @@ function scopeQdsTokensForShadowDom(tokens: string): string {
 }
 
 /** Pinned QDS tokens, scoped to the Elements picker Shadow DOM. */
-export const qdsShadowDomStyles = `${scopeQdsTokensForShadowDom(qdsTokensCss)}\n${qdsShadowDomAdapterCss}`
+export const qdsShadowDomStyles = `${scopeQdsTokensForShadowDom(qdsTokensCss)}\n${qdsShadowDomAdapterCss}\n${qdsPrimitivesCss}`
