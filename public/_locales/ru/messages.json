@@ -671,7 +671,7 @@
     "message": "Откройте панель"
   },
   "onboardStep1Body": {
-    "message": "Нажмите иконку Elements на панели инструментов или Ctrl/Cmd+Shift+X на любом сайте."
+    "message": "На любом сайте нажмите иконку Elements на панели инструментов. Назначенная горячая клавиша показана выше."
   },
   "onboardStep2Title": {
     "message": "Выберите и отредактируйте"
@@ -693,5 +693,62 @@
   },
   "onboardOpenOptions": {
     "message": "Открыть настройки"
+  },
+  "onboardStartEditing": {
+    "message": "Начать редактирование"
+  },
+  "onboardStartEditingHint": {
+    "message": "Настройка и дополнительные разрешения не нужны."
+  },
+  "onboardReadyTitle": {
+    "message": "Всё готово к редактированию"
+  },
+  "onboardReadyBody": {
+    "message": "Вернитесь на любой обычный сайт, затем нажмите иконку Elements на панели или используйте горячую клавишу выше."
+  },
+  "onboardShortcutLabel": {
+    "message": "Ваша горячая клавиша"
+  },
+  "onboardNoShortcut": {
+    "message": "Горячая клавиша не назначена"
+  },
+  "onboardTrialTitle": {
+    "message": "Попробуйте взаимодействие"
+  },
+  "onboardTrialBody": {
+    "message": "Выберите пример, затем попробуйте правку. Эта тренировка не меняет сайт и не сохраняет правило."
+  },
+  "onboardTrialTemporary": {
+    "message": "Только практика"
+  },
+  "onboardTrialSelect": {
+    "message": "Выбрать этот пример"
+  },
+  "onboardTrialHide": {
+    "message": "Скрыть"
+  },
+  "onboardTrialText": {
+    "message": "Изменить текст"
+  },
+  "onboardTrialRound": {
+    "message": "Скруглить углы"
+  },
+  "onboardTrialReset": {
+    "message": "Сбросить практику"
+  },
+  "onboardTrialIdle": {
+    "message": "Выберите пример, чтобы открыть действия тренировки."
+  },
+  "onboardTrialSelected": {
+    "message": "Пример выбран. Выберите правку, чтобы посмотреть результат."
+  },
+  "onboardTrialHidden": {
+    "message": "Предпросмотр: пример скрыт. Ничего не сохранено."
+  },
+  "onboardTrialTextChanged": {
+    "message": "Предпросмотр: текст примера изменён. Ничего не сохранено."
+  },
+  "onboardTrialRounded": {
+    "message": "Предпросмотр: углы примера скруглены. Ничего не сохранено."
   }
 }

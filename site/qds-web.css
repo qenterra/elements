@@ -1,0 +1,63 @@
+/*
+ * QenTerra Design System 1.8.1 Web token bridge for the standalone Pages site.
+ * Source: packages/css/tokens.css
+ * Source SHA-256: d0fc4ebc8335c75941c6abf459cc72b24768d648c9552a09a31134c8985e7a5b
+ * This committed subset keeps the public clone independent of a sibling checkout.
+ */
+:root {
+  --qds-action-primary: #1a1a1c;
+  --qds-action-primary-content: #ffffff;
+  --qds-border-default: rgba(15, 15, 17, 0.12);
+  --qds-border-strong: rgba(15, 15, 17, 0.22);
+  --qds-fill-hover: rgba(15, 15, 17, 0.045);
+  --qds-fill-pressed: rgba(15, 15, 17, 0.085);
+  --qds-fill-scrim: rgba(15, 15, 17, 0.46);
+  --qds-fill-selected: rgba(15, 15, 17, 0.075);
+  --qds-fill-selected-strong: rgba(15, 15, 17, 0.14);
+  --qds-state-destructive: #d84a42;
+  --qds-state-informative: #2468c9;
+  --qds-surface-chrome: #fafafb;
+  --qds-surface-content: #f4f4f6;
+  --qds-surface-overlay: #ffffff;
+  --qds-surface-raised: #e0e0e6;
+  --qds-surface-secondary: #e8e8ec;
+  --qds-text-inverted: #ffffff;
+  --qds-text-primary: #1a1a1c;
+  --qds-text-secondary: #56565e;
+  --qds-text-tertiary: #6a6a73;
+  --qds-radius-control: 6px;
+  --qds-radius-group: 10px;
+  --qds-radius-panel: 14px;
+  --qds-radius-hero: 18px;
+  --qds-radius-pill: 999px;
+  --qds-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --qds-ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --qds-motion-hover: 100ms;
+  --qds-motion-press: 80ms;
+  --qds-motion-disclosure: 180ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --qds-action-primary: #ffffff;
+    --qds-action-primary-content: #171719;
+    --qds-border-default: rgba(255, 255, 255, 0.13);
+    --qds-border-strong: rgba(255, 255, 255, 0.24);
+    --qds-fill-hover: rgba(255, 255, 255, 0.045);
+    --qds-fill-pressed: rgba(255, 255, 255, 0.085);
+    --qds-fill-scrim: rgba(0, 0, 0, 0.46);
+    --qds-fill-selected: rgba(255, 255, 255, 0.085);
+    --qds-fill-selected-strong: rgba(255, 255, 255, 0.14);
+    --qds-state-destructive: #e5695e;
+    --qds-state-informative: #68a4f1;
+    --qds-surface-chrome: #1a1a1c;
+    --qds-surface-content: #171719;
+    --qds-surface-overlay: #27272b;
+    --qds-surface-raised: #27272b;
+    --qds-surface-secondary: #202023;
+    --qds-text-inverted: #171719;
+    --qds-text-primary: #ffffff;
+    --qds-text-secondary: #b9b9c0;
+    --qds-text-tertiary: #94949d;
+  }
+}

@@ -8,6 +8,7 @@ const projectRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 const siteRoot = join(projectRoot, 'site')
 const siteFile = join(siteRoot, 'index.html')
 const html = await readFile(siteFile, 'utf8')
+const qdsWeb = await readFile(join(siteRoot, 'qds-web.css'), 'utf8')
 const packageJson = JSON.parse(await readFile(join(projectRoot, 'package.json'), 'utf8'))
 const errors = []
 
@@ -28,6 +29,10 @@ const headingCount = [...html.matchAll(/<h1\b/g)].length
 if (headingCount !== 1) errors.push(`Expected one h1, found ${headingCount}`)
 
 requirePattern(/class="skip-link"/, 'Missing skip link')
+requirePattern(/<link rel="stylesheet" href="qds-web\.css"/, 'Missing QDS Web token bridge')
+if (!qdsWeb.includes('QenTerra Design System 1.8.1')) {
+  errors.push('QDS Web bridge does not declare the pinned 1.8.1 source')
+}
 requirePattern(/role="tablist"/, 'Missing product-tour tablist')
 requirePattern(/aria-live="polite"/, 'Missing live demo status')
 requirePattern(/data-actions=""/, 'Demo must expose a composable action state')
@@ -62,6 +67,10 @@ rejectPattern(/\bbrowser-icon\b/, 'Download cards must not use decorative browse
 rejectPattern(
   /elements-[^"'<>]*-(?:firefox|safari)\.zip/i,
   'Pages must publish the supported Chrome archive only',
+)
+rejectPattern(
+  /animation:\s*[^;]*\binfinite\b/i,
+  'Site must not ship non-semantic infinite animation',
 )
 
 const localAssets = new Set()

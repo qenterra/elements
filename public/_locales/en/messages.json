@@ -856,7 +856,7 @@
     "description": "Onboarding step 1 title."
   },
   "onboardStep1Body": {
-    "message": "Click the Elements icon in the toolbar or press Ctrl/Cmd+Shift+X on any website.",
+    "message": "On any website, click the Elements icon in the toolbar. Your assigned shortcut is shown above.",
     "description": "Onboarding step 1 body."
   },
   "onboardStep2Title": {
@@ -886,5 +886,81 @@
   "onboardOpenOptions": {
     "message": "Open settings",
     "description": "Onboarding button that opens the options page."
+  },
+  "onboardStartEditing": {
+    "message": "Start editing",
+    "description": "Primary onboarding call to action."
+  },
+  "onboardStartEditingHint": {
+    "message": "No setup or additional access is needed.",
+    "description": "Reassurance below the start editing call to action."
+  },
+  "onboardReadyTitle": {
+    "message": "You are ready to edit",
+    "description": "Title after starting the onboarding flow."
+  },
+  "onboardReadyBody": {
+    "message": "Return to any regular website, then click the Elements toolbar icon or use the shortcut above.",
+    "description": "Safe next step that does not open a tab or request permissions."
+  },
+  "onboardShortcutLabel": {
+    "message": "Your shortcut",
+    "description": "Label for the registered extension shortcut."
+  },
+  "onboardNoShortcut": {
+    "message": "No shortcut set",
+    "description": "Explicit state when Chrome has no shortcut assigned."
+  },
+  "onboardTrialTitle": {
+    "message": "Try the interaction",
+    "description": "Title of the local onboarding trial."
+  },
+  "onboardTrialBody": {
+    "message": "Select the sample, then try an edit. This practice area never changes a website or saves a rule.",
+    "description": "Explains the safety boundary of the guided trial."
+  },
+  "onboardTrialTemporary": {
+    "message": "Practice only",
+    "description": "Eyebrow that identifies the local session-only trial."
+  },
+  "onboardTrialSelect": {
+    "message": "Select this sample",
+    "description": "Action that locks the local sample target."
+  },
+  "onboardTrialHide": {
+    "message": "Hide",
+    "description": "Local guided trial hide action."
+  },
+  "onboardTrialText": {
+    "message": "Edit text",
+    "description": "Local guided trial text action."
+  },
+  "onboardTrialRound": {
+    "message": "Round corners",
+    "description": "Local guided trial round-corners action."
+  },
+  "onboardTrialReset": {
+    "message": "Reset practice",
+    "description": "Resets the local guided trial."
+  },
+  "onboardTrialIdle": {
+    "message": "Select the sample to unlock the practice actions.",
+    "description": "Initial local guided trial status."
+  },
+  "onboardTrialSelected": {
+    "message": "Sample selected. Choose an edit to preview it.",
+    "description": "Guided trial status after selecting a local sample."
+  },
+  "onboardTrialHidden": {
+    "message": "Preview: the sample is hidden. Nothing was saved.",
+    "description": "Guided trial hide outcome."
+  },
+  "onboardTrialTextChanged": {
+    "message": "Preview: the sample text changed. Nothing was saved.",
+    "description": "Guided trial text outcome."
+  },
+  "onboardTrialRounded": {
+    "message": "Preview: the sample corners are rounded. Nothing was saved.",
+    "description": "Guided trial round outcome."
   }
 }

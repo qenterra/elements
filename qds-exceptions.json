@@ -26,8 +26,15 @@
       "id": "legacy-product-site-colors",
       "rule": "raw-color",
       "path": "site/index.html",
-      "reason": "The public product site remains on its legacy inline stylesheet in this first migration slice.",
-      "reviewTrigger": "Before the public site QDS migration begins."
+      "reason": "QDS semantic aliases now govern the site shell; the inline interactive product illustration retains a small documented set of local fixture colors.",
+      "reviewTrigger": "When the product illustration is extracted into QDS composition primitives."
+    },
+    {
+      "id": "qds-web-token-bridge",
+      "rule": "raw-color",
+      "path": "site/qds-web.css",
+      "reason": "Committed QDS 1.8.1 Web token subset keeps the static Pages site self-contained without a sibling runtime dependency.",
+      "reviewTrigger": "When the QDS package version or source hash changes."
     }
   ]
 }

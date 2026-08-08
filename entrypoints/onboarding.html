@@ -67,7 +67,7 @@
 
       .hero {
         text-align: center;
-        margin-bottom: 40px;
+        margin-bottom: var(--qds-space-8);
         animation: heroIn 0.4s var(--el-ease-out) backwards;
       }
 
@@ -167,6 +167,74 @@
         text-wrap: pretty;
       }
 
+      .hero__actions {
+        display: grid;
+        justify-items: center;
+        gap: var(--qds-space-2);
+        margin-top: var(--qds-space-6);
+      }
+
+      .hero__actions .qds-button {
+        min-height: var(--qds-size-control-prominent);
+        padding-inline: var(--qds-component-button-padding-x-prominent);
+      }
+
+      .hero__hint,
+      .shortcut,
+      .ready {
+        font: var(--qds-type-supporting-weight) var(--qds-type-supporting-size) /
+          var(--qds-type-supporting-line) var(--qds-type-supporting-family);
+      }
+
+      .hero__hint {
+        margin: 0;
+        color: var(--el-text-muted);
+      }
+
+      .shortcut {
+        display: inline-flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: var(--qds-space-2);
+        margin-top: var(--qds-space-4);
+        color: var(--el-text-muted);
+      }
+
+      .shortcut__keys {
+        display: inline-flex;
+        flex-wrap: wrap;
+        gap: var(--qds-component-keycap-gap);
+      }
+
+      .shortcut__empty {
+        color: var(--el-text);
+        font-weight: var(--qds-type-body-emphasized-weight);
+      }
+
+      .ready {
+        display: grid;
+        gap: var(--qds-space-1);
+        margin: var(--qds-space-4) auto 0;
+        padding: var(--qds-space-3) var(--qds-space-4);
+        border: var(--qds-stroke-default) solid var(--el-border);
+        border-radius: var(--qds-radius-group);
+        background: var(--el-accent-soft);
+        color: var(--el-text);
+        text-align: left;
+      }
+
+      .ready strong {
+        color: var(--el-text-strong);
+        font: var(--qds-type-body-emphasized-weight) var(--qds-type-body-emphasized-size) /
+          var(--qds-type-body-emphasized-line) var(--qds-type-body-emphasized-family);
+      }
+
+      .steps {
+        display: grid;
+        gap: var(--qds-space-3);
+      }
+
       .step {
         display: flex;
         align-items: center;
@@ -179,17 +247,13 @@
         animation: heroIn 0.3s var(--el-ease-out) backwards;
       }
 
-      .step + .step {
-        margin-top: 14px;
-      }
-
-      .step:nth-of-type(1) {
+      .step:nth-child(1) {
         animation-delay: 0.12s;
       }
-      .step:nth-of-type(2) {
+      .step:nth-child(2) {
         animation-delay: 0.2s;
       }
-      .step:nth-of-type(3) {
+      .step:nth-child(3) {
         animation-delay: 0.28s;
       }
 
@@ -222,14 +286,89 @@
         text-wrap: pretty;
       }
 
-      .step__body kbd {
-        font-family: ui-monospace, 'SF Mono', Menlo, monospace;
-        font-size: 12px;
-        color: var(--el-text);
-        background: var(--el-surface-alt);
-        border: 1px solid var(--el-border);
-        border-radius: 5px;
-        padding: 1px 6px;
+      .guided-trial {
+        margin-top: var(--qds-space-6);
+      }
+
+      .guided-trial h2 {
+        margin: 0 0 var(--qds-space-1);
+        color: var(--el-text-strong);
+        font: var(--qds-type-section-title-weight) var(--qds-type-section-title-size) /
+          var(--qds-type-section-title-line) var(--qds-type-section-title-family);
+      }
+
+      .guided-trial p {
+        margin: 0;
+        color: var(--el-text-muted);
+        font-size: var(--qds-type-supporting-size);
+      }
+
+      .section-eyebrow {
+        margin-bottom: var(--qds-space-1) !important;
+        color: var(--el-accent);
+        font-size: var(--qds-type-compact-metadata-size) !important;
+        font-weight: var(--qds-type-compact-metadata-weight);
+        letter-spacing: var(--qds-type-compact-metadata-tracking);
+        text-transform: uppercase;
+      }
+
+      .trial-canvas {
+        display: grid;
+        min-height: 112px;
+        place-items: center;
+        padding: var(--qds-space-4);
+        border: var(--qds-stroke-default) dashed var(--el-border);
+        border-radius: var(--qds-radius-group);
+        background: var(--el-bg);
+      }
+
+      .trial-target {
+        display: grid;
+        gap: var(--qds-space-1);
+        width: min(100%, 260px);
+        min-height: 64px;
+        padding: var(--qds-space-3);
+        border: var(--qds-stroke-emphasis) solid var(--el-border);
+        border-radius: var(--qds-radius-control);
+        background: var(--el-surface);
+        color: var(--el-text-strong);
+        cursor: pointer;
+        text-align: left;
+        transition:
+          border-color var(--qds-motion-hover) var(--qds-ease-standard),
+          opacity var(--qds-motion-disclosure) var(--qds-ease-standard),
+          border-radius var(--qds-motion-disclosure) var(--qds-ease-standard);
+      }
+
+      .trial-target span {
+        color: var(--el-text-muted);
+        font-size: var(--qds-type-supporting-size);
+      }
+
+      .trial-canvas.is-selected .trial-target {
+        border-color: var(--el-accent);
+      }
+
+      .trial-canvas[data-action='hide'] .trial-target {
+        opacity: var(--qds-opacity-faint);
+      }
+
+      .trial-canvas[data-action='round'] .trial-target {
+        border-radius: var(--qds-radius-hero);
+      }
+
+      .trial-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--qds-space-2);
+      }
+
+      .trial-actions .qds-button {
+        flex: 1 1 110px;
+      }
+
+      .trial-status {
+        min-height: var(--qds-type-supporting-line);
       }
 
       .privacy {
@@ -262,31 +401,6 @@
         animation: heroIn 0.3s var(--el-ease-out) 0.44s backwards;
       }
 
-      button.primary {
-        font: inherit;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        color: var(--el-accent-contrast);
-        background: var(--el-accent);
-        border: none;
-        padding: 12px 26px;
-        border-radius: 10px;
-        transition:
-          background-color 0.15s ease,
-          transform 0.12s var(--el-ease-out);
-      }
-
-      button.primary:active {
-        transform: scale(0.97);
-      }
-
-      @media (hover: hover) and (pointer: fine) {
-        button.primary:hover {
-          background: var(--el-accent-hover);
-        }
-      }
-
       @media (prefers-reduced-motion: reduce) {
         .hero,
         .hero__bracket,
@@ -297,7 +411,7 @@
           animation: none;
         }
 
-        button.primary {
+        .trial-target {
           transition: none;
         }
       }

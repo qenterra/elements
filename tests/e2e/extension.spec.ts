@@ -405,12 +405,25 @@ test('onboarding centers every step number against its copy', async () => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto(`chrome-extension://${extensionId}/onboarding.html`)
 
+  await expect(page.getByTestId('start-editing')).toBeVisible()
+  await expect(page.getByText('Your shortcut')).toBeVisible()
+  await page.getByTestId('start-editing').click()
+  await expect(page.getByTestId('onboarding-ready')).toBeVisible()
+
   const steps = page.locator('.step')
   await expect(steps).toHaveCount(3)
   for (let index = 0; index < 3; index += 1) {
     const step = steps.nth(index)
     await expectVerticalCentersAligned(step.locator('.step__number'), step.locator(':scope > div'))
   }
+
+  const practiceTarget = page.getByRole('button', { name: 'Select this sample' })
+  const hidePractice = page.getByRole('button', { name: 'Hide', exact: true })
+  await expect(hidePractice).toBeDisabled()
+  await practiceTarget.click()
+  await expect(hidePractice).toBeEnabled()
+  await hidePractice.click()
+  await expect(page.getByText('Preview: the sample is hidden. Nothing was saved.')).toBeVisible()
   await expectNoSeriousAccessibilityViolations(page)
   await page.close()
 })

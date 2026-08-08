@@ -30,55 +30,35 @@
     <link rel="preload" href="images/picker-dark.png" as="image" type="image/png" />
     <link rel="preload" href="images/options-dark.png" as="image" type="image/png" />
     <link rel="preload" href="images/picker-narrow.png" as="image" type="image/png" />
+    <link rel="stylesheet" href="qds-web.css" />
     <script>
       document.documentElement.classList.add('js')
     </script>
     <style>
       :root {
         color-scheme: dark light;
-        --page: #0d0f12;
-        --page-soft: #111419;
-        --surface: #16191f;
-        --surface-raised: #1b1f26;
-        --surface-soft: #20252d;
-        --border: #2b313a;
-        --border-strong: #3a424e;
-        --ink: #f2f5f7;
-        --text: #b3bbc7;
-        --muted: #848e9e;
-        --cyan: #25d4ee;
-        --cyan-strong: #6cecff;
-        --cyan-ink: #071114;
-        --cyan-soft: rgba(37, 212, 238, 0.12);
-        --danger: #f66e78;
-        --shadow-sm: 0 10px 30px rgba(0, 0, 0, 0.22);
-        --shadow-lg: 0 32px 90px rgba(0, 0, 0, 0.46);
-        --radius-sm: 12px;
-        --radius: 20px;
-        --radius-lg: 30px;
+        --page: var(--qds-surface-content);
+        --page-soft: var(--qds-surface-chrome);
+        --surface: var(--qds-surface-overlay);
+        --surface-raised: var(--qds-surface-raised);
+        --surface-soft: var(--qds-surface-secondary);
+        --border: var(--qds-border-default);
+        --border-strong: var(--qds-border-strong);
+        --ink: var(--qds-text-primary);
+        --text: var(--qds-text-secondary);
+        --muted: var(--qds-text-tertiary);
+        --cyan: var(--qds-state-informative);
+        --cyan-strong: var(--qds-state-informative);
+        --cyan-ink: var(--qds-text-inverted);
+        --cyan-soft: var(--qds-fill-selected-strong);
+        --danger: var(--qds-state-destructive);
+        --shadow-sm: 0 10px 30px var(--qds-fill-scrim);
+        --shadow-lg: 0 32px 90px var(--qds-fill-scrim);
+        --radius-sm: var(--qds-radius-control);
+        --radius: var(--qds-radius-panel);
+        --radius-lg: var(--qds-radius-hero);
         --container: 1180px;
-        --ease: cubic-bezier(0.22, 1, 0.36, 1);
-      }
-
-      @media (prefers-color-scheme: light) {
-        :root {
-          --page: #f5f7f8;
-          --page-soft: #eef2f4;
-          --surface: #ffffff;
-          --surface-raised: #f9fbfc;
-          --surface-soft: #e9eef1;
-          --border: #d8e0e5;
-          --border-strong: #c1ccd3;
-          --ink: #10151a;
-          --text: #46525f;
-          --muted: #687583;
-          --cyan: #087f96;
-          --cyan-strong: #00697d;
-          --cyan-ink: #ffffff;
-          --cyan-soft: rgba(8, 127, 150, 0.1);
-          --shadow-sm: 0 10px 30px rgba(27, 47, 58, 0.1);
-          --shadow-lg: 0 32px 90px rgba(27, 47, 58, 0.16);
-        }
+        --ease: var(--qds-ease-standard);
       }
 
       *,
@@ -523,19 +503,6 @@
         height: 7px;
         border-radius: 999px;
         background: var(--cyan);
-        animation: scroll-dot 1.8s var(--ease) infinite;
-      }
-
-      @keyframes scroll-dot {
-        0%,
-        100% {
-          transform: translateY(0);
-          opacity: 0.55;
-        }
-        50% {
-          transform: translateY(11px);
-          opacity: 1;
-        }
       }
 
       .section {
