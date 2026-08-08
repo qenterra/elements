@@ -331,6 +331,68 @@
     "message": "Site sort order",
     "description": "Accessible label for the site list sorting controls."
   },
+  "optionsNavigation": {
+    "message": "Options navigation",
+    "description": "Accessible label for the settings-page navigation."
+  },
+  "optionsSearchScope": {
+    "message": "Search across $COUNT$ saved sites",
+    "description": "Explains the scope of the saved-site search.",
+    "placeholders": { "count": { "content": "$1", "example": "12" } }
+  },
+  "optionsSearchResults": {
+    "message": "$COUNT$ sites shown",
+    "description": "Live result count for the saved-site search.",
+    "placeholders": { "count": { "content": "$1", "example": "3" } }
+  },
+  "optionsSearchClear": {
+    "message": "Clear search",
+    "description": "Clears the saved-site search query."
+  },
+  "optionsRecoveryTitle": {
+    "message": "Deletion can still be undone",
+    "description": "Title of the persistent recovery block after deleting saved rules."
+  },
+  "optionsRecoveryRestore": {
+    "message": "Restore rules",
+    "description": "Restores the most recently deleted saved site or rule."
+  },
+  "optionsRecoveryDismiss": {
+    "message": "Discard recovery",
+    "description": "Dismisses the durable recovery block."
+  },
+  "optionsRecoveryRestored": {
+    "message": "Saved rules restored.",
+    "description": "Confirmation after restoring a deleted site or rule."
+  },
+  "optionsRecoveryRestoreFailed": {
+    "message": "The saved rules could not be restored. Try again.",
+    "description": "Error shown when restoring a deleted site or rule fails."
+  },
+  "optionsSitesLoadFailed": {
+    "message": "Saved sites could not be loaded. Try reloading this page.",
+    "description": "Error shown when the saved-site list cannot be read."
+  },
+  "optionsSettingsSaveFailed": {
+    "message": "The setting could not be saved. Try again.",
+    "description": "Error shown when saving a settings change fails."
+  },
+  "optionsSiteDeleteFailed": {
+    "message": "The site's saved rules could not be deleted. Try again.",
+    "description": "Error shown when deleting all rules for a site fails."
+  },
+  "optionsRuleDeleteFailed": {
+    "message": "The saved rule could not be deleted. Try again.",
+    "description": "Error shown when deleting one rule fails."
+  },
+  "optionsSitePauseFailed": {
+    "message": "The site's paused state could not be changed. Try again.",
+    "description": "Error shown when pausing or resuming a site fails."
+  },
+  "optionsExportFailed": {
+    "message": "The backup could not be exported. Try again.",
+    "description": "Error shown when creating or downloading an export fails."
+  },
   "optionsErrorGeneric": {
     "message": "Something went wrong.",
     "description": "Fallback error shown when an operation fails without a known reason."

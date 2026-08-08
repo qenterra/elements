@@ -22,7 +22,7 @@ import {
   type ThemePreference,
 } from '../../src/core/model'
 import { PROTOCOL_VERSION, type ExtensionRequest, type ResponseFor } from '../../src/core/protocol'
-import type { ImportReview } from '../../src/core/repository'
+import type { ImportReview, SiteRecord } from '../../src/core/repository'
 import { resolveTheme, watchSystemTheme } from '../../src/core/theme'
 import { sendProtocolMessage } from '../../src/core/transport'
 
@@ -35,11 +35,11 @@ type ToastMessage = {
   undo?: () => void | Promise<void>
 }
 type ImportReviewState = { text: string; report: ImportReview }
+type RecoveryState = { snapshot: SiteRecord; message: string }
 
 const SORT_KEY = 'siteListSort'
 const DOCUMENTS_URL = 'https://github.com/QenTerra/elements/blob/main/'
 const FEEDBACK_URL = 'https://github.com/QenTerra/elements/issues'
-const SEARCH_THRESHOLD = 8
 
 function documentUrl(path: string): string {
   return `${DOCUMENTS_URL}${path}`
@@ -281,6 +281,37 @@ function ToastNotice({
   )
 }
 
+function RecoveryNotice({
+  recovery,
+  onRestore,
+  onDismiss,
+}: {
+  recovery: RecoveryState
+  onRestore: () => void | Promise<void>
+  onDismiss: () => void
+}) {
+  return (
+    <aside className="recoveryNotice qds-group" aria-label={t('optionsRecoveryTitle')}>
+      <div>
+        <p className="recoveryNotice__title">{t('optionsRecoveryTitle')}</p>
+        <p className="recoveryNotice__copy">{recovery.message}</p>
+      </div>
+      <div className="recoveryNotice__actions">
+        <button
+          type="button"
+          className="qds-button qds-button--secondary"
+          onClick={() => void onRestore()}
+        >
+          {t('optionsRecoveryRestore')}
+        </button>
+        <button type="button" className="qds-button qds-button--quiet" onClick={onDismiss}>
+          {t('optionsRecoveryDismiss')}
+        </button>
+      </div>
+    </aside>
+  )
+}
+
 function CodeHint() {
   const message = t('optionsBackupHint')
   const parts = message.split(/(<code>|<\/code>)/g)
@@ -349,95 +380,98 @@ function SettingsCard({
   ]
 
   return (
-    <section className="card">
-      <p className="cardTitle">
+    <section className="optionsSection" id="settings" aria-labelledby="settings_title">
+      <div className="sectionHeading">
         <SlidersIcon />
-        <span>{t('optionsSettingsTitle')}</span>
-      </p>
-      <div className="settingRow">
-        <span className="settingRow__text">
-          <span className="settingRow__label">{t('optionsTheme')}</span>
-          <span className="settingRow__hint">{t('optionsThemeHint')}</span>
-        </span>
-        <span className="segment" role="group" aria-label={t('optionsTheme')}>
-          {themes.map((theme) => (
-            <button
-              key={theme.id}
-              type="button"
-              className={`segment__btn${settings.theme === theme.id ? ' isActive' : ''}`}
-              aria-pressed={settings.theme === theme.id}
-              onClick={() => onChange({ theme: theme.id })}
-            >
-              {theme.label}
-            </button>
-          ))}
-        </span>
+        <h2 id="settings_title">{t('optionsSettingsTitle')}</h2>
       </div>
-      <div className="settingRow">
-        <span className="settingRow__text">
-          <span className="settingRow__label">{t('pickerRememberDefault')}</span>
-          <span className="settingRow__hint">{t('optionsRememberHint')}</span>
-        </span>
-        <button
-          type="button"
-          className="switch"
-          role="switch"
-          aria-checked={settings.remember}
-          aria-label={t('pickerRememberDefault')}
-          onClick={() => onChange({ remember: !settings.remember })}
-        >
-          <span className="switch__knob" />
-        </button>
-      </div>
-      <div className="settingRow">
-        <span className="settingRow__text">
-          <span className="settingRow__label">{t('optionsRadius')}</span>
-          <span className="settingRow__hint">{t('optionsRadiusHint')}</span>
-        </span>
-        <span
-          className="radiusPreview"
-          style={{ borderRadius: Math.min(13, settings.radius / 2 + 2) } as CSSProperties}
-          aria-hidden="true"
-        />
-        <input
-          className="settingRow__range"
-          type="range"
-          min={MIN_RADIUS}
-          max={MAX_RADIUS}
-          value={settings.radius}
-          aria-label={t('optionsRadius')}
-          onChange={(event) => onChange({ radius: Number(event.target.value) })}
-        />
-        <span className="settingRow__value">{settings.radius}px</span>
-      </div>
-      <div className="settingRow">
-        <span className="settingRow__text">
-          <span className="settingRow__label">{t('optionsAdvanced')}</span>
-          <span className="settingRow__hint">{t('optionsAdvancedHint')}</span>
-        </span>
-        <button
-          type="button"
-          className="switch"
-          role="switch"
-          aria-checked={settings.advanced}
-          aria-label={t('optionsAdvanced')}
-          onClick={() => onChange({ advanced: !settings.advanced })}
-        >
-          <span className="switch__knob" />
-        </button>
-      </div>
-      <div className="settingRow">
-        <span className="settingRow__text">
-          <span className="settingRow__label">{t('optionsShortcut')}</span>
-          <span className="settingRow__hint">{hotkey}</span>
-        </span>
-        <button
-          type="button"
-          className="secondary"
-          onClick={() => void callBackground({ v: PROTOCOL_VERSION, type: 'shortcut.open' })}
-        >
-          {t('optionsShortcutChange')}
-        </button>
+      <div className="qds-group settingsGroup">
+        <div className="settingRow qds-interactive-row settingRow_appearance">
+          <span className="settingRow__text">
+            <span className="settingRow__label">{t('optionsTheme')}</span>
+            <span className="settingRow__hint">{t('optionsThemeHint')}</span>
+          </span>
+          <span className="qds-radio-group" role="radiogroup" aria-label={t('optionsTheme')}>
+            {themes.map((theme) => (
+              <label className="qds-radio-group__option" key={theme.id}>
+                <input
+                  type="radio"
+                  name="theme"
+                  value={theme.id}
+                  checked={settings.theme === theme.id}
+                  onChange={() => onChange({ theme: theme.id })}
+                />
+                <span>{theme.label}</span>
+              </label>
+            ))}
+          </span>
+        </div>
+        <div className="settingRow qds-interactive-row">
+          <span className="settingRow__text">
+            <span className="settingRow__label">{t('pickerRememberDefault')}</span>
+            <span className="settingRow__hint">{t('optionsRememberHint')}</span>
+          </span>
+          <button
+            type="button"
+            className="switch"
+            role="switch"
+            aria-checked={settings.remember}
+            aria-label={t('pickerRememberDefault')}
+            onClick={() => onChange({ remember: !settings.remember })}
+          >
+            <span className="switch__knob" />
+          </button>
+        </div>
+        <div className="settingRow qds-interactive-row settingRow_radius">
+          <span className="settingRow__text">
+            <span className="settingRow__label">{t('optionsRadius')}</span>
+            <span className="settingRow__hint">{t('optionsRadiusHint')}</span>
+          </span>
+          <span
+            className="radiusPreview"
+            style={{ borderRadius: Math.min(13, settings.radius / 2 + 2) } as CSSProperties}
+            aria-hidden="true"
+          />
+          <input
+            className="settingRow__range"
+            type="range"
+            min={MIN_RADIUS}
+            max={MAX_RADIUS}
+            value={settings.radius}
+            aria-label={t('optionsRadius')}
+            onChange={(event) => onChange({ radius: Number(event.target.value) })}
+          />
+          <span className="settingRow__value">{settings.radius}px</span>
+        </div>
+        <div className="settingRow qds-interactive-row">
+          <span className="settingRow__text">
+            <span className="settingRow__label">{t('optionsAdvanced')}</span>
+            <span className="settingRow__hint">{t('optionsAdvancedHint')}</span>
+          </span>
+          <button
+            type="button"
+            className="switch"
+            role="switch"
+            aria-checked={settings.advanced}
+            aria-label={t('optionsAdvanced')}
+            onClick={() => onChange({ advanced: !settings.advanced })}
+          >
+            <span className="switch__knob" />
+          </button>
+        </div>
+        <div className="settingRow qds-interactive-row">
+          <span className="settingRow__text">
+            <span className="settingRow__label">{t('optionsShortcut')}</span>
+            <span className="settingRow__hint">{hotkey}</span>
+          </span>
+          <button
+            type="button"
+            className="qds-button qds-button--secondary"
+            onClick={() => void callBackground({ v: PROTOCOL_VERSION, type: 'shortcut.open' })}
+          >
+            {t('optionsShortcutChange')}
+          </button>
+        </div>
       </div>
     </section>
   )
@@ -459,6 +493,7 @@ function OptionsApp({
   const [busy, setBusy] = useState<'import' | 'export' | null>(null)
   const [review, setReview] = useState<ImportReviewState | null>(null)
   const [reviewMode, setReviewMode] = useState<'replace' | 'merge'>('merge')
+  const [recovery, setRecovery] = useState<RecoveryState | null>(null)
   const [sortMode, setSortMode] = useState<SortMode>(() => {
     const saved = localStorage.getItem(SORT_KEY)
     return saved === 'date' ? 'date' : 'name'
@@ -485,7 +520,7 @@ function OptionsApp({
 
   const reloadSites = useCallback(async () => setSites(await readSites()), [])
   useEffect(() => {
-    void reloadSites().catch(() => showToast(t('optionsErrorGeneric'), true))
+    void reloadSites().catch(() => showToast(t('optionsSitesLoadFailed'), true))
   }, [reloadSites, showToast])
 
   useEffect(() => {
@@ -512,7 +547,7 @@ function OptionsApp({
         return
       window.clearTimeout(timer)
       timer = window.setTimeout(() => {
-        void reloadSites().catch(() => showToast(t('optionsErrorGeneric'), true))
+        void reloadSites().catch(() => showToast(t('optionsSitesLoadFailed'), true))
       }, 300)
     }
     browser.storage.onChanged.addListener(listener)
@@ -536,7 +571,7 @@ function OptionsApp({
               settings: merged,
             })
           })
-          .catch(() => showToast(t('optionsErrorGeneric'), true))
+          .catch(() => showToast(t('optionsSettingsSaveFailed'), true))
         return merged
       })
     },
@@ -606,17 +641,11 @@ function OptionsApp({
         site: domain,
       })
       if (!snapshot) return
-      showToast(t('optionsSiteDeleted', [domain]), false, async () => {
-        await callBackground({
-          v: PROTOCOL_VERSION,
-          type: 'site.restore',
-          snapshot,
-        })
-        await reloadSites()
-      })
+      setRecovery({ snapshot, message: t('optionsSiteDeleted', [domain]) })
+      showToast(t('optionsSiteDeleted', [domain]))
       await reloadSites()
     } catch {
-      showToast(t('optionsErrorGeneric'), true)
+      showToast(t('optionsSiteDeleteFailed'), true)
     }
   }
 
@@ -630,17 +659,11 @@ function OptionsApp({
         ruleId: rule.id,
       })
       if (!snapshot) return
-      showToast(t('optionsRuleDeleted'), false, async () => {
-        await callBackground({
-          v: PROTOCOL_VERSION,
-          type: 'site.restore',
-          snapshot,
-        })
-        await reloadSites()
-      })
+      setRecovery({ snapshot, message: t('optionsRuleDeleted') })
+      showToast(t('optionsRuleDeleted'))
       await reloadSites()
     } catch {
-      showToast(t('optionsErrorGeneric'), true)
+      showToast(t('optionsRuleDeleteFailed'), true)
     }
   }
 
@@ -654,7 +677,7 @@ function OptionsApp({
       })
       await reloadSites()
     } catch {
-      showToast(t('optionsErrorGeneric'), true)
+      showToast(t('optionsSitePauseFailed'), true)
     }
   }
 
@@ -671,6 +694,8 @@ function OptionsApp({
       link.click()
       showToast(t('optionsExportSuccess'))
       window.setTimeout(() => URL.revokeObjectURL(url), 30_000)
+    } catch {
+      showToast(t('optionsExportFailed'), true)
     } finally {
       setBusy(null)
     }
@@ -719,245 +744,302 @@ function OptionsApp({
     }
   }
 
+  const restoreRecovery = async () => {
+    if (!recovery) return
+    try {
+      await callBackground({
+        v: PROTOCOL_VERSION,
+        type: 'site.restore',
+        snapshot: recovery.snapshot,
+      })
+      setRecovery(null)
+      await reloadSites()
+      showToast(t('optionsRecoveryRestored'))
+    } catch {
+      showToast(t('optionsRecoveryRestoreFailed'), true)
+    }
+  }
+
   return (
     <>
-      <main className="page" inert={review ? true : undefined}>
-        <section className="card pageHeader">
-          <div className="pageHeader__icon">
-            <BrandMark width="24" height="24" />
+      <main className="optionsShell" inert={review ? true : undefined}>
+        <aside className="optionsNav" aria-label={t('extensionName')}>
+          <div className="pageHeader">
+            <div className="pageHeader__icon">
+              <BrandMark width="24" height="24" />
+            </div>
+            <div>
+              <h1>{t('extensionName')}</h1>
+              <p className="pageHeader__tagline">{t('optionsTagline')}</p>
+            </div>
           </div>
-          <div>
-            <h1>{t('extensionName')}</h1>
-            <p className="pageHeader__tagline">{t('optionsTagline')}</p>
-          </div>
-        </section>
+          <nav className="optionsNav__links" aria-label={t('optionsNavigation')}>
+            <a href="#sites">{t('optionsSitesTitle')}</a>
+            <a href="#settings">{t('optionsSettingsTitle')}</a>
+            <a href="#backup">{t('optionsBackupTitle')}</a>
+            <a href="#about">{t('optionsAboutTitle')}</a>
+          </nav>
+        </aside>
 
-        <section className="card">
-          <p className="cardTitle">
-            <SiteIcon />
-            <span>{t('optionsSitesTitle')}</span>
-            <span className="sortSwitch" role="group" aria-label={t('optionsSortOrder')}>
-              <button
-                type="button"
-                className={`sortSwitch__btn${sortMode === 'name' ? ' isActive' : ''}`}
-                onClick={(event) => changeSortMode('name', event.detail > 0)}
-                aria-pressed={sortMode === 'name'}
-              >
-                {t('optionsSitesSortName')}
-              </button>
-              <button
-                type="button"
-                className={`sortSwitch__btn${sortMode === 'date' ? ' isActive' : ''}`}
-                onClick={(event) => changeSortMode('date', event.detail > 0)}
-                aria-pressed={sortMode === 'date'}
-              >
-                {t('optionsSitesSortDate')}
-              </button>
-            </span>
-          </p>
-          <p className="cardDescription">{t('optionsSitesDescription')}</p>
-          {sites.length >= SEARCH_THRESHOLD && (
-            <input
-              className="search"
-              type="search"
-              value={search}
-              placeholder={t('optionsSearchPlaceholder')}
-              aria-label={t('optionsSearchPlaceholder')}
-              onChange={(event) => setSearch(event.target.value)}
+        <div className="optionsContent">
+          {recovery && (
+            <RecoveryNotice
+              recovery={recovery}
+              onRestore={restoreRecovery}
+              onDismiss={() => setRecovery(null)}
             />
           )}
-          <div className="siteList">
-            <div className="siteList__rows">
-              {filteredSites.map((site) => (
-                <div
-                  className={`siteRow${expanded.has(site.domain) ? ' isExpanded' : ''}${site.paused ? ' isPaused' : ''}`}
-                  data-domain={site.domain}
-                  style={
-                    {
-                      '--row-index': Math.min(siteAnimationOrder.get(site.domain) ?? 0, 6),
-                    } as CSSProperties
-                  }
-                  key={site.domain}
+          <section className="optionsSection" id="sites" aria-labelledby="sites_title">
+            <div className="sectionHeading sectionHeading_actions">
+              <SiteIcon />
+              <h2 id="sites_title">{t('optionsSitesTitle')}</h2>
+              <span className="sortSwitch" role="group" aria-label={t('optionsSortOrder')}>
+                <button
+                  type="button"
+                  className={`sortSwitch__btn${sortMode === 'name' ? ' isActive' : ''}`}
+                  onClick={(event) => changeSortMode('name', event.detail > 0)}
+                  aria-pressed={sortMode === 'name'}
                 >
-                  <div className="siteRow__head">
+                  {t('optionsSitesSortName')}
+                </button>
+                <button
+                  type="button"
+                  className={`sortSwitch__btn${sortMode === 'date' ? ' isActive' : ''}`}
+                  onClick={(event) => changeSortMode('date', event.detail > 0)}
+                  aria-pressed={sortMode === 'date'}
+                >
+                  {t('optionsSitesSortDate')}
+                </button>
+              </span>
+            </div>
+            <p className="cardDescription">{t('optionsSitesDescription')}</p>
+            {sites.length > 0 && (
+              <div className="searchArea">
+                <label className="searchScope" htmlFor="site_search">
+                  {t('optionsSearchScope', [String(sites.length)])}
+                </label>
+                <div className="searchControl">
+                  <input
+                    id="site_search"
+                    className="search"
+                    type="search"
+                    value={search}
+                    placeholder={t('optionsSearchPlaceholder')}
+                    aria-label={t('optionsSearchPlaceholder')}
+                    onChange={(event) => setSearch(event.target.value)}
+                  />
+                  {search && (
                     <button
                       type="button"
-                      className="siteRow__expand"
-                      aria-expanded={expanded.has(site.domain)}
-                      aria-label={t('optionsSiteRules', [site.domain])}
-                      onClick={() => toggleExpanded(site.domain)}
+                      className="qds-button qds-button--quiet searchClear"
+                      onClick={() => setSearch('')}
                     >
-                      <ChevronIcon />
+                      {t('optionsSearchClear')}
                     </button>
-                    <a
-                      className="siteRow__domain"
-                      href={siteHref(site.domain)}
-                      target="_blank"
-                      rel="noopener noreferrer nofollow"
-                    >
-                      {site.domain}
-                    </a>
-                    <span className="siteRow__count">
-                      {t('optionsSitesCount', [String(site.rules.length)])}
-                    </span>
-                    <span className="siteRow__date">{formatDate(site.modified)}</span>
-                    <button
-                      type="button"
-                      className={`siteRow__btn${site.paused ? ' isActive' : ''}`}
-                      title={t(site.paused ? 'optionsSiteResume' : 'optionsSitePause')}
-                      aria-label={t(site.paused ? 'optionsSiteResume' : 'optionsSitePause')}
-                      aria-pressed={site.paused}
-                      onClick={() => void togglePauseSite(site.domain, !site.paused)}
-                    >
-                      <PauseIcon />
-                    </button>
-                    <button
-                      type="button"
-                      className="siteRow__btn siteRow__delete"
-                      title={t('optionsSiteDeleteTitle')}
-                      aria-label={t('optionsSiteDeleteFor', [site.domain])}
-                      onClick={() => void deleteSite(site.domain)}
-                    >
-                      <TrashIcon />
-                    </button>
-                  </div>
-                  <div className="siteRules">
-                    <div className="siteRules__inner">
-                      <div className="siteRules__list">
-                        {site.rules.map((rule) => (
-                          <div
-                            className="ruleRow"
-                            key={rule.id ?? `${rule.action ?? 'hide'}:${rule.selector}`}
-                          >
-                            <span className="ruleRow__icon" title={ruleLabel(rule.action)}>
-                              <RuleIcon action={rule.action} />
-                            </span>
-                            <span className="ruleRow__selector" title={rule.selector}>
-                              {rule.action === 'text' && rule.text !== undefined
-                                ? `${rule.selector} → “${rule.text}”`
-                                : rule.selector}
-                            </span>
-                            {rule.action === 'round' && rule.value !== undefined && (
-                              <span className="ruleRow__value">{rule.value}px</span>
-                            )}
-                            <button
-                              type="button"
-                              className="ruleRow__delete"
-                              title={t('pickerDeleteRule')}
-                              aria-label={t('optionsRuleDeleteFor', [rule.selector])}
-                              onClick={() => void deleteRule(site.domain, rule)}
+                  )}
+                </div>
+                <p className="searchStatus" aria-live="polite">
+                  {t('optionsSearchResults', [String(filteredSites.length)])}
+                </p>
+              </div>
+            )}
+            <div className="siteList qds-group">
+              <div className="siteList__rows">
+                {filteredSites.map((site) => (
+                  <div
+                    className={`siteRow${expanded.has(site.domain) ? ' isExpanded' : ''}${site.paused ? ' isPaused' : ''}`}
+                    data-domain={site.domain}
+                    style={
+                      {
+                        '--row-index': Math.min(siteAnimationOrder.get(site.domain) ?? 0, 6),
+                      } as CSSProperties
+                    }
+                    key={site.domain}
+                  >
+                    <div className="siteRow__head">
+                      <button
+                        type="button"
+                        className="siteRow__expand qds-icon-button"
+                        aria-expanded={expanded.has(site.domain)}
+                        aria-label={t('optionsSiteRules', [site.domain])}
+                        onClick={() => toggleExpanded(site.domain)}
+                      >
+                        <ChevronIcon />
+                      </button>
+                      <a
+                        className="siteRow__domain"
+                        href={siteHref(site.domain)}
+                        target="_blank"
+                        rel="noopener noreferrer nofollow"
+                      >
+                        {site.domain}
+                      </a>
+                      <span className="siteRow__count">
+                        {t('optionsSitesCount', [String(site.rules.length)])}
+                      </span>
+                      <span className="siteRow__date">{formatDate(site.modified)}</span>
+                      <button
+                        type="button"
+                        className={`siteRow__btn qds-icon-button${site.paused ? ' isActive' : ''}`}
+                        title={t(site.paused ? 'optionsSiteResume' : 'optionsSitePause')}
+                        aria-label={t(site.paused ? 'optionsSiteResume' : 'optionsSitePause')}
+                        aria-pressed={site.paused}
+                        onClick={() => void togglePauseSite(site.domain, !site.paused)}
+                      >
+                        <PauseIcon />
+                      </button>
+                      <button
+                        type="button"
+                        className="siteRow__btn siteRow__delete qds-icon-button"
+                        title={t('optionsSiteDeleteTitle')}
+                        aria-label={t('optionsSiteDeleteFor', [site.domain])}
+                        onClick={() => void deleteSite(site.domain)}
+                      >
+                        <TrashIcon />
+                      </button>
+                    </div>
+                    <div className="siteRules">
+                      <div className="siteRules__inner">
+                        <div className="siteRules__list">
+                          {site.rules.map((rule) => (
+                            <div
+                              className="ruleRow"
+                              key={rule.id ?? `${rule.action ?? 'hide'}:${rule.selector}`}
                             >
-                              <TrashIcon />
-                            </button>
-                          </div>
-                        ))}
+                              <span className="ruleRow__icon" title={ruleLabel(rule.action)}>
+                                <RuleIcon action={rule.action} />
+                              </span>
+                              <span className="ruleRow__selector" title={rule.selector}>
+                                {rule.action === 'text' && rule.text !== undefined
+                                  ? `${rule.selector} → “${rule.text}”`
+                                  : rule.selector}
+                              </span>
+                              {rule.action === 'round' && rule.value !== undefined && (
+                                <span className="ruleRow__value">{rule.value}px</span>
+                              )}
+                              <button
+                                type="button"
+                                className="ruleRow__delete qds-icon-button"
+                                title={t('pickerDeleteRule')}
+                                aria-label={t('optionsRuleDeleteFor', [rule.selector])}
+                                onClick={() => void deleteRule(site.domain, rule)}
+                              >
+                                <TrashIcon />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-              {!filteredSites.length && (
-                <p className="siteList__empty">
-                  <span className="bracket" aria-hidden="true" />
-                  {search ? t('optionsSearchEmpty') : t('optionsSitesEmpty')}
-                  <span className="bracket bracket_r" aria-hidden="true" />
-                </p>
-              )}
+                ))}
+                {!filteredSites.length && (
+                  <p className="siteList__empty">
+                    <span className="bracket" aria-hidden="true" />
+                    {search ? t('optionsSearchEmpty') : t('optionsSitesEmpty')}
+                    <span className="bracket bracket_r" aria-hidden="true" />
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <SettingsCard settings={settings} hotkey={hotkey} onChange={updateSettings} />
+          <SettingsCard settings={settings} hotkey={hotkey} onChange={updateSettings} />
 
-        <section className="card">
-          <p className="cardTitle">
-            <BackupIcon />
-            <span>{t('optionsBackupTitle')}</span>
-          </p>
-          <CodeHint />
-          <div className="actions">
-            <button
-              type="button"
-              className="primary"
-              disabled={busy !== null}
-              onClick={() => void exportSettings()}
-            >
-              {busy === 'export' && <span className="spinner" aria-hidden="true" />}
-              {t('optionsExportButton')}
-            </button>
-            <button
-              type="button"
-              className="secondary"
-              disabled={busy !== null}
-              onClick={() => importInput.current?.click()}
-            >
-              {busy === 'import' && <span className="spinner" aria-hidden="true" />}
-              {t('optionsImportButton')}
-            </button>
-            <input
-              ref={importInput}
-              type="file"
-              accept="application/json"
-              hidden
-              onChange={(event) => {
-                const file = event.target.files?.[0]
-                event.target.value = ''
-                if (file) void startImport(file)
-              }}
-            />
-          </div>
-        </section>
-
-        <section className="card">
-          <p className="cardTitle">
-            <InfoIcon />
-            <span>{t('optionsAboutTitle')}</span>
-          </p>
-          <div className="about">
-            <p>
-              <b>Elements</b>
-              <span className="version">v{displayVersion}</span>
-              <br />
-              {t('optionsMadeBy')}{' '}
-              <a href="https://github.com/QenTerra" target="_blank" rel="noopener noreferrer">
-                Nikita Melnychenko (QenTerra)
-              </a>
-              .
-            </p>
-            <div className="about__documents">
-              <nav className="about__links" aria-label={t('optionsLegalDocuments')}>
-                <a href={FEEDBACK_URL} target="_blank" rel="noopener noreferrer">
-                  {t('optionsFeedback')}
-                </a>
-                <a href={documentUrl('LICENSE')} target="_blank" rel="noopener noreferrer">
-                  {t('optionsLicense')}
-                </a>
-                <a href={documentUrl('PRIVACY.md')} target="_blank" rel="noopener noreferrer">
-                  {t('optionsPrivacy')}
-                </a>
-                <a href={documentUrl('TERMS_OF_USE.md')} target="_blank" rel="noopener noreferrer">
-                  {t('optionsTerms')}
-                </a>
-                <a href={documentUrl('SECURITY.md')} target="_blank" rel="noopener noreferrer">
-                  {t('optionsSecurity')}
-                </a>
-                <a
-                  href={documentUrl('THIRD_PARTY_NOTICES.md')}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {t('optionsNotices')}
-                </a>
-              </nav>
+          <section className="optionsSection" id="backup" aria-labelledby="backup_title">
+            <div className="sectionHeading">
+              <BackupIcon />
+              <h2 id="backup_title">{t('optionsBackupTitle')}</h2>
             </div>
-          </div>
-        </section>
+            <CodeHint />
+            <div className="actions qds-group">
+              <button
+                type="button"
+                className="qds-button qds-button--primary"
+                disabled={busy !== null}
+                onClick={() => void exportSettings()}
+              >
+                {busy === 'export' && <span className="spinner" aria-hidden="true" />}
+                {t('optionsExportButton')}
+              </button>
+              <button
+                type="button"
+                className="qds-button qds-button--secondary"
+                disabled={busy !== null}
+                onClick={() => importInput.current?.click()}
+              >
+                {busy === 'import' && <span className="spinner" aria-hidden="true" />}
+                {t('optionsImportButton')}
+              </button>
+              <input
+                ref={importInput}
+                type="file"
+                accept="application/json"
+                hidden
+                onChange={(event) => {
+                  const file = event.target.files?.[0]
+                  event.target.value = ''
+                  if (file) void startImport(file)
+                }}
+              />
+            </div>
+          </section>
+
+          <section className="optionsSection" id="about" aria-labelledby="about_title">
+            <div className="sectionHeading">
+              <InfoIcon />
+              <h2 id="about_title">{t('optionsAboutTitle')}</h2>
+            </div>
+            <div className="about qds-group">
+              <p>
+                <b>Elements</b>
+                <span className="version">v{displayVersion}</span>
+                <br />
+                {t('optionsMadeBy')}{' '}
+                <a href="https://github.com/QenTerra" target="_blank" rel="noopener noreferrer">
+                  Nikita Melnychenko (QenTerra)
+                </a>
+                .
+              </p>
+              <div className="about__documents">
+                <nav className="about__links" aria-label={t('optionsLegalDocuments')}>
+                  <a href={FEEDBACK_URL} target="_blank" rel="noopener noreferrer">
+                    {t('optionsFeedback')}
+                  </a>
+                  <a href={documentUrl('LICENSE')} target="_blank" rel="noopener noreferrer">
+                    {t('optionsLicense')}
+                  </a>
+                  <a href={documentUrl('PRIVACY.md')} target="_blank" rel="noopener noreferrer">
+                    {t('optionsPrivacy')}
+                  </a>
+                  <a
+                    href={documentUrl('TERMS_OF_USE.md')}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {t('optionsTerms')}
+                  </a>
+                  <a href={documentUrl('SECURITY.md')} target="_blank" rel="noopener noreferrer">
+                    {t('optionsSecurity')}
+                  </a>
+                  <a
+                    href={documentUrl('THIRD_PARTY_NOTICES.md')}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {t('optionsNotices')}
+                  </a>
+                </nav>
+              </div>
+            </div>
+          </section>
+        </div>
       </main>
       {review && (
-        <div className="modalOverlay" role="presentation">
+        <div className="modalOverlay qds-dialog-backdrop" role="presentation">
           <div
             ref={importDialog}
-            className="modal"
+            className="modal qds-dialog"
             role="dialog"
             aria-modal="true"
             aria-labelledby="import_dialog_title"

@@ -425,10 +425,10 @@ test('options initializes its theme, lists the port-scoped site, and reviews imp
   await expect(page.locator('.version')).toHaveText('v1.0')
   await expect(page.locator('.siteRow__domain').first()).toHaveText(new URL(baseUrl).host)
   await expect(page.locator('html')).toHaveAttribute('data-theme', /light|dark/)
-  await page.getByRole('button', { name: 'Dark' }).click()
+  await page.getByRole('radio', { name: 'Dark' }).check()
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
   await expectNoSeriousAccessibilityViolations(page)
-  await page.getByRole('button', { name: 'Light' }).click()
+  await page.getByRole('radio', { name: 'Light' }).check()
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
   await expectNoSeriousAccessibilityViolations(page)
 

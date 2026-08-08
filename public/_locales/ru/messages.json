@@ -267,6 +267,53 @@
   "optionsSortOrder": {
     "message": "Порядок сортировки сайтов"
   },
+  "optionsNavigation": {
+    "message": "Навигация по настройкам"
+  },
+  "optionsSearchScope": {
+    "message": "Поиск по $COUNT$ сохранённым сайтам",
+    "placeholders": { "count": { "content": "$1", "example": "12" } }
+  },
+  "optionsSearchResults": {
+    "message": "Показано сайтов: $COUNT$",
+    "placeholders": { "count": { "content": "$1", "example": "3" } }
+  },
+  "optionsSearchClear": {
+    "message": "Очистить поиск"
+  },
+  "optionsRecoveryTitle": {
+    "message": "Удаление ещё можно отменить"
+  },
+  "optionsRecoveryRestore": {
+    "message": "Восстановить правила"
+  },
+  "optionsRecoveryDismiss": {
+    "message": "Закрыть восстановление"
+  },
+  "optionsRecoveryRestored": {
+    "message": "Сохранённые правила восстановлены."
+  },
+  "optionsRecoveryRestoreFailed": {
+    "message": "Не удалось восстановить сохранённые правила. Попробуйте ещё раз."
+  },
+  "optionsSitesLoadFailed": {
+    "message": "Не удалось загрузить сохранённые сайты. Перезагрузите страницу."
+  },
+  "optionsSettingsSaveFailed": {
+    "message": "Не удалось сохранить настройку. Попробуйте ещё раз."
+  },
+  "optionsSiteDeleteFailed": {
+    "message": "Не удалось удалить сохранённые правила сайта. Попробуйте ещё раз."
+  },
+  "optionsRuleDeleteFailed": {
+    "message": "Не удалось удалить сохранённое правило. Попробуйте ещё раз."
+  },
+  "optionsSitePauseFailed": {
+    "message": "Не удалось изменить режим паузы для сайта. Попробуйте ещё раз."
+  },
+  "optionsExportFailed": {
+    "message": "Не удалось экспортировать резервную копию. Попробуйте ещё раз."
+  },
   "optionsErrorGeneric": {
     "message": "Что-то пошло не так."
   },

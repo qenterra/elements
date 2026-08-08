@@ -918,6 +918,222 @@
         vertical-align: 1px;
       }
 
+      /* The settings page deliberately uses one persistent shell: navigation
+       * stays quiet and the saved-site history remains the dominant surface. */
+      .optionsShell {
+        display: grid;
+        grid-template-columns: minmax(188px, 236px) minmax(0, 680px);
+        gap: var(--qds-space-8);
+        max-width: 980px;
+        margin: 0 auto;
+      }
+
+      .optionsNav {
+        position: sticky;
+        top: var(--qds-space-6);
+        align-self: start;
+        display: grid;
+        gap: var(--qds-space-6);
+        padding: var(--qds-space-5);
+        border: var(--qds-stroke-default) solid var(--qds-border-default);
+        border-radius: var(--qds-component-panel-radius);
+        background: var(--qds-surface-overlay);
+      }
+
+      .pageHeader {
+        display: flex;
+        align-items: center;
+        gap: var(--qds-space-3);
+      }
+
+      .pageHeader__icon {
+        width: var(--qds-size-target-touch);
+        height: var(--qds-size-target-touch);
+        border-radius: var(--qds-radius-control);
+      }
+
+      .optionsNav__links {
+        display: grid;
+        gap: var(--qds-space-1);
+      }
+
+      .optionsNav__links a {
+        min-height: var(--qds-size-control-standard);
+        display: flex;
+        align-items: center;
+        padding: 0 var(--qds-space-3);
+        border-radius: var(--qds-component-interactive-row-radius);
+        color: var(--qds-text-secondary);
+        font-weight: var(--qds-type-body-emphasized-weight);
+        text-decoration: none;
+      }
+
+      .optionsNav__links a:hover,
+      .optionsNav__links a:focus-visible {
+        background: var(--qds-fill-hover);
+        color: var(--qds-text-primary);
+      }
+
+      .optionsContent {
+        min-width: 0;
+      }
+
+      .optionsSection + .optionsSection {
+        margin-top: var(--qds-space-8);
+      }
+
+      .sectionHeading {
+        display: flex;
+        align-items: center;
+        gap: var(--qds-space-2);
+        margin: 0 0 var(--qds-space-2);
+        color: var(--qds-text-primary);
+      }
+
+      .sectionHeading svg {
+        color: var(--qds-action-primary);
+      }
+
+      .sectionHeading h2 {
+        margin: 0;
+        font: var(--qds-type-section-title-size) / var(--qds-type-section-title-line)
+          var(--qds-type-section-title-family);
+        font-weight: var(--qds-type-section-title-weight);
+        letter-spacing: var(--qds-type-section-title-tracking);
+      }
+
+      .sectionHeading_actions .sortSwitch {
+        margin-left: auto;
+      }
+
+      .settingsGroup {
+        gap: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .settingsGroup .settingRow {
+        min-height: var(--qds-size-target-touch);
+        padding: var(--qds-space-3) var(--qds-space-4);
+        border-radius: 0;
+      }
+
+      .settingsGroup .settingRow:hover {
+        background: var(--qds-fill-hover);
+      }
+
+      .settingsGroup .settingRow + .settingRow {
+        border-top: var(--qds-stroke-default) solid var(--qds-border-default);
+      }
+
+      .settingRow_appearance {
+        align-items: flex-start;
+      }
+
+      .settingRow_appearance .qds-radio-group {
+        grid-auto-flow: column;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        width: min(330px, 100%);
+      }
+
+      .settingRow_appearance .qds-radio-group__option {
+        justify-content: center;
+        min-height: var(--qds-size-control-standard);
+        padding: 0 var(--qds-space-2);
+        white-space: nowrap;
+      }
+
+      .settingRow_radius .settingRow__range {
+        width: min(150px, 25vw);
+      }
+
+      .searchArea {
+        display: grid;
+        gap: var(--qds-space-1);
+        margin: 0 0 var(--qds-space-3);
+      }
+
+      .searchScope,
+      .searchStatus {
+        margin: 0;
+        color: var(--qds-text-tertiary);
+        font: var(--qds-type-supporting-size) / var(--qds-type-supporting-line)
+          var(--qds-type-supporting-family);
+      }
+
+      .searchControl {
+        display: flex;
+        gap: var(--qds-space-2);
+      }
+
+      .searchControl .search {
+        min-height: var(--qds-size-control-standard);
+        margin: 0;
+      }
+
+      .searchClear {
+        flex: none;
+      }
+
+      .siteList {
+        padding: var(--qds-space-1);
+        background: var(--qds-surface-secondary);
+      }
+
+      .siteRow__head {
+        min-height: var(--qds-size-target-touch);
+        padding: var(--qds-space-1) var(--qds-space-2);
+      }
+
+      .siteRow__expand,
+      .siteRow__btn,
+      .ruleRow__delete {
+        width: var(--qds-size-control-standard);
+        height: var(--qds-size-control-standard);
+        min-width: var(--qds-size-control-standard);
+        min-height: var(--qds-size-control-standard);
+      }
+
+      .recoveryNotice {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--qds-space-4);
+        margin-bottom: var(--qds-space-6);
+        border-color: var(--qds-border-focus);
+        background: var(--qds-fill-selected);
+      }
+
+      .recoveryNotice__title,
+      .recoveryNotice__copy {
+        margin: 0;
+      }
+
+      .recoveryNotice__title {
+        color: var(--qds-text-primary);
+        font-weight: var(--qds-type-body-emphasized-weight);
+      }
+
+      .recoveryNotice__copy {
+        color: var(--qds-text-secondary);
+      }
+
+      .recoveryNotice__actions {
+        display: flex;
+        flex: none;
+        gap: var(--qds-space-2);
+      }
+
+      .optionsSection .actions {
+        margin-top: var(--qds-space-3);
+        padding: var(--qds-space-3);
+        background: var(--qds-surface-secondary);
+      }
+
+      .optionsSection .about {
+        padding: var(--qds-space-4);
+      }
+
       @media (hover: hover) and (pointer: fine) {
         .card:hover::after {
           opacity: 0.72;
@@ -1011,6 +1227,48 @@
 
         .settingRow {
           flex-wrap: wrap;
+        }
+
+        .optionsShell {
+          display: block;
+        }
+
+        .optionsNav {
+          position: static;
+          gap: var(--qds-space-3);
+          margin-bottom: var(--qds-space-6);
+          padding: var(--qds-space-4);
+        }
+
+        .optionsNav__links {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .optionsNav__links a {
+          justify-content: center;
+          padding: 0 var(--qds-space-2);
+        }
+
+        .settingRow_appearance .qds-radio-group {
+          width: 100%;
+        }
+
+        .settingRow_radius .settingRow__range {
+          flex: 1;
+          width: auto;
+        }
+
+        .recoveryNotice {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .recoveryNotice__actions {
+          width: 100%;
+        }
+
+        .recoveryNotice__actions button {
+          flex: 1;
         }
 
         .modalOverlay {
