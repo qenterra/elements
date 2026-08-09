@@ -35,7 +35,7 @@ export class RuleEngine {
         if (!selector) continue
         if (selector === state.previewSelector) {
           cssLines.push(
-            `${selector} { outline: solid 3px rgba(34,211,238,.6) !important; outline-offset: -3px !important; }`,
+            `${selector} { outline: solid calc(var(--qds-stroke-default) + var(--qds-stroke-focus)) rgba(34,211,238,.6) !important; outline-offset: calc(-1 * (var(--qds-stroke-default) + var(--qds-stroke-focus))) !important; }`,
           )
           continue
         }

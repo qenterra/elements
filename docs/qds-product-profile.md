@@ -38,7 +38,9 @@ The doctor audits `src`, `entrypoints`, and `site`. The upstream-compatible [`qd
 - `product-illustration-colors` — `site/product-illustration.css`
 - `qds-web-token-bridge` — `site/qds-web.css`
 
-The local gate rejects raw `rgb`/`rgba`, duration, radius, spacing, component-size, and typography metrics. Its only non-canonical exceptions are Chrome badge colors, host-document targeting colors that cannot resolve Shadow DOM CSS variables, and four authored product-illustration colors.
+The local gate rejects raw `rgb`/`rgba`, duration, radius, spacing, typography, width/height/min/max, layout-column, stroke/outline, and positioned-inset metrics in CSS blocks and inline HTML declarations. It also validates both exception registries as strict schemas: unknown rules or fields, empty data, duplicate signatures, stale entries, escaping/missing paths, and canonical SHA drift fail the gate.
+
+Non-canonical exceptions remain exact rather than file-wide. They cover Chrome badge colors, host-document targeting colors that cannot resolve Shadow DOM CSS variables, four authored product-illustration colors, and 21 product geometry signatures for CSS glyphs, screenshot/demo aspect constraints, responsive overlay height caps, compact range widths, and the public-site canvas/browser floor. Each geometry entry names one path, property, and value and carries its own removal trigger.
 
 ## Migration order
 

@@ -30,4 +30,16 @@ describe('document shortcut ownership', () => {
     expect(allowsNativeKeyboardActivation([button, document.body], 0)).toBe(true)
     expect(allowsNativeKeyboardActivation([button, document.body], 1)).toBe(false)
   })
+
+  it('treats native audio and video controls as page-owned Space targets', () => {
+    const audio = document.createElement('audio')
+    const video = document.createElement('video')
+    audio.controls = true
+    video.controls = true
+
+    expect(ownsDocumentShortcut([audio, document.body, document])).toBe(false)
+    expect(ownsDocumentShortcut([video, document.body, document])).toBe(false)
+    expect(allowsNativeKeyboardActivation([audio, document.body], 0)).toBe(true)
+    expect(allowsNativeKeyboardActivation([video, document.body], 0)).toBe(true)
+  })
 })

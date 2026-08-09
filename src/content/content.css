@@ -4,17 +4,17 @@
   display: flex;
   flex-direction: column;
   padding: 0 var(--qds-space-4);
-  width: min(360px, calc(100vw - 32px));
-  max-width: calc(100vw - 32px);
-  max-height: calc(100vh - 32px);
+  width: min(var(--qds-component-overlay-popover-max-width), calc(100vw - var(--qds-space-8)));
+  max-width: calc(100vw - var(--qds-space-8));
+  max-height: calc(100vh - var(--qds-space-8));
   font: var(--qds-type-row-weight) var(--qds-type-row-size) / var(--qds-type-row-line)
     var(--qds-type-row-family);
   color: var(--el-text);
   background: var(--el-surface);
-  border: solid 1px var(--el-border);
+  border: solid var(--qds-stroke-default) var(--el-border);
   border-radius: var(--el-radius-panel);
   box-shadow: var(--el-shadow-panel);
-  min-height: 120px;
+  min-height: calc(var(--qds-size-row-compact) * 3);
   transform-origin: bottom right;
   /* Keeps the full-bleed changes list from poking past the rounded corners.
 	   "clip" instead of "hidden": a descendant's scrollIntoView used to
@@ -52,8 +52,8 @@
 }
 
 :where(button, a, input, textarea, [role='button']):focus-visible {
-  outline: solid 2px var(--el-accent);
-  outline-offset: 2px;
+  outline: solid var(--qds-stroke-focus) var(--el-accent);
+  outline-offset: var(--qds-stroke-focus);
 }
 
 input[type='checkbox'] {
@@ -63,7 +63,7 @@ input[type='checkbox'] {
 
 hr {
   border: none;
-  border-top: solid 1px var(--el-border);
+  border-top: solid var(--qds-stroke-default) var(--el-border);
   margin: 0 calc(var(--qds-space-4) * -1) var(--qds-space-3);
 }
 
@@ -74,7 +74,7 @@ hr {
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  height: 44px;
+  height: var(--qds-size-target-touch);
   padding: 0 var(--qds-space-20) 0 0;
   cursor: grab;
   touch-action: none;
@@ -205,7 +205,7 @@ hr {
   position: relative;
   margin: 0 0 var(--qds-space-3);
   padding: var(--qds-space-3) var(--qds-space-3);
-  border: solid 1px var(--el-accent);
+  border: solid var(--qds-stroke-default) var(--el-accent);
   border-radius: var(--qds-radius-group);
   background: var(--el-accent-soft);
 }
@@ -249,14 +249,14 @@ hr {
   font-family: var(--qds-type-body-family);
   font-size: var(--qds-type-metadata-size);
   background: var(--el-surface-alt);
-  border: solid 1px var(--el-border);
+  border: solid var(--qds-stroke-default) var(--el-border);
   border-radius: var(--qds-radius-group);
   padding: var(--qds-space-1) var(--qds-space-3);
   margin: 0 0 var(--qds-space-3);
   /* Keep the panel stable while following the selected element, but reveal
 	   the terminal selector instead of clipping the beginning of the path. */
   height: auto;
-  min-height: 44px;
+  min-height: var(--qds-size-target-touch);
   display: flex;
   align-items: center;
   overflow-x: auto;
@@ -273,7 +273,7 @@ hr {
   min-height: var(--qds-component-keycap-height);
   margin: 0 0 var(--qds-space-1);
   padding: var(--qds-space-1) var(--qds-space-2);
-  border: solid 1px var(--el-border);
+  border: solid var(--qds-stroke-default) var(--el-border);
   border-radius: var(--qds-radius-pill);
   font-size: var(--qds-type-metadata-size);
   font-weight: var(--qds-type-display-weight);
@@ -311,7 +311,7 @@ hr {
 #elements_current_elm .pathNode {
   display: inline-block;
   color: var(--el-text);
-  border-bottom: solid 2px transparent;
+  border-bottom: solid var(--qds-stroke-emphasis) transparent;
   margin: 0 var(--qds-space-1);
   overflow: hidden;
 }
@@ -322,7 +322,7 @@ hr {
   max-width: 180px;
   padding: var(--qds-space-1) var(--qds-space-1);
   border: 0;
-  border-bottom: solid 2px transparent;
+  border-bottom: solid var(--qds-stroke-emphasis) transparent;
   border-radius: var(--qds-radius-control);
   background: transparent;
   font: inherit;
@@ -362,7 +362,7 @@ hr {
   white-space: nowrap;
   color: var(--el-text);
   background: var(--el-surface-alt);
-  border: solid 1px var(--el-border);
+  border: solid var(--qds-stroke-default) var(--el-border);
   border-radius: var(--el-radius-control);
   padding: var(--qds-space-1) var(--qds-space-2);
   cursor: pointer;
@@ -395,7 +395,7 @@ hr {
   font-size: var(--qds-type-compact-metadata-size);
   color: var(--el-text-muted);
   background: var(--el-surface);
-  border: solid 1px var(--el-border);
+  border: solid var(--qds-stroke-default) var(--el-border);
   border-radius: var(--qds-radius-control);
   padding: var(--qds-space-0) var(--qds-space-1);
 }
@@ -416,9 +416,9 @@ hr {
 .moreMenu {
   position: fixed;
   box-sizing: border-box;
-  width: min(220px, calc(100vw - 16px));
+  width: min(var(--qds-size-sidebar-compact), calc(100vw - var(--qds-space-4)));
   background: var(--el-surface);
-  border: solid 1px var(--el-border);
+  border: solid var(--qds-stroke-default) var(--el-border);
   border-radius: var(--qds-radius-group);
   box-shadow: var(--el-shadow-card);
   padding: var(--qds-space-1);
@@ -471,8 +471,8 @@ hr {
 }
 
 .moreMenu__item svg {
-  width: 13px;
-  height: 13px;
+  width: var(--qds-size-icon-s);
+  height: var(--qds-size-icon-s);
   color: var(--el-accent);
   flex: none;
 }
@@ -481,7 +481,7 @@ hr {
 
 .changes {
   margin: 0 calc(var(--qds-space-4) * -1);
-  border-top: solid 1px var(--el-border);
+  border-top: solid var(--qds-stroke-default) var(--el-border);
 }
 
 .changes__title {
@@ -519,7 +519,7 @@ hr {
 }
 
 .historyDisclosure {
-  width: calc(100% - 32px);
+  width: calc(100% - var(--qds-space-8));
   margin: var(--qds-space-2) var(--qds-space-4) var(--qds-space-3);
   justify-content: center;
 }
@@ -527,7 +527,7 @@ hr {
 .bracket {
   position: relative;
   width: 9px;
-  height: 16px;
+  height: var(--qds-size-icon-m);
   flex: none;
   opacity: 0.7;
 }
@@ -539,18 +539,18 @@ hr {
   left: 0;
   width: 8px;
   height: 6px;
-  border-left: solid 2px var(--el-accent);
+  border-left: solid var(--qds-stroke-emphasis) var(--el-accent);
 }
 
 .bracket::before {
   top: 0;
-  border-top: solid 2px var(--el-accent);
+  border-top: solid var(--qds-stroke-emphasis) var(--el-accent);
   border-top-left-radius: var(--qds-radius-control);
 }
 
 .bracket::after {
   bottom: 0;
-  border-bottom: solid 2px var(--el-accent);
+  border-bottom: solid var(--qds-stroke-emphasis) var(--el-accent);
   border-bottom-left-radius: var(--qds-radius-control);
 }
 
@@ -559,7 +559,7 @@ hr {
 }
 
 .editList {
-  max-height: 176px;
+  max-height: calc(var(--qds-size-row-comfortable) * 3 + var(--qds-space-2));
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -570,7 +570,7 @@ hr {
   align-items: center;
   gap: var(--qds-space-1);
   padding: var(--qds-space-1) var(--qds-space-4);
-  border-top: solid 1px var(--el-border);
+  border-top: solid var(--qds-stroke-default) var(--el-border);
   overflow: hidden;
   transition: background-color var(--qds-motion-replace) ease;
 }
@@ -841,7 +841,7 @@ hr {
   color: var(--el-text);
   padding: var(--qds-space-0) var(--qds-space-1);
   margin: 0 var(--qds-space-0);
-  border: solid 1px var(--el-border);
+  border: solid var(--qds-stroke-default) var(--el-border);
   border-radius: var(--qds-radius-control);
   white-space: nowrap;
 }
@@ -864,7 +864,7 @@ hr {
   align-items: center;
   gap: var(--qds-space-2);
   background: var(--el-surface-alt);
-  border: solid 1px var(--el-border);
+  border: solid var(--qds-stroke-default) var(--el-border);
   border-radius: var(--qds-radius-group);
   box-shadow: var(--el-shadow-card);
   padding: var(--qds-space-2) var(--qds-space-3);
@@ -907,11 +907,11 @@ hr {
   position: fixed;
   box-sizing: border-box;
   z-index: 5;
-  width: min(320px, calc(100vw - 24px));
-  max-height: calc(100vh - 16px);
+  width: min(var(--qds-component-overlay-popover-max-width), calc(100vw - var(--qds-space-6)));
+  max-height: calc(100vh - var(--qds-space-4));
   overflow-y: auto;
   background: var(--el-surface);
-  border: solid 1px var(--el-border);
+  border: solid var(--qds-stroke-default) var(--el-border);
   border-radius: var(--qds-radius-group);
   box-shadow: var(--el-shadow-card);
   padding: var(--qds-space-3);
@@ -958,7 +958,7 @@ hr {
     var(--qds-type-monospaced-data-line) var(--qds-type-monospaced-data-family);
   color: var(--el-text-strong);
   background: var(--el-surface-alt);
-  border: solid 1px var(--el-border);
+  border: solid var(--qds-stroke-default) var(--el-border);
   border-radius: var(--qds-radius-control);
   padding: var(--qds-space-2) var(--qds-space-2);
   transition: border-color var(--qds-motion-replace) ease;
@@ -1007,7 +1007,7 @@ hr {
   font-variant-numeric: tabular-nums;
   font-size: var(--qds-type-metadata-size);
   color: var(--el-text);
-  min-width: 36px;
+  min-width: var(--qds-size-target-touch);
   text-align: right;
 }
 
@@ -1024,7 +1024,7 @@ hr {
   cursor: pointer;
   color: var(--el-text-strong);
   background: var(--el-surface-alt);
-  border: solid 1px var(--el-border);
+  border: solid var(--qds-stroke-default) var(--el-border);
   padding: var(--qds-space-2) var(--qds-space-3);
   border-radius: var(--qds-radius-control);
   transition:
@@ -1052,7 +1052,7 @@ hr {
   align-items: center;
   gap: var(--qds-space-0);
   background: var(--el-surface);
-  border: solid 1px var(--el-border);
+  border: solid var(--qds-stroke-default) var(--el-border);
   border-radius: var(--qds-radius-group);
   box-shadow: var(--el-shadow-card);
   padding: var(--qds-space-1);
@@ -1099,8 +1099,8 @@ hr {
 }
 
 .miniBar__rule {
-  width: 1px;
-  height: 16px;
+  width: var(--qds-stroke-default);
+  height: var(--qds-size-icon-m);
   background: var(--el-border);
   margin: 0 var(--qds-space-1);
   flex: none;
@@ -1134,10 +1134,10 @@ hr {
 /* --- Minimized state -------------------------------------------------------- */
 
 .mainWindow.minimized {
-  width: min(206px, calc(100vw - 32px));
-  max-width: calc(100vw - 32px);
+  width: min(var(--qds-size-sidebar-compact), calc(100vw - var(--qds-space-8)));
+  max-width: calc(100vw - var(--qds-space-8));
   min-height: 0;
-  height: 44px;
+  height: var(--qds-size-target-touch);
 }
 
 .mainWindow.minimized .mainWindow__body {
@@ -1319,7 +1319,7 @@ hr {
   }
 
   .header {
-    height: 48px;
+    height: var(--qds-size-row-standard);
     cursor: default;
     touch-action: auto;
   }
@@ -1399,10 +1399,10 @@ hr {
   }
 
   .popover {
-    left: 8px !important;
-    right: 8px;
+    left: var(--qds-space-2) !important;
+    right: var(--qds-space-2);
     top: auto !important;
-    bottom: max(8px, env(safe-area-inset-bottom));
+    bottom: max(var(--qds-space-2), env(safe-area-inset-bottom));
     width: auto;
     max-height: min(72vh, 560px);
     overflow-y: auto;

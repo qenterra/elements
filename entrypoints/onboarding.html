@@ -28,12 +28,12 @@
       }
 
       :where(a, button, [tabindex]):focus-visible {
-        outline: 2px solid var(--el-accent);
-        outline-offset: 2px;
+        outline: var(--qds-stroke-focus) solid var(--el-accent);
+        outline-offset: var(--qds-stroke-focus);
       }
 
       .page {
-        max-width: 560px;
+        max-width: var(--qds-component-overlay-sheet-readable-width);
         margin: 0 auto;
       }
 
@@ -70,48 +70,64 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 88px;
-        height: 88px;
+        width: calc(var(--qds-size-target-touch) * 2);
+        height: calc(var(--qds-size-target-touch) * 2);
         margin-bottom: var(--qds-space-5);
         color: var(--el-accent);
       }
 
       .hero__bracket {
         position: absolute;
-        width: 22px;
-        height: 22px;
+        width: var(--qds-size-icon-xl);
+        height: var(--qds-size-icon-xl);
         animation: bracketIn var(--qds-motion-spatial-long) var(--el-ease-out) backwards;
       }
 
       .hero__bracket_tl {
         top: 0;
         left: 0;
-        border-top: solid 3.5px currentColor;
-        border-left: solid 3.5px currentColor;
+        border-top: solid
+          calc(var(--qds-stroke-hairline) + var(--qds-stroke-default) + var(--qds-stroke-focus))
+          currentColor;
+        border-left: solid
+          calc(var(--qds-stroke-hairline) + var(--qds-stroke-default) + var(--qds-stroke-focus))
+          currentColor;
         border-top-left-radius: var(--qds-radius-group);
         animation-delay: var(--qds-motion-hover);
       }
       .hero__bracket_tr {
         top: 0;
         right: 0;
-        border-top: solid 3.5px currentColor;
-        border-right: solid 3.5px currentColor;
+        border-top: solid
+          calc(var(--qds-stroke-hairline) + var(--qds-stroke-default) + var(--qds-stroke-focus))
+          currentColor;
+        border-right: solid
+          calc(var(--qds-stroke-hairline) + var(--qds-stroke-default) + var(--qds-stroke-focus))
+          currentColor;
         border-top-right-radius: var(--qds-radius-group);
         animation-delay: var(--qds-motion-disclosure);
       }
       .hero__bracket_bl {
         bottom: 0;
         left: 0;
-        border-bottom: solid 3.5px currentColor;
-        border-left: solid 3.5px currentColor;
+        border-bottom: solid
+          calc(var(--qds-stroke-hairline) + var(--qds-stroke-default) + var(--qds-stroke-focus))
+          currentColor;
+        border-left: solid
+          calc(var(--qds-stroke-hairline) + var(--qds-stroke-default) + var(--qds-stroke-focus))
+          currentColor;
         border-bottom-left-radius: var(--qds-radius-group);
         animation-delay: var(--qds-motion-spatial-long);
       }
       .hero__bracket_br {
         bottom: 0;
         right: 0;
-        border-bottom: solid 3.5px currentColor;
-        border-right: solid 3.5px currentColor;
+        border-bottom: solid
+          calc(var(--qds-stroke-hairline) + var(--qds-stroke-default) + var(--qds-stroke-focus))
+          currentColor;
+        border-right: solid
+          calc(var(--qds-stroke-hairline) + var(--qds-stroke-default) + var(--qds-stroke-focus))
+          currentColor;
         border-bottom-right-radius: var(--qds-radius-group);
         animation-delay: var(--qds-motion-spatial-long);
       }
@@ -130,16 +146,16 @@
       }
 
       .hero__line:nth-child(1) {
-        width: 44px;
+        width: var(--qds-size-target-touch);
         animation-delay: var(--qds-motion-disclosure);
       }
       .hero__line:nth-child(2) {
-        width: 30px;
+        width: var(--qds-size-control-standard);
         opacity: 0.75;
         animation-delay: var(--qds-motion-spatial-long);
       }
       .hero__line:nth-child(3) {
-        width: 37px;
+        width: var(--qds-size-control-prominent);
         opacity: 0.55;
         animation-delay: var(--qds-motion-spatial-long);
       }
@@ -157,7 +173,7 @@
         font-size: var(--qds-type-section-title-size);
         color: var(--el-text-muted);
         margin: 0 auto;
-        max-width: 430px;
+        max-width: var(--qds-component-overlay-dialog-readable-width);
         text-wrap: pretty;
       }
 
@@ -234,7 +250,7 @@
         align-items: center;
         gap: var(--qds-space-4);
         background: var(--el-surface);
-        border: 1px solid var(--el-border);
+        border: var(--qds-stroke-default) solid var(--el-border);
         border-radius: var(--qds-radius-panel);
         box-shadow: var(--el-shadow-card);
         padding: var(--qds-space-5) var(--qds-space-5);
@@ -255,8 +271,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 34px;
-        height: 34px;
+        width: var(--qds-size-control-standard);
+        height: var(--qds-size-control-standard);
         flex: none;
         border-radius: var(--qds-radius-group);
         background: var(--el-accent-soft);
@@ -308,7 +324,7 @@
 
       .trial-canvas {
         display: grid;
-        min-height: 112px;
+        min-height: calc(var(--qds-size-row-comfortable) * 2);
         place-items: center;
         padding: var(--qds-space-4);
         border: var(--qds-stroke-default) dashed var(--el-border);
@@ -319,8 +335,8 @@
       .trial-target {
         display: grid;
         gap: var(--qds-space-1);
-        width: min(100%, 260px);
-        min-height: 64px;
+        width: min(100%, var(--qds-size-sidebar-standard));
+        min-height: var(--qds-size-rail-compact);
         padding: var(--qds-space-3);
         border: var(--qds-stroke-emphasis) solid var(--el-border);
         border-radius: var(--qds-radius-control);
@@ -370,7 +386,7 @@
       .privacy {
         margin-top: var(--qds-space-6);
         padding: var(--qds-space-4) var(--qds-space-5);
-        border: 1px solid var(--el-accent);
+        border: var(--qds-stroke-default) solid var(--el-accent);
         background: var(--el-accent-soft);
         border-radius: var(--qds-radius-panel);
         animation: heroIn var(--qds-motion-spatial-long) var(--el-ease-out)

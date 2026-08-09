@@ -191,6 +191,195 @@
       "value": "#d3484e",
       "reason": "Product illustration retains its authored action accent.",
       "migrationTrigger": "The illustration becomes a QDS composition."
+    },
+    {
+      "id": "picker-breadcrumb-label-cap",
+      "rule": "raw-component-size",
+      "path": "src/content/content.css",
+      "property": "max-width",
+      "value": "180px",
+      "reason": "The compact picker breadcrumb reserves a product-specific label width inside the 360px shell.",
+      "migrationTrigger": "QDS publishes a compact breadcrumb composition for extension pickers."
+    },
+    {
+      "id": "picker-disclosure-bracket-width",
+      "rule": "raw-component-size",
+      "path": "src/content/content.css",
+      "property": "width",
+      "value": "9px",
+      "reason": "The authored CSS disclosure bracket uses exact asymmetric glyph geometry.",
+      "migrationTrigger": "The bracket is replaced by a registered QDS icon."
+    },
+    {
+      "id": "picker-disclosure-bracket-arm-width",
+      "rule": "raw-component-size",
+      "path": "src/content/content.css",
+      "property": "width",
+      "value": "8px",
+      "reason": "The authored CSS disclosure bracket arm uses exact glyph geometry.",
+      "migrationTrigger": "The bracket is replaced by a registered QDS icon."
+    },
+    {
+      "id": "picker-disclosure-bracket-arm-height",
+      "rule": "raw-component-size",
+      "path": "src/content/content.css",
+      "property": "height",
+      "value": "6px",
+      "reason": "The authored CSS disclosure bracket arm uses exact glyph geometry.",
+      "migrationTrigger": "The bracket is replaced by a registered QDS icon."
+    },
+    {
+      "id": "picker-minibar-label-cap",
+      "rule": "raw-component-size",
+      "path": "src/content/content.css",
+      "property": "max-width",
+      "value": "200px",
+      "reason": "The minimized picker label cap preserves room for its adjacent size and action controls.",
+      "migrationTrigger": "QDS publishes a minimized extension toolbar composition."
+    },
+    {
+      "id": "picker-adaptive-sheet-height-cap",
+      "rule": "raw-component-size",
+      "path": "src/content/content.css",
+      "property": "max-height",
+      "value": "520px",
+      "reason": "The adaptive picker sheet uses a viewport-tested product height cap; QDS defines overlay widths but not height caps.",
+      "migrationTrigger": "QDS publishes responsive overlay height semantics."
+    },
+    {
+      "id": "picker-adaptive-popover-height-cap",
+      "rule": "raw-component-size",
+      "path": "src/content/content.css",
+      "property": "max-height",
+      "value": "560px",
+      "reason": "The adaptive selector popover uses a viewport-tested product height cap; QDS defines overlay widths but not height caps.",
+      "migrationTrigger": "QDS publishes responsive overlay height semantics."
+    },
+    {
+      "id": "shared-dialog-height-cap",
+      "rule": "raw-component-size",
+      "path": "src/qds/primitives.css",
+      "property": "max-height",
+      "value": "720px",
+      "reason": "Shared extension dialogs need a desktop viewport cap; QDS 1.8.1 defines readable widths but no dialog height token.",
+      "migrationTrigger": "QDS publishes a dialog height or viewport-cap semantic."
+    },
+    {
+      "id": "onboarding-mark-line-height",
+      "rule": "raw-component-size",
+      "path": "entrypoints/onboarding.html",
+      "property": "height",
+      "value": "6px",
+      "reason": "The onboarding hero mark retains its authored three-line illustration geometry.",
+      "migrationTrigger": "The hero mark becomes a registered QDS brand composition."
+    },
+    {
+      "id": "options-empty-bracket-width",
+      "rule": "raw-component-size",
+      "path": "entrypoints/options.html",
+      "property": "width",
+      "value": "9px",
+      "reason": "The empty-state CSS bracket uses exact asymmetric illustration geometry.",
+      "migrationTrigger": "The bracket is replaced by a registered QDS icon."
+    },
+    {
+      "id": "options-empty-bracket-arm-width",
+      "rule": "raw-component-size",
+      "path": "entrypoints/options.html",
+      "property": "width",
+      "value": "8px",
+      "reason": "The empty-state CSS bracket arm uses exact illustration geometry.",
+      "migrationTrigger": "The bracket is replaced by a registered QDS icon."
+    },
+    {
+      "id": "options-empty-bracket-arm-height",
+      "rule": "raw-component-size",
+      "path": "entrypoints/options.html",
+      "property": "height",
+      "value": "6px",
+      "reason": "The empty-state CSS bracket arm uses exact illustration geometry.",
+      "migrationTrigger": "The bracket is replaced by a registered QDS icon."
+    },
+    {
+      "id": "options-radius-range-width",
+      "rule": "raw-component-size",
+      "path": "entrypoints/options.html",
+      "property": "width",
+      "value": "130px",
+      "reason": "The radius preview range has a product-specific width paired with its numeric readout.",
+      "migrationTrigger": "QDS publishes a compact range-field composition."
+    },
+    {
+      "id": "options-responsive-range-width",
+      "rule": "raw-component-size",
+      "path": "entrypoints/options.html",
+      "property": "width",
+      "value": "150px",
+      "reason": "The responsive radius range width preserves the field and readout fit at narrow option widths.",
+      "migrationTrigger": "QDS publishes responsive range-field sizing."
+    },
+    {
+      "id": "options-modal-height-cap",
+      "rule": "raw-component-size",
+      "path": "entrypoints/options.html",
+      "property": "max-height",
+      "value": "720px",
+      "reason": "Import and recovery dialogs share a desktop viewport cap; QDS 1.8.1 defines readable widths but no dialog height token.",
+      "migrationTrigger": "QDS publishes a dialog height or viewport-cap semantic."
+    },
+    {
+      "id": "site-container-width",
+      "rule": "raw-component-size",
+      "path": "site/index.html",
+      "property": "--container",
+      "value": "1180px",
+      "reason": "The marketing page uses an authored maximum canvas wider than the QDS readable-content column.",
+      "migrationTrigger": "QDS publishes a marketing-canvas composition or the site adopts the readable-content shell."
+    },
+    {
+      "id": "site-browser-floor-width",
+      "rule": "raw-component-size",
+      "path": "site/index.html",
+      "property": "min-width",
+      "value": "320px",
+      "reason": "The public page explicitly supports the tested 320px browser floor.",
+      "migrationTrigger": "The supported minimum viewport changes."
+    },
+    {
+      "id": "site-proof-dot-width",
+      "rule": "raw-component-size",
+      "path": "site/index.html",
+      "property": "width",
+      "value": "6px",
+      "reason": "The hero proof list uses an exact decorative status-dot geometry.",
+      "migrationTrigger": "The proof marker becomes a QDS status component."
+    },
+    {
+      "id": "site-proof-dot-height",
+      "rule": "raw-component-size",
+      "path": "site/index.html",
+      "property": "height",
+      "value": "6px",
+      "reason": "The hero proof list uses an exact decorative status-dot geometry.",
+      "migrationTrigger": "The proof marker becomes a QDS status component."
+    },
+    {
+      "id": "site-hero-screenshot-height-cap",
+      "rule": "raw-component-size",
+      "path": "site/index.html",
+      "property": "max-height",
+      "value": "520px",
+      "reason": "The real product screenshot retains a height cap tuned to its captured aspect ratio.",
+      "migrationTrigger": "The canonical product screenshot aspect ratio changes."
+    },
+    {
+      "id": "site-demo-canvas-minimum-height",
+      "rule": "raw-component-size",
+      "path": "site/index.html",
+      "property": "min-height",
+      "value": "520px",
+      "reason": "The interactive demo canvas needs an authored minimum height for its stacked target and action fixture.",
+      "migrationTrigger": "The demo is rebuilt from a registered QDS interactive composition."
     }
   ]
 }

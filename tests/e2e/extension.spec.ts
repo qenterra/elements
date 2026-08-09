@@ -32,6 +32,7 @@ const fixtureHtml = `<!doctype html>
     <main id="content" style="padding:20px">
       <button id="page-button" type="button">Page action</button>
       <input id="page-input" aria-label="Page input" />
+      <audio id="page-audio" aria-label="Page audio" controls muted></audio>
       <h1 id="headline">Original headline</h1>
       <p id="paragraph">Body text that stays.</p>
       <section class="fixture-shell-with-a-long-class-name">
@@ -120,7 +121,10 @@ async function resetExtensionState(theme: 'system' | 'light' | 'dark' = 'system'
       }
     ).chrome
     await Promise.all([api.storage.local.clear(), api.storage.sync.clear()])
-    await api.storage.sync.set({ settings: JSON.stringify(settings) })
+    await api.storage.sync.set({
+      settings: JSON.stringify(settings),
+      elementsSchemaVersion: 2,
+    })
   }, settingsFor(theme))
 }
 
@@ -148,7 +152,10 @@ async function expectIsolatedExtensionState(
   })
 
   expect(state.local).toEqual({})
-  expect(state.sync).toEqual({ settings: JSON.stringify(settingsFor(theme)) })
+  expect(state.sync).toEqual({
+    settings: JSON.stringify(settingsFor(theme)),
+    elementsSchemaVersion: 2,
+  })
 }
 
 async function openExtensionPage(
@@ -537,6 +544,47 @@ test('Space respects picker and host-page control ownership while keeping the gl
   await pageInput.focus()
   await page.keyboard.press('Space')
   await expect(pageInput).toHaveValue(' ')
+
+  const pageAudio = page.getByLabel('Page audio')
+  await pageAudio.evaluate((element) => {
+    const audio = element as HTMLAudioElement
+    const sampleCount = 8_000
+    const buffer = new ArrayBuffer(44 + sampleCount)
+    const bytes = new Uint8Array(buffer)
+    const view = new DataView(buffer)
+    const text = (offset: number, value: string) => {
+      for (let index = 0; index < value.length; index += 1)
+        bytes[offset + index] = value.charCodeAt(index)
+    }
+    text(0, 'RIFF')
+    view.setUint32(4, 36 + sampleCount, true)
+    text(8, 'WAVEfmt ')
+    view.setUint32(16, 16, true)
+    view.setUint16(20, 1, true)
+    view.setUint16(22, 1, true)
+    view.setUint32(24, 8_000, true)
+    view.setUint32(28, 8_000, true)
+    view.setUint16(32, 1, true)
+    view.setUint16(34, 8, true)
+    text(36, 'data')
+    view.setUint32(40, sampleCount, true)
+    bytes.fill(128, 44)
+    audio.src = URL.createObjectURL(new Blob([buffer], { type: 'audio/wav' }))
+    audio.load()
+  })
+  await expect
+    .poll(() => pageAudio.evaluate((element) => (element as HTMLAudioElement).readyState))
+    .toBeGreaterThan(1)
+  await pageAudio.focus()
+  await page.keyboard.press('Space')
+  await expect
+    .poll(() => pageAudio.evaluate((element) => !(element as HTMLAudioElement).paused))
+    .toBe(true)
+  await expect(page.locator('#headline')).toBeVisible()
+  await page.keyboard.press('Space')
+  await expect
+    .poll(() => pageAudio.evaluate((element) => (element as HTMLAudioElement).paused))
+    .toBe(true)
 
   await page.evaluate(() => {
     document.body.tabIndex = -1

@@ -180,6 +180,60 @@ test('narrow layout stays inside the viewport', async ({ page }) => {
   expect(overflow).toEqual([])
 })
 
+test('multiline headings keep QDS line geometry without glyph overlap at narrow widths', async ({
+  page,
+}) => {
+  const selectors = [
+    'h1',
+    '#demo-title',
+    '.demo-title',
+    '#features-title',
+    '#tour-title',
+    '#privacy-title',
+    '#download-title',
+    '#technical-title',
+    '.final-card h2',
+  ]
+
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 320, height: 360 },
+  ]) {
+    await page.setViewportSize(viewport)
+    await page.reload()
+    let multilineHeadings = 0
+
+    for (const selector of selectors) {
+      const heading = page.locator(selector).first()
+      await heading.scrollIntoViewIfNeeded()
+      const geometry = await heading.evaluate((element) => {
+        const style = getComputedStyle(element)
+        const range = document.createRange()
+        range.selectNodeContents(element)
+        const lines = [...range.getClientRects()]
+          .filter((rect) => rect.width > 0 && rect.height > 0)
+          .map((rect) => ({ top: rect.top, bottom: rect.bottom }))
+          .sort((left, right) => left.top - right.top)
+        return {
+          fontSize: Number.parseFloat(style.fontSize),
+          lineHeight: Number.parseFloat(style.lineHeight),
+          lines,
+        }
+      })
+
+      if (geometry.lines.length > 1) multilineHeadings += 1
+      expect(geometry.lineHeight).toBeGreaterThan(geometry.fontSize)
+      for (let index = 1; index < geometry.lines.length; index += 1) {
+        expect(geometry.lines[index - 1].bottom).toBeLessThanOrEqual(
+          geometry.lines[index].top + 0.5,
+        )
+      }
+    }
+
+    expect(multilineHeadings).toBeGreaterThanOrEqual(3)
+  }
+})
+
 test('reduced-motion mode keeps content visible and interactions working', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.reload()

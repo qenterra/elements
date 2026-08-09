@@ -33,7 +33,7 @@
       "id": "qds-web-token-bridge",
       "rule": "raw-color",
       "path": "site/qds-web.css",
-      "reason": "Committed QDS 1.8.1 Web token subset keeps the static Pages site self-contained without a sibling runtime dependency.",
+      "reason": "Committed complete QDS 1.8.1 Web token snapshot keeps the static Pages site self-contained without a sibling runtime dependency.",
       "reviewTrigger": "When the QDS package version or source hash changes."
     }
   ]

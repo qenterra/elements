@@ -5,6 +5,8 @@ const INTERACTIVE_SELECTOR = [
   'textarea',
   'select',
   'summary',
+  'audio[controls]',
+  'video[controls]',
   '[contenteditable]:not([contenteditable="false"])',
   '[role="button"]',
   '[role="link"]',
