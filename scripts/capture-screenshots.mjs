@@ -67,7 +67,9 @@ const server = createServer((_request, response) => {
 })
 await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
 const baseUrl = `http://127.0.0.1:${server.address().port}/`
-const fixtureSite = new URL(baseUrl).host
+const fixtureSite = 'qa-fixture.example'
+assert.equal(fixtureSite, 'qa-fixture.example')
+assert.notEqual(fixtureSite, new URL(baseUrl).host)
 const fixtureModified = 1_700_000_000_000
 const fixtureRule = {
   id: 'rule_fixture_round',
