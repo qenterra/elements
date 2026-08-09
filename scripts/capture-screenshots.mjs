@@ -3,14 +3,17 @@
 // extension. Requires `npm run build:chrome` first.
 // Usage: CHROMIUM_PATH=/path/to/chrome node scripts/capture-screenshots.mjs
 import { createServer } from 'node:http'
-import { copyFile, mkdir } from 'node:fs/promises'
+import { copyFile, mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium } from '@playwright/test'
 
 const projectDirectory = join(dirname(fileURLToPath(import.meta.url)), '..')
 const extensionPath = join(projectDirectory, '.output/chrome-mv3')
-const outputDirectory = join(projectDirectory, '.output/screenshots')
+const outputDirectory = process.env.QA_OUTPUT_DIR
+  ? join(projectDirectory, process.env.QA_OUTPUT_DIR)
+  : join(projectDirectory, '.output/screenshots')
+const qaOnly = Boolean(process.env.QA_OUTPUT_DIR)
 const documentationImageDirectory = join(projectDirectory, 'docs/images')
 const siteImageDirectory = join(projectDirectory, 'site/images')
 
@@ -71,10 +74,16 @@ const context = await chromium.launchPersistentContext('', {
     : { channel: 'chromium' }),
   viewport: { width: 1280, height: 800 },
   deviceScaleFactor: 2,
-  args: [`--disable-extensions-except=${extensionPath}`, `--load-extension=${extensionPath}`],
+  args: [
+    '--disable-crash-reporter',
+    '--no-crashpad',
+    `--disable-extensions-except=${extensionPath}`,
+    `--load-extension=${extensionPath}`,
+  ],
 })
 const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'))
 const extensionId = new URL(worker.url()).host
+const screenshotManifest = []
 await mkdir(outputDirectory, { recursive: true })
 await mkdir(documentationImageDirectory, { recursive: true })
 await mkdir(siteImageDirectory, { recursive: true })
@@ -94,6 +103,31 @@ async function setTheme(theme) {
   }, theme)
 }
 
+async function emulateEvidenceMedia(page, { colorScheme, contrast, reducedMotion } = {}) {
+  await page.emulateMedia({
+    ...(colorScheme ? { colorScheme } : {}),
+    ...(reducedMotion ? { reducedMotion } : {}),
+  })
+  if (contrast === 'more') {
+    const session = await context.newCDPSession(page)
+    await session.send('Emulation.setEmulatedMedia', {
+      features: [{ name: 'prefers-contrast', value: 'more' }],
+    })
+  }
+}
+
+async function saveScreenshot(page, file, state) {
+  const path = join(outputDirectory, file)
+  await page.screenshot({ path })
+  screenshotManifest.push({
+    file,
+    state,
+    viewport: page.viewportSize(),
+    deviceScaleFactor: await page.evaluate(() => window.devicePixelRatio),
+    cssZoom: await page.evaluate(() => getComputedStyle(document.documentElement).zoom),
+  })
+}
+
 async function capturePicker(
   theme,
   file,
@@ -101,10 +135,19 @@ async function capturePicker(
   interaction = 'locked',
   target = '#promo',
   panelFile,
+  evidence = {},
 ) {
   await setTheme(theme)
   const page = await context.newPage()
-  await page.setViewportSize(viewport)
+  await page.setViewportSize(
+    evidence.zoom
+      ? {
+          width: Math.round(viewport.width / evidence.zoom),
+          height: Math.round(viewport.height / evidence.zoom),
+        }
+      : viewport,
+  )
+  await emulateEvidenceMedia(page, evidence)
   await page.goto(baseUrl)
   await worker.evaluate(async (urlPrefix) => {
     const tabs = await chrome.tabs.query({})
@@ -141,7 +184,13 @@ async function capturePicker(
       .click()
   }
   await page.waitForTimeout(250)
-  await page.screenshot({ path: join(outputDirectory, file) })
+  await saveScreenshot(page, file, {
+    surface: 'picker',
+    theme,
+    interaction,
+    target,
+    ...evidence,
+  })
   if (panelFile) {
     await page.addStyleTag({
       content: `
@@ -155,25 +204,86 @@ async function capturePicker(
       `,
     })
     await pickerPanel.screenshot({ path: join(outputDirectory, panelFile) })
+    const panel = await pickerPanel.boundingBox()
+    screenshotManifest.push({
+      file: panelFile,
+      state: { surface: 'picker-panel', theme, interaction },
+      viewport: panel ? { width: Math.round(panel.width), height: Math.round(panel.height) } : null,
+      deviceScaleFactor: await page.evaluate(() => window.devicePixelRatio),
+      cssZoom: await page.evaluate(() => getComputedStyle(document.documentElement).zoom),
+    })
   }
   await page.close()
 }
 
-async function captureOptions(theme, file) {
+async function seedSavedRule(theme) {
   await setTheme(theme)
   const page = await context.newPage()
-  await page.goto(`chrome-extension://${extensionId}/options.html`)
-  await page.waitForTimeout(600)
-  await page.screenshot({ path: join(outputDirectory, file) })
+  await page.goto(baseUrl)
+  await worker.evaluate(async (urlPrefix) => {
+    const tabs = await chrome.tabs.query({})
+    const tab = tabs.find((candidate) => candidate.url?.startsWith(urlPrefix))
+    await chrome.tabs.sendMessage(tab.id, { v: 2, type: 'picker.toggle' })
+  }, baseUrl)
+  const panel = page.locator('#elements-extension-root-v2 .mainWindow')
+  await panel.waitFor()
+  await page.hover('#newsletter')
+  await page.locator('#newsletter').click()
+  await panel.getByRole('button', { name: 'Round' }).click()
   await page.close()
 }
 
-async function captureOnboarding(theme, file) {
+async function captureOptions(theme, file, state = 'default', evidence = {}) {
+  await setTheme(theme)
+  if (state !== 'empty') await seedSavedRule(theme)
+  const page = await context.newPage()
+  const viewport = evidence.viewport ?? { width: 1280, height: 800 }
+  await page.setViewportSize(
+    evidence.zoom
+      ? {
+          width: Math.round(viewport.width / evidence.zoom),
+          height: Math.round(viewport.height / evidence.zoom),
+        }
+      : viewport,
+  )
+  await emulateEvidenceMedia(page, evidence)
+  if (state === 'delete-error') {
+    await page.addInitScript(() => {
+      const original = chrome.runtime.sendMessage.bind(chrome.runtime)
+      chrome.runtime.sendMessage = (message, ...rest) => {
+        if (message?.type === 'site.delete') {
+          return Promise.resolve({ ok: false, error: 'QA_SYNTHETIC_DELETE_FAILURE' })
+        }
+        return original(message, ...rest)
+      }
+    })
+  }
+  await page.goto(`chrome-extension://${extensionId}/options.html`)
+  if (state === 'recovery' || state === 'delete-error') {
+    const deleteButton = page.getByRole('button', { name: /Delete all rules for/ }).first()
+    await deleteButton.click()
+    await page.waitForTimeout(250)
+    if (state === 'recovery') {
+      await page.locator('.recoveryNotice').scrollIntoViewIfNeeded()
+    }
+  }
+  await page.waitForTimeout(600)
+  await saveScreenshot(page, file, { surface: 'options', theme, state, ...evidence })
+  await page.close()
+}
+
+async function captureOnboarding(theme, file, state = 'initial', evidence = {}) {
   await setTheme(theme)
   const page = await context.newPage()
+  await page.setViewportSize(evidence.viewport ?? { width: 1280, height: 800 })
+  await emulateEvidenceMedia(page, evidence)
   await page.goto(`chrome-extension://${extensionId}/onboarding.html`)
+  if (state === 'trial') {
+    await page.getByTestId('start-editing').click()
+    await page.getByRole('button', { name: 'Hide', exact: true }).click()
+  }
   await page.waitForTimeout(600)
-  await page.screenshot({ path: join(outputDirectory, file) })
+  await saveScreenshot(page, file, { surface: 'onboarding', theme, state, ...evidence })
   await page.close()
 }
 
@@ -203,6 +313,70 @@ await capturePicker(
 await captureOnboarding('dark', '12-onboarding-dark.png')
 await capturePicker('dark', '13-picker-default-wide.png', undefined, 'idle')
 await capturePicker('dark', '14-picker-default-narrow.png', { width: 390, height: 844 }, 'idle')
+await capturePicker(
+  'system',
+  '16-picker-system-light.png',
+  undefined,
+  'locked',
+  '#promo',
+  undefined,
+  {
+    colorScheme: 'light',
+  },
+)
+await capturePicker(
+  'system',
+  '17-picker-system-dark.png',
+  undefined,
+  'locked',
+  '#promo',
+  undefined,
+  {
+    colorScheme: 'dark',
+  },
+)
+await capturePicker(
+  'dark',
+  '18-picker-reduced-motion.png',
+  undefined,
+  'locked',
+  '#promo',
+  undefined,
+  {
+    reducedMotion: 'reduce',
+  },
+)
+await capturePicker(
+  'dark',
+  '19-picker-increased-contrast.png',
+  undefined,
+  'more',
+  '#promo',
+  undefined,
+  {
+    contrast: 'more',
+  },
+)
+await capturePicker(
+  'dark',
+  '20-picker-zoom-200.png',
+  { width: 640, height: 720 },
+  'text',
+  '#promo',
+  undefined,
+  { zoom: 2 },
+)
+await captureOptions('system', '21-options-system-light.png', 'default', { colorScheme: 'light' })
+await captureOptions('system', '22-options-system-dark.png', 'default', { colorScheme: 'dark' })
+await captureOptions('dark', '23-options-recovery.png', 'recovery')
+await captureOptions('dark', '24-options-delete-error.png', 'delete-error')
+await captureOptions('dark', '25-options-increased-contrast.png', 'default', { contrast: 'more' })
+await captureOptions('dark', '26-options-zoom-200.png', 'default', {
+  viewport: { width: 640, height: 720 },
+  zoom: 2,
+})
+await captureOnboarding('dark', '27-onboarding-trial.png', 'trial')
+await captureOnboarding('light', '28-onboarding-light.png')
 
 const documentationImages = new Map([
   ['01-picker-dark.png', 'picker-dark.png'],
@@ -214,24 +388,33 @@ const documentationImages = new Map([
 const siteImages = new Map(
   [...documentationImages].filter(([, destination]) => destination !== 'onboarding-dark.png'),
 )
-await Promise.all(
-  [...documentationImages].map(([source, destination]) =>
-    copyFile(join(outputDirectory, source), join(documentationImageDirectory, destination)),
-  ),
-)
-await Promise.all(
-  [...siteImages].map(([source, destination]) =>
-    copyFile(join(outputDirectory, source), join(siteImageDirectory, destination)),
-  ),
-)
-await copyFile(
-  join(projectDirectory, 'public/icons/icon_128.png'),
-  join(siteImageDirectory, 'icon-128.png'),
+if (!qaOnly) {
+  await Promise.all(
+    [...documentationImages].map(([source, destination]) =>
+      copyFile(join(outputDirectory, source), join(documentationImageDirectory, destination)),
+    ),
+  )
+  await Promise.all(
+    [...siteImages].map(([source, destination]) =>
+      copyFile(join(outputDirectory, source), join(siteImageDirectory, destination)),
+    ),
+  )
+  await copyFile(
+    join(projectDirectory, 'public/icons/icon_128.png'),
+    join(siteImageDirectory, 'icon-128.png'),
+  )
+}
+
+await writeFile(
+  join(outputDirectory, 'manifest.json'),
+  `${JSON.stringify(screenshotManifest, null, 2)}\n`,
 )
 
 console.log(`Saved QA screenshots to ${outputDirectory}`)
 console.log(
-  `Refreshed ${documentationImages.size} documentation screenshots, ${siteImages.size} Pages screenshots, and the Pages icon.`,
+  qaOnly
+    ? `Recorded ${screenshotManifest.length} deterministic QA states without changing public screenshots.`
+    : `Refreshed ${documentationImages.size} documentation screenshots, ${siteImages.size} Pages screenshots, and the Pages icon.`,
 )
 await context.close()
 server.close()

@@ -341,7 +341,7 @@
       }
 
       .trial-target span {
-        color: var(--el-text-muted);
+        color: var(--el-text);
         font-size: var(--qds-type-supporting-size);
       }
 
@@ -350,7 +350,9 @@
       }
 
       .trial-canvas[data-action='hide'] .trial-target {
-        opacity: var(--qds-opacity-faint);
+        border-style: dashed;
+        background: var(--el-surface-alt);
+        text-decoration: line-through;
       }
 
       .trial-canvas[data-action='round'] .trial-target {

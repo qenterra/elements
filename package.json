@@ -13,6 +13,7 @@
     "release:archives": "npm run zip:chrome",
     "release:notes": "node scripts/release-notes.mjs",
     "screenshots": "node scripts/capture-screenshots.mjs",
+    "screenshots:qa": "QA_OUTPUT_DIR=artifacts/qa node scripts/capture-screenshots.mjs",
     "site:serve": "node scripts/serve-site.mjs",
     "lint": "oxlint --deny-warnings .",
     "format": "prettier --write .",

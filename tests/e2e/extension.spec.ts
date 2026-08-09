@@ -85,9 +85,59 @@ async function openFixture(viewport?: { width: number; height: number }): Promis
   return page
 }
 
+async function extensionId(): Promise<string> {
+  return new URL((await background()).url()).host
+}
+
+async function openExtensionPage(
+  path: 'onboarding.html' | 'options.html',
+  viewport?: { width: number; height: number },
+): Promise<Page> {
+  const page = await context.newPage()
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  if (viewport) await page.setViewportSize(viewport)
+  await page.goto(`chrome-extension://${await extensionId()}/${path}`)
+  return page
+}
+
+async function setStoredTheme(theme: 'system' | 'light' | 'dark'): Promise<void> {
+  const worker = await background()
+  await worker.evaluate(async (value) => {
+    const api = (
+      globalThis as unknown as {
+        chrome: { storage: { sync: { set: (value: object) => Promise<void> } } }
+      }
+    ).chrome
+    await api.storage.sync.set({
+      settings: JSON.stringify({
+        remember: true,
+        theme: value,
+        radius: 12,
+        advanced: true,
+        coachmarkSeen: true,
+      }),
+    })
+  }, theme)
+}
+
+async function emulateIncreasedContrast(page: Page): Promise<void> {
+  const session = await context.newCDPSession(page)
+  await session.send('Emulation.setEmulatedMedia', {
+    features: [{ name: 'prefers-contrast', value: 'more' }],
+  })
+}
+
 async function lockTarget(page: Page, selector: string): Promise<void> {
   await page.hover(selector)
   await page.locator(selector).click()
+}
+
+async function createSavedRoundRule(selector = '#deep-target'): Promise<void> {
+  const page = await openFixture()
+  await togglePicker()
+  await lockTarget(page, selector)
+  await page.getByRole('button', { name: 'Round' }).last().click()
+  await page.close()
 }
 
 async function expectNoSeriousAccessibilityViolations(page: Page, include?: string): Promise<void> {
@@ -152,7 +202,12 @@ test.beforeAll(async () => {
     ...(process.env.CHROMIUM_PATH
       ? { executablePath: process.env.CHROMIUM_PATH }
       : { channel: 'chromium' }),
-    args: [`--disable-extensions-except=${extensionPath}`, `--load-extension=${extensionPath}`],
+    args: [
+      '--disable-crash-reporter',
+      '--no-crashpad',
+      `--disable-extensions-except=${extensionPath}`,
+      `--load-extension=${extensionPath}`,
+    ],
   })
   context.on('page', (page) => {
     page.on('pageerror', (error) => pageErrors.push(`${page.url()}: ${error.message}`))
@@ -281,6 +336,21 @@ test('menus, history controls, and the text editor stay inside their visible bou
   await page.keyboard.press('Escape')
   await expect(panel.getByRole('button', { name: 'More actions' })).toBeFocused()
 
+  await panel.getByRole('button', { name: 'Text' }).click()
+  const textEditor = page.getByRole('dialog', { name: 'Edit visible text' })
+  await expect(textEditor).toBeVisible()
+  await expect
+    .poll(() =>
+      textEditor.evaluate((dialog) => {
+        const root = dialog.getRootNode()
+        return root instanceof ShadowRoot ? (root.activeElement?.tagName ?? null) : null
+      }),
+    )
+    .toBe('TEXTAREA')
+  await page.keyboard.press('Escape')
+  await expect(panel).toBeFocused()
+
+  await lockTarget(page, '#deep-target')
   await panel.getByRole('button', { name: 'Round' }).click()
   const row = panel.locator('.editRow').first()
   const remove = row.getByRole('button', { name: /Delete the rule/ })
@@ -399,11 +469,7 @@ test('narrow viewports use a bounded bottom sheet', async () => {
 })
 
 test('onboarding centers every step number against its copy', async () => {
-  const worker = await background()
-  const extensionId = new URL(worker.url()).host
-  const page = await context.newPage()
-  await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto(`chrome-extension://${extensionId}/onboarding.html`)
+  const page = await openExtensionPage('onboarding.html')
 
   await expect(page.getByTestId('start-editing')).toBeVisible()
   await expect(page.getByText('Your shortcut')).toBeVisible()
@@ -428,11 +494,8 @@ test('onboarding centers every step number against its copy', async () => {
 })
 
 test('options initializes its theme, lists the port-scoped site, and reviews imports', async () => {
-  const worker = await background()
-  const extensionId = new URL(worker.url()).host
-  const page = await context.newPage()
-  await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto(`chrome-extension://${extensionId}/options.html`)
+  await createSavedRoundRule()
+  const page = await openExtensionPage('options.html')
 
   await expect(page.locator('.version')).toHaveText('v1.0')
   await expect(page.locator('.siteRow__domain').first()).toHaveText(new URL(baseUrl).host)
@@ -469,5 +532,74 @@ test('options initializes its theme, lists the port-scoped site, and reviews imp
   await expect(dialog).toContainText('1 rule')
   await page.keyboard.press('Escape')
   await expect(dialog).toBeHidden()
+  await page.close()
+})
+
+test('system, light, and dark appearances resolve without losing their preference', async () => {
+  for (const appearance of ['system', 'light', 'dark'] as const) {
+    await test.step(appearance, async () => {
+      await setStoredTheme(appearance)
+      const page = await context.newPage()
+      await page.emulateMedia({ colorScheme: appearance === 'light' ? 'dark' : 'light' })
+      await page.goto(`chrome-extension://${await extensionId()}/options.html`)
+
+      await expect(
+        page.getByRole('radio', { name: appearance[0].toUpperCase() + appearance.slice(1) }),
+      ).toBeChecked()
+      const expectedResolved = appearance === 'system' ? 'light' : appearance
+      await expect(page.locator('html')).toHaveAttribute('data-theme', expectedResolved)
+      await expectNoSeriousAccessibilityViolations(page)
+      await page.close()
+    })
+  }
+})
+
+test('site deletion exposes durable recovery and restores the saved rule', async () => {
+  await setStoredTheme('dark')
+  await createSavedRoundRule()
+
+  const options = await openExtensionPage('options.html')
+  const domain = new URL(baseUrl).host
+  const row = options.locator('.siteRow', { hasText: domain })
+  await expect(row).toBeVisible()
+  await row.getByRole('button', { name: `Delete all rules for ${domain}` }).click()
+  const recovery = options.getByRole('complementary', { name: 'Deletion can still be undone' })
+  await expect(recovery).toBeVisible()
+  await expect(options.locator('.siteRow', { hasText: domain })).toHaveCount(0)
+  await recovery.getByRole('button', { name: 'Restore rules' }).click()
+  await expect(recovery).toHaveCount(0)
+  await expect(options.locator('.siteRow', { hasText: domain })).toBeVisible()
+  await expect(options.getByRole('status')).toContainText('Saved rules restored.')
+  await options.close()
+})
+
+test('options remain operable with increased contrast and at 200% zoom', async () => {
+  await setStoredTheme('dark')
+  await createSavedRoundRule()
+  // Playwright has no browser-zoom API. Halving the CSS viewport models the
+  // reflow pressure of 200% browser zoom from a 640×720 viewport.
+  const page = await openExtensionPage('options.html', { width: 320, height: 360 })
+  await emulateIncreasedContrast(page)
+  await expect
+    .poll(() => page.evaluate(() => matchMedia('(prefers-contrast: more)').matches))
+    .toBe(true)
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+  await page.getByRole('radio', { name: 'Light' }).focus()
+  await expect(page.getByRole('radio', { name: 'Light' })).toBeFocused()
+  const overflow = await page.locator('body *').evaluateAll((elements) =>
+    elements
+      .map((element) => {
+        const bounds = element.getBoundingClientRect()
+        return {
+          className: element.getAttribute('class') ?? '',
+          left: Math.round(bounds.left),
+          right: Math.round(bounds.right),
+          tag: element.tagName,
+        }
+      })
+      .filter(({ left, right }) => left < -1 || right > window.innerWidth + 1),
+  )
+  expect(overflow).toEqual([])
+  await expectNoSeriousAccessibilityViolations(page)
   await page.close()
 })

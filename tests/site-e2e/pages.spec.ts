@@ -1,5 +1,7 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
+import { mkdir } from 'node:fs/promises'
+import { join } from 'node:path'
 
 const pageErrors = new WeakMap<Page, string[]>()
 test.beforeEach(async ({ page }) => {
@@ -122,14 +124,17 @@ test('entrance animations settle without jumping back to their loading offset', 
   expect(Math.abs(laterTop - settledTop)).toBeLessThan(0.5)
 
   const featureCard = page.locator('.feature-card').first()
-  await featureCard.scrollIntoViewIfNeeded()
-  await expect(featureCard).toHaveClass(/is-revealed/)
-  const featureTop = await featureCard.evaluate((element) => element.getBoundingClientRect().top)
-  await page.waitForTimeout(250)
-  const featureLaterTop = await featureCard.evaluate(
-    (element) => element.getBoundingClientRect().top,
+  await featureCard.evaluate((element) =>
+    element.scrollIntoView({ behavior: 'instant', block: 'center' }),
   )
-  expect(Math.abs(featureLaterTop - featureTop)).toBeLessThan(0.5)
+  await expect(featureCard).toHaveClass(/is-revealed/)
+  await expect
+    .poll(() => featureCard.evaluate((element) => getComputedStyle(element).transform))
+    .toBe('none')
+  await page.waitForTimeout(250)
+  await expect
+    .poll(() => featureCard.evaluate((element) => getComputedStyle(element).transform))
+    .toBe('none')
 })
 
 test('narrow layout stays inside the viewport', async ({ page }) => {
@@ -182,4 +187,74 @@ test('reduced-motion mode keeps content visible and interactions working', async
   await expect(page.locator('.hero-product')).toBeVisible()
   await page.getByRole('button', { name: 'Hide banner' }).click()
   await expect(page.locator('#demo-canvas')).toHaveAttribute('data-actions', 'hide')
+})
+
+test('increased contrast and 200% zoom keep the primary journey operable', async ({
+  browserName,
+  context,
+  page,
+}) => {
+  test.skip(browserName !== 'chromium', 'CDP media emulation is Chromium-specific')
+  const session = await context.newCDPSession(page)
+  await session.send('Emulation.setEmulatedMedia', {
+    features: [{ name: 'prefers-contrast', value: 'more' }],
+  })
+  // Playwright has no browser-zoom API. Halving the CSS viewport models the
+  // reflow pressure of 200% browser zoom from a 640×720 viewport.
+  await page.setViewportSize({ width: 320, height: 360 })
+
+  await expect
+    .poll(() => page.evaluate(() => matchMedia('(prefers-contrast: more)').matches))
+    .toBe(true)
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+  const download = page.getByRole('link', { name: /Download for Chrome/ }).first()
+  await download.focus()
+  await expect(download).toBeFocused()
+  await expect
+    .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1))
+    .toBe(true)
+})
+
+test('captures the deterministic public-site QA matrix', async ({ context, page }) => {
+  test.skip(!process.env.QA_OUTPUT_DIR, 'QA_OUTPUT_DIR is required for screenshot capture')
+  const outputDirectory = join(process.cwd(), process.env.QA_OUTPUT_DIR!)
+  await mkdir(outputDirectory, { recursive: true })
+  const waitForSettledHero = async () => {
+    const heading = page.getByRole('heading', { level: 1 })
+    await expect(heading).toBeVisible()
+    await expect
+      .poll(() => heading.evaluate((element) => getComputedStyle(element).opacity))
+      .toBe('1')
+    await expect
+      .poll(() =>
+        page.locator('.hero-product').evaluate((element) => getComputedStyle(element).opacity),
+      )
+      .toBe('1')
+  }
+
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await waitForSettledHero()
+  await page.screenshot({ path: join(outputDirectory, '29-site-wide.png') })
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.reload()
+  await waitForSettledHero()
+  await page.screenshot({ path: join(outputDirectory, '30-site-narrow.png') })
+
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.reload()
+  await waitForSettledHero()
+  await page.screenshot({ path: join(outputDirectory, '31-site-reduced-motion.png') })
+
+  const session = await context.newCDPSession(page)
+  await session.send('Emulation.setEmulatedMedia', {
+    features: [{ name: 'prefers-contrast', value: 'more' }],
+  })
+  await waitForSettledHero()
+  await page.screenshot({ path: join(outputDirectory, '32-site-increased-contrast.png') })
+
+  await page.setViewportSize({ width: 320, height: 360 })
+  await page.reload()
+  await waitForSettledHero()
+  await page.screenshot({ path: join(outputDirectory, '33-site-zoom-200.png') })
 })

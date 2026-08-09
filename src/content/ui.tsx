@@ -1,5 +1,5 @@
 import { createRoot, type Root } from 'react-dom/client'
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 import { browser } from 'wxt/browser'
 import contentCss from './content.css?raw'
 import { BrandMark } from '../components/BrandMark'
@@ -465,7 +465,15 @@ function MiniToolbar({
   )
 }
 
-function TextEditor({ rect, controller }: { rect: Rect; controller: ElementController }) {
+function TextEditor({
+  rect,
+  controller,
+  restoreFallbackRef,
+}: {
+  rect: Rect
+  controller: ElementController
+  restoreFallbackRef: RefObject<HTMLElement | null>
+}) {
   const [value, setValue] = useState(() => controller.textEditValue())
   const [invalid, setInvalid] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
@@ -483,14 +491,23 @@ function TextEditor({ rect, controller }: { rect: Rect; controller: ElementContr
     setPosition({ left, top })
   }, [rect])
 
-  useFocusTrap(cardRef, inputRef, () => controller.cancelTextEdit())
+  useFocusTrap(
+    cardRef,
+    inputRef,
+    () => controller.cancelTextEdit(),
+    position !== null,
+    restoreFallbackRef,
+  )
 
   useEffect(() => {
     const cancel = () => controller.cancelTextEdit()
     controller.setModal(true, cancel)
-    inputRef.current?.select()
     return () => controller.setModal(false)
   }, [controller])
+
+  useEffect(() => {
+    if (position) inputRef.current?.select()
+  }, [position])
 
   const save = () => {
     if (controller.commitTextEdit(value)) return
@@ -1119,7 +1136,13 @@ function PickerPanel({ controller }: { controller: ElementController }) {
       {snapshot.marked && !snapshot.minimized && (
         <MiniToolbar marked={snapshot.marked} controller={controller} />
       )}
-      {snapshot.textEditRect && <TextEditor rect={snapshot.textEditRect} controller={controller} />}
+      {snapshot.textEditRect && (
+        <TextEditor
+          rect={snapshot.textEditRect}
+          controller={controller}
+          restoreFallbackRef={panelRef}
+        />
+      )}
       {popover && (
         <SelectorPopover state={popover} controller={controller} onClose={() => setPopover(null)} />
       )}

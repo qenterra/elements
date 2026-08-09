@@ -8,6 +8,9 @@ export default defineConfig({
   use: {
     baseURL: 'http://127.0.0.1:4173',
     channel: 'chromium',
+    launchOptions: {
+      args: ['--disable-crash-reporter', '--no-crashpad'],
+    },
     trace: 'retain-on-failure',
   },
   webServer: {

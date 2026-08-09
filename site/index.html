@@ -666,7 +666,7 @@
       .demo-paragraph {
         max-width: 610px;
         margin-bottom: 22px;
-        color: var(--muted);
+        color: var(--text);
       }
 
       .demo-card {
@@ -905,7 +905,7 @@
 
       .tour-tab small {
         display: block;
-        color: var(--muted);
+        color: var(--text);
         font-size: 13px;
         line-height: 1.45;
       }
@@ -1342,6 +1342,7 @@
       .js[data-motion='full'] [data-reveal]:not(.is-revealed) {
         transform: translateY(22px);
         opacity: 0;
+        transition: none;
       }
 
       @media (max-width: 1020px) {
@@ -2388,8 +2389,8 @@
             stagger: 0.09,
             ease: 'power3.out',
             onComplete: () => {
-              heroReveals.forEach((element) => element.classList.add('is-revealed'))
               gsap.set(heroReveals, { clearProps: 'transform,opacity' })
+              heroReveals.forEach((element) => element.classList.add('is-revealed'))
             },
           },
         )
@@ -2404,8 +2405,8 @@
               duration: 0.72,
               ease: 'power3.out',
               onComplete: () => {
-                element.classList.add('is-revealed')
                 gsap.set(element, { clearProps: 'transform,opacity' })
+                element.classList.add('is-revealed')
               },
               scrollTrigger: {
                 trigger: element,
