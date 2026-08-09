@@ -15,6 +15,7 @@ export function useFocusTrap(
   onClose: () => void,
   active = true,
   restoreFallbackRef?: RefObject<HTMLElement | null>,
+  preferFallback = false,
 ): void {
   const closeRef = useRef(onClose)
   closeRef.current = onClose
@@ -61,7 +62,9 @@ export function useFocusTrap(
     container.addEventListener('keydown', handleKeydown)
     return () => {
       container.removeEventListener('keydown', handleKeydown)
-      if (
+      if (preferFallback && restoreFallbackRef?.current?.isConnected) {
+        restoreFallbackRef.current.focus()
+      } else if (
         previous instanceof HTMLElement &&
         previous.isConnected &&
         !previous.matches(':disabled')
@@ -71,5 +74,5 @@ export function useFocusTrap(
         restoreFallbackRef?.current?.focus()
       }
     }
-  }, [active, containerRef, initialRef, restoreFallbackRef])
+  }, [active, containerRef, initialRef, restoreFallbackRef, preferFallback])
 }

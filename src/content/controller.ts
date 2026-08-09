@@ -9,6 +9,7 @@ import {
   type ExtensionSettings,
   type MarkedInfo,
   type OverlaySnapshot,
+  type PersistedEdit,
   type PathToken,
   type ResolvedTheme,
   type RuntimeEdit,
@@ -25,8 +26,17 @@ import { siteKeyFromUrl } from '../core/site'
 import { resolveTheme, watchSystemTheme } from '../core/theme'
 import { sendProtocolMessage } from '../core/transport'
 import { SnapshotHistory } from './history'
+import { RevisionedPersistence, type PersistenceAttempt } from './persistence-state'
+import { allowsNativeKeyboardActivation, ownsDocumentShortcut } from './keyboard-ownership'
 import { getUniqueSelector, isValidSelector } from './selector'
 import { RuleEngine } from './rule-engine'
+import {
+  QDS_EASE_ENTER,
+  QDS_MOTION_HOVER_MS,
+  QDS_MOTION_PRESENT_MS,
+  QDS_MOTION_REPLACE_MS,
+  QDS_MOTION_SPATIAL_MS,
+} from '../qds/metrics'
 
 export interface OverlayRenderer {
   mount(shadowRoot: ShadowRoot, controller: ElementController): { unmount: () => void }
@@ -81,6 +91,7 @@ export class ElementController {
     (left, right) => comparableEdits(left) === comparableEdits(right),
   )
   private readonly ruleEngine = new RuleEngine()
+  private readonly persistence = new RevisionedPersistence<PersistedEdit[]>([])
 
   private host: HTMLDivElement | null = null
   private overlayUi: { unmount: () => void } | null = null
@@ -186,6 +197,7 @@ export class ElementController {
       canUndo: this.history.canUndo,
       canRedo: this.history.canRedo,
       selectionState,
+      persistence: this.persistence.snapshot,
     }
   }
 
@@ -420,7 +432,7 @@ export class ElementController {
           { opacity: 1, transform: 'scale(1)' },
         ],
         {
-          duration: 140,
+          duration: QDS_MOTION_PRESENT_MS,
           easing: 'cubic-bezier(.23, 1, .32, 1)',
         },
       )
@@ -443,7 +455,7 @@ export class ElementController {
     if (!rect || !this.highlighter) return
     this.highlighter.style.transition =
       animateGeometry && !matchMedia(REDUCED_MOTION).matches
-        ? 'left .11s cubic-bezier(.23,1,.32,1), top .11s cubic-bezier(.23,1,.32,1), width .15s cubic-bezier(.23,1,.32,1), height .15s cubic-bezier(.23,1,.32,1)'
+        ? `left ${QDS_MOTION_HOVER_MS}ms ${QDS_EASE_ENTER}, top ${QDS_MOTION_HOVER_MS}ms ${QDS_EASE_ENTER}, width ${QDS_MOTION_REPLACE_MS}ms ${QDS_EASE_ENTER}, height ${QDS_MOTION_REPLACE_MS}ms ${QDS_EASE_ENTER}`
         : 'none'
     this.highlighter.style.left = `${rect.x}px`
     this.highlighter.style.top = `${rect.y}px`
@@ -512,6 +524,8 @@ export class ElementController {
       }
       return
     }
+
+    if (!ownsDocumentShortcut(event.composedPath())) return
 
     if (event.code === 'Escape') this.deactivate()
     else if (event.code === 'Space' && this.selectionLocked) this.applyAction('hide')
@@ -1006,7 +1020,7 @@ export class ElementController {
               { transform: `translate(${deltaX}px, ${deltaY}px)` },
               { transform: 'translate(0, 0)' },
             ],
-            { duration: 220, easing: 'cubic-bezier(.32, .72, 0, 1)' },
+            { duration: QDS_MOTION_SPATIAL_MS, easing: 'cubic-bezier(.32, .72, 0, 1)' },
           )
         }
       }
@@ -1105,6 +1119,11 @@ export class ElementController {
 
   private preventEvent = (event: Event): boolean | void => {
     if (this.isChildOfWindow(event.target)) return
+    if (
+      event instanceof MouseEvent &&
+      allowsNativeKeyboardActivation(event.composedPath(), event.detail)
+    )
+      return
     event.preventDefault()
     event.stopPropagation()
     return false
@@ -1232,16 +1251,46 @@ export class ElementController {
         ...(createdAt !== undefined ? { createdAt } : {}),
         ...(updatedAt !== undefined ? { updatedAt } : {}),
       }))
-    // Dispatch immediately: the background repository already serializes writes.
-    // Deferring the final snapshot behind a content-script promise can lose an
-    // undo/delete when the tab closes before that queued callback starts.
-    void this.request({
-      v: PROTOCOL_VERSION,
-      type: 'site.rules.save',
-      site: siteKey(),
-      rules: saved,
-      origin: this.sessionId,
-    }).catch(() => undefined)
+    if (this.incognito) {
+      const attempt = this.persistence.begin(saved)
+      this.persistence.settle(attempt.revision, true)
+      this.notify()
+      return
+    }
+    const attempt = this.persistence.begin(saved)
+    this.notify()
+    void this.dispatchPersistence(attempt)
+  }
+
+  private async dispatchPersistence(attempt: PersistenceAttempt<PersistedEdit[]>): Promise<void> {
+    let response: ResponseFor<Extract<ExtensionRequest, { type: 'site.rules.save' }>> | undefined
+    try {
+      response = await this.request({
+        v: PROTOCOL_VERSION,
+        type: 'site.rules.save',
+        site: siteKey(),
+        rules: attempt.value,
+        origin: this.sessionId,
+      })
+    } catch {
+      response = undefined
+    }
+    if (!this.persistence.settle(attempt.revision, response?.persisted === true)) return
+    if (!response?.persisted) {
+      this.showStatus(
+        localizedMessage('pickerPersistenceFailedNotice', 'Changes could not be saved'),
+      )
+    } else {
+      this.notify()
+    }
+  }
+
+  retryPersistence(): void {
+    if (this.incognito) return
+    const attempt = this.persistence.retry()
+    if (!attempt) return
+    this.notify()
+    void this.dispatchPersistence(attempt)
   }
 
   // Native Chrome ignores a Promise returned from an onMessage listener, so

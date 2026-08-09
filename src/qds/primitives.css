@@ -342,3 +342,59 @@
     transition-duration: var(--qds-motion-instant);
   }
 }
+
+@media (prefers-contrast: more) {
+  .qds-button,
+  .qds-icon-button,
+  .qds-group,
+  .qds-interactive-row,
+  .qds-radio-group__option,
+  .qds-dialog,
+  .qds-dialog__close,
+  .qds-keycap {
+    border-color: var(--qds-border-focus);
+    border-width: var(--qds-stroke-emphasis);
+  }
+
+  .qds-button:focus-visible,
+  .qds-icon-button:focus-visible,
+  .qds-interactive-row:focus-visible,
+  .qds-radio-group__option:has(input:focus-visible),
+  .qds-dialog__close:focus-visible {
+    outline-width: var(--qds-stroke-emphasis);
+    outline-offset: var(--qds-space-2);
+  }
+}
+
+@media (forced-colors: active) {
+  .qds-button,
+  .qds-icon-button,
+  .qds-group,
+  .qds-interactive-row,
+  .qds-radio-group__option,
+  .qds-dialog,
+  .qds-dialog__close,
+  .qds-keycap,
+  .qds-tooltip,
+  .qds-status {
+    border-color: ButtonBorder;
+    background: Canvas;
+    color: CanvasText;
+    forced-color-adjust: auto;
+  }
+
+  .qds-button:focus-visible,
+  .qds-icon-button:focus-visible,
+  .qds-interactive-row:focus-visible,
+  .qds-radio-group__option:has(input:focus-visible),
+  .qds-dialog__close:focus-visible {
+    outline-color: Highlight;
+  }
+
+  .qds-radio-group__option:has(input:checked),
+  .qds-interactive-row[aria-current='true'],
+  .qds-interactive-row[aria-pressed='true'] {
+    background: Highlight;
+    color: HighlightText;
+  }
+}

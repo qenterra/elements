@@ -63,6 +63,7 @@ export interface OverlaySnapshot {
   canRedo: boolean
   /** Previewing follows hover; Selected is the explicit locked action target. */
   selectionState: 'idle' | 'previewing' | 'selected'
+  persistence: { phase: 'saving' | 'saved' | 'failed'; revision: number }
 }
 
 export const DEFAULT_SETTINGS: ExtensionSettings = {

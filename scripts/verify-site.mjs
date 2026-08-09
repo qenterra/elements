@@ -8,7 +8,6 @@ const projectRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 const siteRoot = join(projectRoot, 'site')
 const siteFile = join(siteRoot, 'index.html')
 const html = await readFile(siteFile, 'utf8')
-const qdsWeb = await readFile(join(siteRoot, 'qds-web.css'), 'utf8')
 const packageJson = JSON.parse(await readFile(join(projectRoot, 'package.json'), 'utf8'))
 const errors = []
 
@@ -34,9 +33,6 @@ requirePattern(
   /<link rel="stylesheet" href="product-illustration\.css"/,
   'Missing isolated product illustration stylesheet',
 )
-if (!qdsWeb.includes('QenTerra Design System 1.8.1')) {
-  errors.push('QDS Web bridge does not declare the pinned 1.8.1 source')
-}
 requirePattern(/role="tablist"/, 'Missing product-tour tablist')
 requirePattern(/aria-live="polite"/, 'Missing live demo status')
 requirePattern(/data-actions=""/, 'Demo must expose a composable action state')

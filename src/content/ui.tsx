@@ -5,6 +5,7 @@ import contentCss from './content.css?raw'
 import { BrandMark } from '../components/BrandMark'
 import { useFocusTrap } from '../components/useFocusTrap'
 import { qdsShadowDomStyles } from '../qds/adapter/shadow-dom'
+import { QDS_MOTION_DISMISS_MS } from '../qds/metrics'
 import {
   MAX_RADIUS,
   MIN_RADIUS,
@@ -249,10 +250,12 @@ function SelectorPopover({
   state,
   controller,
   onClose,
+  restoreFallbackRef,
 }: {
   state: PopoverState
   controller: ElementController
   onClose: () => void
+  restoreFallbackRef: RefObject<HTMLElement | null>
 }) {
   const isCss =
     state.kind === 'create-css' || (state.kind === 'edit' && state.edit.action === 'css')
@@ -286,13 +289,23 @@ function SelectorPopover({
     setPosition({ left, top })
   }, [state.anchor])
 
-  useFocusTrap(cardRef, inputRef, onClose)
+  useFocusTrap(
+    cardRef,
+    inputRef,
+    onClose,
+    position !== null,
+    restoreFallbackRef,
+    state.kind === 'create-css',
+  )
 
   useEffect(() => {
     controller.setModal(true, onClose)
-    inputRef.current?.select()
     return () => controller.setModal(false)
   }, [controller, onClose])
+
+  useEffect(() => {
+    if (position) inputRef.current?.select()
+  }, [position])
 
   const save = () => {
     let succeeded = false
@@ -1041,13 +1054,31 @@ function PickerPanel({ controller }: { controller: ElementController }) {
               {t('pickerPause')}
             </button>
           </div>
-          <p className="persistenceStatus qds-status" role="status">
-            {t(
-              snapshot.incognito || !snapshot.settings.remember
-                ? 'pickerPersistenceTemporary'
-                : 'pickerPersistenceSaved',
+          <div
+            className={`persistenceStatus persistenceStatus_${snapshot.persistence.phase}`}
+            role={snapshot.persistence.phase === 'failed' ? 'alert' : 'status'}
+          >
+            <span className="qds-status">
+              {t(
+                snapshot.persistence.phase === 'failed'
+                  ? 'pickerPersistenceFailed'
+                  : snapshot.persistence.phase === 'saving'
+                    ? 'pickerPersistenceSaving'
+                    : snapshot.incognito || !snapshot.settings.remember
+                      ? 'pickerPersistenceTemporary'
+                      : 'pickerPersistenceSaved',
+              )}
+            </span>
+            {snapshot.persistence.phase === 'failed' && (
+              <button
+                type="button"
+                className="persistenceStatus__retry qds-button qds-button--quiet"
+                onClick={() => controller.retryPersistence()}
+              >
+                {t('pickerPersistenceRetry')}
+              </button>
             )}
-          </p>
+          </div>
           <div className="hotkeyHints">
             <button
               type="button"
@@ -1144,7 +1175,12 @@ function PickerPanel({ controller }: { controller: ElementController }) {
         />
       )}
       {popover && (
-        <SelectorPopover state={popover} controller={controller} onClose={() => setPopover(null)} />
+        <SelectorPopover
+          state={popover}
+          controller={controller}
+          onClose={() => setPopover(null)}
+          restoreFallbackRef={panelRef}
+        />
       )}
     </>
   )
@@ -1177,7 +1213,7 @@ function EditRow({
         { height: `${height}px`, opacity: 1 },
         { height: '0px', opacity: 0 },
       ],
-      { duration: 160, easing: 'cubic-bezier(.23, 1, .32, 1)' },
+      { duration: QDS_MOTION_DISMISS_MS, easing: 'cubic-bezier(.23, 1, .32, 1)' },
     )
     animation.onfinish = () => controller.deleteEdit(edit)
     animation.oncancel = () => controller.deleteEdit(edit)

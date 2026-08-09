@@ -10,6 +10,7 @@ const overlayPath = resolve(projectRoot, 'src/content/ui.tsx')
 const manifestPath = resolve(projectRoot, 'qds-consumer.json')
 const exceptionsPath = resolve(projectRoot, 'qds-exceptions.json')
 const profilePath = resolve(projectRoot, 'docs/qds-product-profile.md')
+const metricExceptionsPath = resolve(projectRoot, 'qds-metric-exceptions.json')
 
 type DocumentedException = { id: string; path: string }
 
@@ -29,8 +30,26 @@ describe('QDS Shadow DOM adoption', () => {
     expect(existsSync(manifestPath)).toBe(true)
     expect(existsSync(exceptionsPath)).toBe(true)
     expect(existsSync(profilePath)).toBe(true)
+    expect(existsSync(metricExceptionsPath)).toBe(true)
     expect(readFileSync(overlayPath, 'utf8')).toContain('qdsShadowDomStyles')
     expect(readFileSync(resolve(projectRoot, 'package.json'), 'utf8')).toContain('qds:doctor')
+  })
+
+  it('requires property-and-value precision for local metric and platform exceptions', () => {
+    const registry = JSON.parse(readFileSync(metricExceptionsPath, 'utf8')) as {
+      exceptions: Array<Record<string, unknown>>
+    }
+    expect(registry.exceptions.length).toBeGreaterThan(0)
+    for (const exception of registry.exceptions) {
+      expect(exception.path).toEqual(expect.any(String))
+      expect(exception.property).toEqual(expect.any(String))
+      expect(exception.value).toEqual(expect.any(String))
+      expect(exception.reason).toEqual(expect.any(String))
+      expect(exception.migrationTrigger).toEqual(expect.any(String))
+      if (exception.rule === 'canonical-snapshot') {
+        expect(exception.sha256).toMatch(/^[a-f0-9]{64}$/)
+      }
+    }
   })
 
   it('audits every product UI root and records only path-level raw-token debt', () => {

@@ -1,0 +1,196 @@
+{
+  "schemaVersion": 1,
+  "exceptions": [
+    {
+      "id": "canonical-extension-token-snapshot",
+      "rule": "canonical-snapshot",
+      "path": "src/qds/qds-tokens.css",
+      "property": "*",
+      "value": "*",
+      "sha256": "d0fc4ebc8335c75941c6abf459cc72b24768d648c9552a09a31134c8985e7a5b",
+      "reason": "Exact generated QDS 1.8.1 CSS artifact committed for self-contained extension builds.",
+      "migrationTrigger": "Pinned QDS source hash changes."
+    },
+    {
+      "id": "canonical-site-token-snapshot",
+      "rule": "canonical-snapshot",
+      "path": "site/qds-web.css",
+      "property": "*",
+      "value": "*",
+      "sha256": "d0fc4ebc8335c75941c6abf459cc72b24768d648c9552a09a31134c8985e7a5b",
+      "reason": "Exact QDS 1.8.1 CSS artifact; verify-qds-bridge rejects any byte drift.",
+      "migrationTrigger": "Pinned QDS source hash changes."
+    },
+    {
+      "id": "host-highlight-dark-locked-fill",
+      "rule": "raw-color",
+      "path": "src/content/controller.ts",
+      "property": "source",
+      "value": "rgba(34,211,238,0.14)",
+      "reason": "Locked host-page highlight is outside the picker Shadow token scope.",
+      "migrationTrigger": "A host-page QDS color adapter is introduced."
+    },
+    {
+      "id": "host-highlight-dark-preview-fill",
+      "rule": "raw-color",
+      "path": "src/content/controller.ts",
+      "property": "source",
+      "value": "rgba(34,211,238,0.08)",
+      "reason": "Preview host-page highlight is outside the picker Shadow token scope.",
+      "migrationTrigger": "A host-page QDS color adapter is introduced."
+    },
+    {
+      "id": "host-highlight-light-locked-fill",
+      "rule": "raw-color",
+      "path": "src/content/controller.ts",
+      "property": "source",
+      "value": "rgba(21,94,117,0.12)",
+      "reason": "Locked light host-page highlight is outside the picker Shadow token scope.",
+      "migrationTrigger": "A host-page QDS color adapter is introduced."
+    },
+    {
+      "id": "host-highlight-light-preview-fill",
+      "rule": "raw-color",
+      "path": "src/content/controller.ts",
+      "property": "source",
+      "value": "rgba(21,94,117,0.07)",
+      "reason": "Preview light host-page highlight is outside the picker Shadow token scope.",
+      "migrationTrigger": "A host-page QDS color adapter is introduced."
+    },
+    {
+      "id": "host-highlight-dark-outline",
+      "rule": "raw-color",
+      "path": "src/content/controller.ts",
+      "property": "source",
+      "value": "rgba(103,227,245,0.9)",
+      "reason": "Dark host-page outline is outside the picker Shadow token scope.",
+      "migrationTrigger": "A host-page QDS color adapter is introduced."
+    },
+    {
+      "id": "host-highlight-light-outline",
+      "rule": "raw-color",
+      "path": "src/content/controller.ts",
+      "property": "source",
+      "value": "rgba(21,94,117,0.9)",
+      "reason": "Light host-page outline is outside the picker Shadow token scope.",
+      "migrationTrigger": "A host-page QDS color adapter is introduced."
+    },
+    {
+      "id": "host-highlight-dark-shadow-stroke",
+      "rule": "raw-color",
+      "path": "src/content/controller.ts",
+      "property": "source",
+      "value": "rgba(34,211,238,0.12)",
+      "reason": "Dark highlight shadow stroke is outside the picker Shadow token scope.",
+      "migrationTrigger": "A host-page QDS color adapter is introduced."
+    },
+    {
+      "id": "host-highlight-light-shadow",
+      "rule": "raw-color",
+      "path": "src/content/controller.ts",
+      "property": "source",
+      "value": "rgba(21,94,117,0.16)",
+      "reason": "Light highlight shadow is outside the picker Shadow token scope.",
+      "migrationTrigger": "A host-page QDS color adapter is introduced."
+    },
+    {
+      "id": "host-highlight-dark-ink",
+      "rule": "raw-color",
+      "path": "src/content/controller.ts",
+      "property": "source",
+      "value": "#67e3f5",
+      "reason": "Dark host highlight label ink is outside the picker Shadow token scope.",
+      "migrationTrigger": "A host-page QDS color adapter is introduced."
+    },
+    {
+      "id": "host-highlight-light-ink",
+      "rule": "raw-color",
+      "path": "src/content/controller.ts",
+      "property": "source",
+      "value": "#155e75",
+      "reason": "Light host highlight label ink is outside the picker Shadow token scope.",
+      "migrationTrigger": "A host-page QDS color adapter is introduced."
+    },
+    {
+      "id": "host-frame-shield-fill",
+      "rule": "raw-color",
+      "path": "src/content/controller.ts",
+      "property": "source",
+      "value": "rgba(128,128,128,0.2)",
+      "reason": "Cross-frame targeting shield is product geometry outside token scope.",
+      "migrationTrigger": "Frame shields gain a QDS host adapter."
+    },
+    {
+      "id": "host-preview-rule-outline",
+      "rule": "raw-color",
+      "path": "src/content/rule-engine.ts",
+      "property": "outline",
+      "value": "rgba(34,211,238,.6)",
+      "reason": "Preview rule is injected into arbitrary host documents without token scope.",
+      "migrationTrigger": "Injected preview rules gain a QDS host adapter."
+    },
+    {
+      "id": "badge-active-fill",
+      "rule": "raw-color",
+      "path": "entrypoints/background.ts",
+      "property": "source",
+      "value": "#22d3ee",
+      "reason": "Chrome badge API accepts platform color strings rather than CSS variables.",
+      "migrationTrigger": "QDS publishes a typed extension badge palette."
+    },
+    {
+      "id": "badge-paused-fill",
+      "rule": "raw-color",
+      "path": "entrypoints/background.ts",
+      "property": "source",
+      "value": "#8991a1",
+      "reason": "Chrome badge API accepts platform color strings rather than CSS variables.",
+      "migrationTrigger": "QDS publishes a typed extension badge palette."
+    },
+    {
+      "id": "badge-text-color",
+      "rule": "raw-color",
+      "path": "entrypoints/background.ts",
+      "property": "color",
+      "value": "#0f1013",
+      "reason": "Chrome badge text API accepts a platform color string rather than CSS variables.",
+      "migrationTrigger": "QDS publishes a typed extension badge palette."
+    },
+    {
+      "id": "illustration-gradient-start",
+      "rule": "raw-color",
+      "path": "site/product-illustration.css",
+      "property": "--elements-illustration-promo-gradient",
+      "value": "#f55067",
+      "reason": "Product illustration retains its authored promotional gradient.",
+      "migrationTrigger": "The illustration becomes a QDS composition."
+    },
+    {
+      "id": "illustration-gradient-end",
+      "rule": "raw-color",
+      "path": "site/product-illustration.css",
+      "property": "--elements-illustration-promo-gradient",
+      "value": "#e77226",
+      "reason": "Product illustration retains its authored promotional gradient.",
+      "migrationTrigger": "The illustration becomes a QDS composition."
+    },
+    {
+      "id": "illustration-ink",
+      "rule": "raw-color",
+      "path": "site/product-illustration.css",
+      "property": "--elements-illustration-promo-ink",
+      "value": "#ffffff",
+      "reason": "Product illustration retains its authored contrast ink.",
+      "migrationTrigger": "The illustration becomes a QDS composition."
+    },
+    {
+      "id": "illustration-action",
+      "rule": "raw-color",
+      "path": "site/product-illustration.css",
+      "property": "--elements-illustration-promo-action",
+      "value": "#d3484e",
+      "reason": "Product illustration retains its authored action accent.",
+      "migrationTrigger": "The illustration becomes a QDS composition."
+    }
+  ]
+}

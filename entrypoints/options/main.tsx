@@ -11,6 +11,7 @@ import { createRoot } from 'react-dom/client'
 import { browser } from 'wxt/browser'
 import { BrandMark } from '../../src/components/BrandMark'
 import { useFocusTrap } from '../../src/components/useFocusTrap'
+import { QDS_MOTION_DISCLOSURE_MS } from '../../src/qds/metrics'
 import {
   MAX_RADIUS,
   MIN_RADIUS,
@@ -648,7 +649,7 @@ function OptionsApp({
         if (Math.abs(offset) < 1) return
         row.getAnimations().forEach((animation) => animation.cancel())
         row.animate([{ transform: `translateY(${offset}px)` }, { transform: 'translateY(0)' }], {
-          duration: 180,
+          duration: QDS_MOTION_DISCLOSURE_MS,
           easing: 'cubic-bezier(.23, 1, .32, 1)',
         })
       })

@@ -488,7 +488,19 @@
     "message": "Инкогнито: правки остаются временными"
   },
   "pickerPersistenceSaved": {
-    "message": "Новые правки будут сохранены для этого сайта"
+    "message": "Правки сохранены для этого сайта"
+  },
+  "pickerPersistenceSaving": {
+    "message": "Сохраняем правки…"
+  },
+  "pickerPersistenceFailed": {
+    "message": "Правки временные — сохранить не удалось"
+  },
+  "pickerPersistenceFailedNotice": {
+    "message": "Не удалось сохранить правки"
+  },
+  "pickerPersistenceRetry": {
+    "message": "Повторить"
   },
   "pickerPersistenceTemporary": {
     "message": "Новые правки останутся временными до перезагрузки"

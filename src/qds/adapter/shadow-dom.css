@@ -32,3 +32,29 @@
   --el-highlight-fill: var(--qds-fill-selected-strong);
   --el-highlight-outline: var(--qds-border-focus);
 }
+
+@media (prefers-contrast: more) {
+  :host {
+    --el-border: var(--qds-border-focus);
+    --el-text: var(--qds-text-primary);
+    --el-text-muted: var(--qds-text-secondary);
+    --el-accent-soft: var(--qds-fill-selected-strong);
+    --el-highlight-outline: var(--qds-border-focus);
+  }
+}
+
+@media (forced-colors: active) {
+  :host {
+    --el-bg: Canvas;
+    --el-surface: Canvas;
+    --el-surface-alt: Canvas;
+    --el-border: ButtonBorder;
+    --el-text-strong: CanvasText;
+    --el-text: CanvasText;
+    --el-text-muted: CanvasText;
+    --el-accent: Highlight;
+    --el-accent-contrast: HighlightText;
+    --el-danger: Mark;
+    --el-danger-soft: Canvas;
+  }
+}

@@ -30,6 +30,8 @@ const fixtureHtml = `<!doctype html>
     <header id="site-header" style="padding:20px;background:#eee">Site header</header>
     <div id="promo-banner" style="padding:40px;background:#fde047">Annoying promo banner</div>
     <main id="content" style="padding:20px">
+      <button id="page-button" type="button">Page action</button>
+      <input id="page-input" aria-label="Page input" />
       <h1 id="headline">Original headline</h1>
       <p id="paragraph">Body text that stays.</p>
       <section class="fixture-shell-with-a-long-class-name">
@@ -170,6 +172,83 @@ async function emulateIncreasedContrast(page: Page): Promise<void> {
   await session.send('Emulation.setEmulatedMedia', {
     features: [{ name: 'prefers-contrast', value: 'more' }],
   })
+}
+
+async function interceptContentScriptMessage(
+  page: Page,
+  messageType: string,
+): Promise<() => Promise<void>> {
+  const session = await context.newCDPSession(page)
+  const executionContexts = new Map<
+    number,
+    {
+      id: number
+      origin: string
+      name: string
+      auxData?: { isDefault?: boolean; type?: string }
+    }
+  >()
+  session.on('Runtime.executionContextCreated', ({ context: executionContext }) => {
+    executionContexts.set(executionContext.id, executionContext)
+  })
+  await session.send('Runtime.enable')
+
+  const extensionOrigin = `chrome-extension://${await extensionId()}`
+  await expect
+    .poll(
+      () =>
+        [...executionContexts.values()].find(
+          (executionContext) =>
+            executionContext.origin === extensionOrigin &&
+            executionContext.auxData?.type === 'isolated' &&
+            executionContext.auxData.isDefault === false,
+        )?.id,
+      { message: 'extension content-script isolated world was not created' },
+    )
+    .toBeGreaterThan(0)
+
+  const isolatedWorld = [...executionContexts.values()].find(
+    (executionContext) =>
+      executionContext.origin === extensionOrigin &&
+      executionContext.auxData?.type === 'isolated' &&
+      executionContext.auxData.isDefault === false,
+  )!
+  const install = await session.send('Runtime.evaluate', {
+    contextId: isolatedWorld.id,
+    expression: `(() => {
+      const runtimes = [globalThis.chrome?.runtime, globalThis.browser?.runtime]
+        .filter((runtime, index, all) => runtime && all.indexOf(runtime) === index)
+      globalThis.__elementsQaMessageInterceptors = runtimes.map((runtime) => ({
+        runtime,
+        original: runtime.sendMessage.bind(runtime),
+      }))
+      for (const entry of globalThis.__elementsQaMessageInterceptors) {
+        entry.runtime.sendMessage = (message, ...rest) =>
+          message?.type === ${JSON.stringify(messageType)}
+            ? Promise.resolve({ ok: false, error: 'QA_SYNTHETIC_MESSAGE_FAILURE' })
+            : entry.original(message, ...rest)
+      }
+    })()`,
+  })
+  if (install.exceptionDetails) {
+    throw new Error(install.exceptionDetails.text)
+  }
+
+  let restored = false
+  return async () => {
+    if (restored) return
+    await session.send('Runtime.evaluate', {
+      contextId: isolatedWorld.id,
+      expression: `(() => {
+        for (const entry of globalThis.__elementsQaMessageInterceptors ?? []) {
+          entry.runtime.sendMessage = entry.original
+        }
+        delete globalThis.__elementsQaMessageInterceptors
+      })()`,
+    })
+    restored = true
+    await session.detach()
+  }
 }
 
 async function lockTarget(page: Page, selector: string): Promise<void> {
@@ -414,11 +493,57 @@ test('breadcrumb levels and Arrow Up/Down navigate a locked selection', async ()
   await expect(panel.locator('.pathNode.active')).toHaveText(rootLabel ?? '')
   await expect(panel.getByRole('button', { name: 'Hide' })).toBeEnabled()
 
+  await page.evaluate(() => {
+    document.body.tabIndex = -1
+    document.body.focus()
+  })
   await page.keyboard.press('ArrowDown')
   await expect(panel.locator('.pathNode.active')).not.toHaveText(rootLabel ?? '')
   await expectActivePathVisible(page)
   await page.keyboard.press('ArrowUp')
   await expect(panel.locator('.pathNode.active')).toHaveText(rootLabel ?? '')
+  await page.close()
+})
+
+test('Space respects picker and host-page control ownership while keeping the global hide shortcut', async () => {
+  const page = await openFixture()
+  await page.evaluate(() => {
+    const state = window as typeof window & { pageActivations?: number }
+    state.pageActivations = 0
+    document.querySelector('#page-button')?.addEventListener('click', () => {
+      state.pageActivations = (state.pageActivations ?? 0) + 1
+    })
+  })
+  await togglePicker()
+
+  const panel = page.locator('#elements-extension-root-v2 .mainWindow')
+  const more = panel.getByRole('button', { name: 'More actions' })
+  await lockTarget(page, '#headline')
+  await more.focus()
+  await page.keyboard.press('Space')
+  await expect(page.getByRole('menu')).toBeVisible()
+  await page.keyboard.press('Escape')
+
+  await page.locator('#page-button').focus()
+  await page.keyboard.press('Space')
+  await expect
+    .poll(() =>
+      page.evaluate(() => (window as typeof window & { pageActivations?: number }).pageActivations),
+    )
+    .toBe(1)
+  await expect(page.locator('#headline')).toBeVisible()
+
+  const pageInput = page.getByRole('textbox', { name: 'Page input' })
+  await pageInput.focus()
+  await page.keyboard.press('Space')
+  await expect(pageInput).toHaveValue(' ')
+
+  await page.evaluate(() => {
+    document.body.tabIndex = -1
+    document.body.focus()
+  })
+  await page.keyboard.press('Space')
+  await expect(page.locator('#headline')).toBeHidden()
   await page.close()
 })
 
@@ -490,6 +615,101 @@ test('menus, history controls, and the text editor stay inside their visible bou
   await narrow.close()
 })
 
+test('selector and custom CSS dialogs trap focus only after positioning and restore deterministically', async () => {
+  const page = await openFixture()
+  await togglePicker()
+  await lockTarget(page, '#headline')
+  const panel = page.locator('#elements-extension-root-v2 .mainWindow')
+
+  await panel.getByRole('button', { name: 'Round' }).click()
+  const editButton = panel.locator('.editRow__edit').first()
+  await editButton.click()
+  const selectorDialog = page.getByRole('dialog', { name: 'Customize CSS selector' })
+  await expect(selectorDialog).toBeVisible()
+  const selectorInput = selectorDialog.getByRole('textbox').first()
+  await expect(selectorInput).toBeFocused()
+  await selectorDialog.getByRole('button', { name: 'Cancel' }).focus()
+  await page.keyboard.press('Tab')
+  await expect(selectorInput).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(editButton).toBeFocused()
+
+  await panel.getByRole('button', { name: 'More actions' }).click()
+  await page.getByRole('menuitem', { name: 'Custom CSS' }).click()
+  const cssDialog = page.getByRole('dialog', { name: 'Customize CSS selector' })
+  await expect(cssDialog).toBeVisible()
+  await expect(cssDialog.getByRole('textbox').first()).toBeFocused()
+  await cssDialog.getByRole('button', { name: 'Cancel' }).focus()
+  await page.keyboard.press('Tab')
+  await expect(cssDialog.getByRole('textbox').first()).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(panel).toBeFocused()
+  await page.close()
+})
+
+test('persistence failure marks edits temporary and retries the latest snapshot', async () => {
+  const page = await openFixture()
+  const restoreMessages = await interceptContentScriptMessage(page, 'site.rules.save')
+
+  try {
+    await togglePicker()
+    await lockTarget(page, '#headline')
+    await page
+      .locator('#elements-extension-root-v2 .mainWindow')
+      .getByRole('button', { name: 'Round' })
+      .click()
+    const persistence = page.locator('#elements-extension-root-v2 .persistenceStatus')
+    await expect(persistence).toContainText('saving failed')
+    await expect(persistence.getByRole('button', { name: 'Retry' })).toBeVisible()
+
+    await restoreMessages()
+    await persistence.getByRole('button', { name: 'Retry' }).click()
+    await expect(persistence).toContainText('Changes saved for this site')
+  } finally {
+    await restoreMessages().catch(() => undefined)
+    await page.close()
+  }
+})
+
+test('rapid persistence snapshots settle on the newest edit set', async () => {
+  const page = await openFixture()
+  await togglePicker()
+  await lockTarget(page, '#headline')
+  const panel = page.locator('#elements-extension-root-v2 .mainWindow')
+  await panel.getByRole('button', { name: 'Round' }).click()
+  await panel.getByRole('button', { name: 'More actions' }).click()
+  await page.getByRole('menuitem', { name: 'Dim the element' }).click()
+  await expect(panel.locator('.persistenceStatus')).toContainText('Changes saved for this site')
+  await expect(panel.locator('.editRow')).toHaveCount(2)
+  await page.reload()
+  await togglePicker()
+  await expect(page.locator('#elements-extension-root-v2 .editRow')).toHaveCount(2)
+  await page.close()
+})
+
+test('picker Increased Contrast has intentionally stronger computed boundaries', async () => {
+  const page = await openFixture()
+  await togglePicker()
+  const panel = page.locator('#elements-extension-root-v2 .mainWindow')
+  const baseline = await panel.evaluate((element) => ({
+    borderColor: getComputedStyle(element).borderColor,
+    borderWidth: getComputedStyle(element).borderWidth,
+  }))
+  await emulateIncreasedContrast(page)
+  await expect
+    .poll(() => page.evaluate(() => matchMedia('(prefers-contrast: more)').matches))
+    .toBe(true)
+  const contrast = await panel.evaluate((element) => ({
+    borderColor: getComputedStyle(element).borderColor,
+    borderWidth: getComputedStyle(element).borderWidth,
+  }))
+  expect(contrast).not.toEqual(baseline)
+  expect(Number.parseFloat(contrast.borderWidth)).toBeGreaterThanOrEqual(
+    Number.parseFloat(baseline.borderWidth),
+  )
+  await page.close()
+})
+
 test('text editing is transactional and undo restores the original DOM node', async () => {
   const page = await openFixture()
   await page.evaluate(() => {
@@ -518,6 +738,10 @@ test('text editing is transactional and undo restores the original DOM node', as
   await editor.getByRole('button', { name: 'Save' }).click()
   await expect(page.locator('[data-elements-text-replacement]')).toHaveText('Edited headline')
 
+  await page.evaluate(() => {
+    document.body.tabIndex = -1
+    document.body.focus()
+  })
   await page.keyboard.press('Control+z')
   await expect(page.locator('#headline')).toHaveText('Original headline')
   await togglePicker()
@@ -549,6 +773,10 @@ test('complete history supports undo and redo', async () => {
   await lockTarget(page, '#site-header')
   await page.getByRole('button', { name: 'Hide the element' }).last().click()
   await expect(page.locator('#site-header')).toBeHidden()
+  await page.evaluate(() => {
+    document.body.tabIndex = -1
+    document.body.focus()
+  })
   await page.keyboard.press('Control+z')
   await expect(page.locator('#site-header')).toBeVisible()
   await page.keyboard.press('Control+Shift+z')
@@ -726,11 +954,20 @@ test('options remain operable with increased contrast and at 200% zoom', async (
   // Playwright has no browser-zoom API. Halving the CSS viewport models the
   // reflow pressure of 200% browser zoom from a 640×720 viewport.
   const page = await openExtensionPage('options.html', { width: 320, height: 360 })
+  const baselineBoundary = await page.locator('.siteList').evaluate((element) => ({
+    borderColor: getComputedStyle(element).borderColor,
+    borderWidth: getComputedStyle(element).borderWidth,
+  }))
   await emulateIncreasedContrast(page)
   await expect
     .poll(() => page.evaluate(() => matchMedia('(prefers-contrast: more)').matches))
     .toBe(true)
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+  const contrastBoundary = await page.locator('.siteList').evaluate((element) => ({
+    borderColor: getComputedStyle(element).borderColor,
+    borderWidth: getComputedStyle(element).borderWidth,
+  }))
+  expect(contrastBoundary).not.toEqual(baselineBoundary)
   await page.getByRole('radio', { name: 'Light' }).focus()
   await expect(page.getByRole('radio', { name: 'Light' })).toBeFocused()
   const overflow = await page.locator('body *').evaluateAll((elements) =>

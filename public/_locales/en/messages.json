@@ -618,8 +618,24 @@
     "description": "Explains why remembering edits is disabled in a private window."
   },
   "pickerPersistenceSaved": {
-    "message": "New edits will be saved for this site",
-    "description": "Honest status when new picker edits will be persisted."
+    "message": "Changes saved for this site",
+    "description": "Confirmed picker persistence status."
+  },
+  "pickerPersistenceSaving": {
+    "message": "Saving changes…",
+    "description": "Picker persistence request in progress."
+  },
+  "pickerPersistenceFailed": {
+    "message": "Changes are temporary — saving failed",
+    "description": "Picker persistence failure status."
+  },
+  "pickerPersistenceFailedNotice": {
+    "message": "Changes could not be saved",
+    "description": "Picker persistence failure notice."
+  },
+  "pickerPersistenceRetry": {
+    "message": "Retry",
+    "description": "Retry the newest picker snapshot."
   },
   "pickerPersistenceTemporary": {
     "message": "New edits will stay temporary until reload",

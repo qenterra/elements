@@ -196,6 +196,10 @@ test('increased contrast and 200% zoom keep the primary journey operable', async
   page,
 }) => {
   test.skip(browserName !== 'chromium', 'CDP media emulation is Chromium-specific')
+  const baselineBoundary = await page.locator('.demo-shell').evaluate((element) => ({
+    borderColor: getComputedStyle(element).borderColor,
+    borderWidth: getComputedStyle(element).borderWidth,
+  }))
   const session = await context.newCDPSession(page)
   await session.send('Emulation.setEmulatedMedia', {
     features: [{ name: 'prefers-contrast', value: 'more' }],
@@ -208,6 +212,11 @@ test('increased contrast and 200% zoom keep the primary journey operable', async
     .poll(() => page.evaluate(() => matchMedia('(prefers-contrast: more)').matches))
     .toBe(true)
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+  const contrastBoundary = await page.locator('.demo-shell').evaluate((element) => ({
+    borderColor: getComputedStyle(element).borderColor,
+    borderWidth: getComputedStyle(element).borderWidth,
+  }))
+  expect(contrastBoundary).not.toEqual(baselineBoundary)
   const download = page.getByRole('link', { name: /Download for Chrome/ }).first()
   await download.focus()
   await expect(download).toBeFocused()
@@ -272,7 +281,11 @@ test('captures the deterministic public-site QA matrix', async ({ context, page 
       viewport: { width: window.innerWidth, height: window.innerHeight },
     }))
     expect(effective).toEqual({ colorScheme: 'light', reducedMotion, contrast, viewport })
-    await capturePage.screenshot({ path: join(outputDirectory, file) })
+    await capturePage.screenshot({
+      path: join(outputDirectory, file),
+      animations: 'disabled',
+      caret: 'hide',
+    })
     siteEntries.push({
       file,
       state: { surface: 'site', state },

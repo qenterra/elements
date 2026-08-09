@@ -30,13 +30,15 @@ The element highlighter, selector breadcrumb, edit-history controls, and picker 
 
 ## Exceptions
 
-The doctor audits `src`, `entrypoints`, and `site`. [`qds-exceptions.json`](../qds-exceptions.json) is the authoritative registry; each entry names one exact path and a migration trigger, so none masks a whole root. Its current narrow entries are:
+The doctor audits `src`, `entrypoints`, and `site`. The upstream-compatible [`qds-exceptions.json`](../qds-exceptions.json) remains the path-level doctor registry. Elements additionally runs [`qds-metric-exceptions.json`](../qds-metric-exceptions.json), whose entries require an exact path, property, value, reason, and migration trigger. Canonical generated snapshots must also match their pinned SHA-256, so a comment cannot launder drift as compliance.
 
 - `qds-generated-css-snapshot` — `src/qds/qds-tokens.css`
 - `legacy-toolbar-badge-colors` — `entrypoints/background.ts`
 - `legacy-host-highlighter-colors` — `src/content/controller.ts`
 - `product-illustration-colors` — `site/product-illustration.css`
 - `qds-web-token-bridge` — `site/qds-web.css`
+
+The local gate rejects raw `rgb`/`rgba`, duration, radius, spacing, component-size, and typography metrics. Its only non-canonical exceptions are Chrome badge colors, host-document targeting colors that cannot resolve Shadow DOM CSS variables, and four authored product-illustration colors.
 
 ## Migration order
 
@@ -47,4 +49,4 @@ The doctor audits `src`, `entrypoints`, and `site`. [`qds-exceptions.json`](../q
 
 ## Verification matrix
 
-Automated: QDS doctor, typecheck, lint, formatting, unit tests, and production build. Rendered: Chrome extension E2E and narrow-view screenshots remain required for picker geometry. Live: keyboard, screen-reader, persistence, and host-page isolation checks remain manual acceptance work.
+Automated: enhanced QDS gate plus upstream doctor, token-bridge integrity, typecheck, lint, formatting, unit tests, production build, rendered Chromium E2E, and deterministic screenshots. Manual platform acceptance remains separate for installed system Chrome, VoiceOver, native Increased Contrast, and browser-UI zoom.

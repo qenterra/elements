@@ -90,6 +90,8 @@ const context = await chromium.launchPersistentContext('', {
   deviceScaleFactor: 2,
   args: [
     '--disable-crash-reporter',
+    '--disable-gpu',
+    '--force-color-profile=srgb',
     '--no-crashpad',
     `--disable-extensions-except=${extensionPath}`,
     `--load-extension=${extensionPath}`,
@@ -145,7 +147,7 @@ async function effectiveEnvironment(page) {
 
 async function saveScreenshot(page, file, state) {
   const path = join(outputDirectory, file)
-  await page.screenshot({ path })
+  await page.screenshot({ path, animations: 'disabled', caret: 'hide' })
   screenshotManifest.push({
     file,
     state,
@@ -175,12 +177,15 @@ async function capturePicker(
       : viewport,
   )
   await emulateEvidenceMedia(page, evidence)
-  await page.goto(baseUrl)
-  await worker.evaluate(async (urlPrefix) => {
+  const captureUrl = new URL(baseUrl)
+  captureUrl.searchParams.set('qa-state', file)
+  await page.goto(captureUrl.href)
+  await worker.evaluate(async (targetUrl) => {
     const tabs = await chrome.tabs.query({})
-    const tab = tabs.find((candidate) => candidate.url?.startsWith(urlPrefix))
+    const tab = tabs.find((candidate) => candidate.url === targetUrl)
+    if (tab?.id === undefined) throw new Error(`QA tab not found: ${targetUrl}`)
     await chrome.tabs.sendMessage(tab.id, { v: 2, type: 'picker.toggle' })
-  }, baseUrl)
+  }, captureUrl.href)
   const pickerPanel = page.locator('#elements-extension-root-v2 .mainWindow')
   await pickerPanel.waitFor()
   if (interaction !== 'idle') await page.hover(target)
@@ -211,6 +216,7 @@ async function capturePicker(
       .click()
   }
   await page.waitForTimeout(250)
+  assert.equal(await pickerPanel.isVisible(), true, `${file}: picker panel is not visible`)
   await saveScreenshot(page, file, {
     surface: 'picker',
     theme,
@@ -218,6 +224,11 @@ async function capturePicker(
     target,
     ...evidence,
   })
+  assert.equal(
+    await pickerPanel.isVisible(),
+    true,
+    `${file}: picker panel disappeared during capture`,
+  )
   if (panelFile) {
     await page.addStyleTag({
       content: `
@@ -230,7 +241,11 @@ async function capturePicker(
         }
       `,
     })
-    await pickerPanel.screenshot({ path: join(outputDirectory, panelFile) })
+    await pickerPanel.screenshot({
+      path: join(outputDirectory, panelFile),
+      animations: 'disabled',
+      caret: 'hide',
+    })
     const panel = await pickerPanel.boundingBox()
     screenshotManifest.push({
       file: panelFile,
