@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
-import { mkdir } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
 const pageErrors = new WeakMap<Page, string[]>()
@@ -218,43 +219,108 @@ test('increased contrast and 200% zoom keep the primary journey operable', async
 test('captures the deterministic public-site QA matrix', async ({ context, page }) => {
   test.skip(!process.env.QA_OUTPUT_DIR, 'QA_OUTPUT_DIR is required for screenshot capture')
   const outputDirectory = join(process.cwd(), process.env.QA_OUTPUT_DIR!)
+  const manifestPath = join(outputDirectory, 'manifest.json')
   await mkdir(outputDirectory, { recursive: true })
-  const waitForSettledHero = async () => {
-    const heading = page.getByRole('heading', { level: 1 })
+  await page.close()
+
+  const siteEntries: Array<Record<string, unknown> & { file: string }> = []
+  const waitForSettledHero = async (capturePage: Page) => {
+    const heading = capturePage.getByRole('heading', { level: 1 })
     await expect(heading).toBeVisible()
     await expect
       .poll(() => heading.evaluate((element) => getComputedStyle(element).opacity))
       .toBe('1')
     await expect
       .poll(() =>
-        page.locator('.hero-product').evaluate((element) => getComputedStyle(element).opacity),
+        capturePage
+          .locator('.hero-product')
+          .evaluate((element) => getComputedStyle(element).opacity),
       )
       .toBe('1')
   }
 
-  await page.setViewportSize({ width: 1280, height: 800 })
-  await waitForSettledHero()
-  await page.screenshot({ path: join(outputDirectory, '29-site-wide.png') })
+  const capture = async ({
+    file,
+    state,
+    viewport,
+    reducedMotion = 'no-preference',
+    contrast = 'no-preference',
+  }: {
+    file: string
+    state: string
+    viewport: { width: number; height: number }
+    reducedMotion?: 'reduce' | 'no-preference'
+    contrast?: 'more' | 'no-preference'
+  }) => {
+    const capturePage = await context.newPage()
+    const errors: string[] = []
+    capturePage.on('pageerror', (error) => errors.push(error.message))
+    await capturePage.setViewportSize(viewport)
+    await capturePage.emulateMedia({ colorScheme: 'light', reducedMotion })
+    const session = await context.newCDPSession(capturePage)
+    await session.send('Emulation.setEmulatedMedia', {
+      features: [{ name: 'prefers-contrast', value: contrast }],
+    })
+    await capturePage.goto('/')
+    await waitForSettledHero(capturePage)
+    const effective = await capturePage.evaluate(() => ({
+      colorScheme: matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+      reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches
+        ? 'reduce'
+        : 'no-preference',
+      contrast: matchMedia('(prefers-contrast: more)').matches ? 'more' : 'no-preference',
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+    }))
+    expect(effective).toEqual({ colorScheme: 'light', reducedMotion, contrast, viewport })
+    await capturePage.screenshot({ path: join(outputDirectory, file) })
+    siteEntries.push({
+      file,
+      state: { surface: 'site', state },
+      effective,
+      deviceScaleFactor: await capturePage.evaluate(() => window.devicePixelRatio),
+      cssZoom: await capturePage.evaluate(() => getComputedStyle(document.documentElement).zoom),
+    })
+    await capturePage.close()
+    expect(errors).toEqual([])
+  }
 
-  await page.setViewportSize({ width: 390, height: 844 })
-  await page.reload()
-  await waitForSettledHero()
-  await page.screenshot({ path: join(outputDirectory, '30-site-narrow.png') })
-
-  await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.reload()
-  await waitForSettledHero()
-  await page.screenshot({ path: join(outputDirectory, '31-site-reduced-motion.png') })
-
-  const session = await context.newCDPSession(page)
-  await session.send('Emulation.setEmulatedMedia', {
-    features: [{ name: 'prefers-contrast', value: 'more' }],
+  await capture({
+    file: '29-site-wide.png',
+    state: 'wide',
+    viewport: { width: 1280, height: 800 },
   })
-  await waitForSettledHero()
-  await page.screenshot({ path: join(outputDirectory, '32-site-increased-contrast.png') })
+  await capture({
+    file: '30-site-narrow.png',
+    state: 'narrow',
+    viewport: { width: 390, height: 844 },
+  })
+  await capture({
+    file: '31-site-reduced-motion.png',
+    state: 'reduced-motion',
+    viewport: { width: 390, height: 844 },
+    reducedMotion: 'reduce',
+  })
+  await capture({
+    file: '32-site-increased-contrast.png',
+    state: 'increased-contrast',
+    viewport: { width: 390, height: 844 },
+    contrast: 'more',
+  })
+  await capture({
+    file: '33-site-zoom-200.png',
+    state: 'zoom-200',
+    viewport: { width: 320, height: 360 },
+  })
 
-  await page.setViewportSize({ width: 320, height: 360 })
-  await page.reload()
-  await waitForSettledHero()
-  await page.screenshot({ path: join(outputDirectory, '33-site-zoom-200.png') })
+  const existingManifest = existsSync(manifestPath)
+    ? (JSON.parse(await readFile(manifestPath, 'utf8')) as Array<
+        Record<string, unknown> & { file: string }
+      >)
+    : []
+  const siteFiles = new Set(siteEntries.map((entry) => entry.file))
+  const manifest = existingManifest
+    .filter((entry) => !siteFiles.has(entry.file))
+    .concat(siteEntries)
+    .sort((left, right) => left.file.localeCompare(right.file))
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
 })

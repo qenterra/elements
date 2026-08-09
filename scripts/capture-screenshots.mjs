@@ -2,6 +2,7 @@
 // Captures store-listing screenshots (1280x800) from a built Chrome
 // extension. Requires `npm run build:chrome` first.
 // Usage: CHROMIUM_PATH=/path/to/chrome node scripts/capture-screenshots.mjs
+import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
 import { copyFile, mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
@@ -66,6 +67,17 @@ const server = createServer((_request, response) => {
 })
 await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
 const baseUrl = `http://127.0.0.1:${server.address().port}/`
+const fixtureSite = new URL(baseUrl).host
+const fixtureModified = 1_700_000_000_000
+const fixtureRule = {
+  id: 'rule_fixture_round',
+  selector: '#newsletter',
+  permanent: true,
+  action: 'round',
+  value: '12',
+  createdAt: fixtureModified,
+  updatedAt: fixtureModified,
+}
 
 const context = await chromium.launchPersistentContext('', {
   headless: true,
@@ -88,32 +100,45 @@ await mkdir(outputDirectory, { recursive: true })
 await mkdir(documentationImageDirectory, { recursive: true })
 await mkdir(siteImageDirectory, { recursive: true })
 
-async function setTheme(theme) {
-  await worker.evaluate(async (value) => {
-    await chrome.storage.local.remove(['settings', '__elements_local_routes__'])
+function settingsFor(theme) {
+  return {
+    remember: true,
+    theme,
+    radius: 12,
+    advanced: true,
+    coachmarkSeen: true,
+  }
+}
+
+async function resetExtensionState(theme) {
+  await worker.evaluate(async (settings) => {
+    await Promise.all([chrome.storage.local.clear(), chrome.storage.sync.clear()])
     await chrome.storage.sync.set({
-      settings: JSON.stringify({
-        remember: true,
-        theme: value,
-        radius: 12,
-        advanced: true,
-        coachmarkSeen: true,
-      }),
+      settings: JSON.stringify(settings),
     })
-  }, theme)
+  }, settingsFor(theme))
 }
 
 async function emulateEvidenceMedia(page, { colorScheme, contrast, reducedMotion } = {}) {
   await page.emulateMedia({
-    ...(colorScheme ? { colorScheme } : {}),
-    ...(reducedMotion ? { reducedMotion } : {}),
+    colorScheme: colorScheme ?? 'light',
+    reducedMotion: reducedMotion ?? 'no-preference',
   })
-  if (contrast === 'more') {
-    const session = await context.newCDPSession(page)
-    await session.send('Emulation.setEmulatedMedia', {
-      features: [{ name: 'prefers-contrast', value: 'more' }],
-    })
-  }
+  const session = await context.newCDPSession(page)
+  await session.send('Emulation.setEmulatedMedia', {
+    features: [{ name: 'prefers-contrast', value: contrast ?? 'no-preference' }],
+  })
+}
+
+async function effectiveEnvironment(page) {
+  return page.evaluate(() => ({
+    colorScheme: matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+    reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches
+      ? 'reduce'
+      : 'no-preference',
+    contrast: matchMedia('(prefers-contrast: more)').matches ? 'more' : 'no-preference',
+    viewport: { width: window.innerWidth, height: window.innerHeight },
+  }))
 }
 
 async function saveScreenshot(page, file, state) {
@@ -122,7 +147,7 @@ async function saveScreenshot(page, file, state) {
   screenshotManifest.push({
     file,
     state,
-    viewport: page.viewportSize(),
+    effective: await effectiveEnvironment(page),
     deviceScaleFactor: await page.evaluate(() => window.devicePixelRatio),
     cssZoom: await page.evaluate(() => getComputedStyle(document.documentElement).zoom),
   })
@@ -137,7 +162,7 @@ async function capturePicker(
   panelFile,
   evidence = {},
 ) {
-  await setTheme(theme)
+  await resetExtensionState(theme)
   const page = await context.newPage()
   await page.setViewportSize(
     evidence.zoom
@@ -208,7 +233,10 @@ async function capturePicker(
     screenshotManifest.push({
       file: panelFile,
       state: { surface: 'picker-panel', theme, interaction },
-      viewport: panel ? { width: Math.round(panel.width), height: Math.round(panel.height) } : null,
+      effective: {
+        ...(await effectiveEnvironment(page)),
+        crop: panel ? { width: Math.round(panel.width), height: Math.round(panel.height) } : null,
+      },
       deviceScaleFactor: await page.evaluate(() => window.devicePixelRatio),
       cssZoom: await page.evaluate(() => getComputedStyle(document.documentElement).zoom),
     })
@@ -217,25 +245,36 @@ async function capturePicker(
 }
 
 async function seedSavedRule(theme) {
-  await setTheme(theme)
-  const page = await context.newPage()
-  await page.goto(baseUrl)
-  await worker.evaluate(async (urlPrefix) => {
-    const tabs = await chrome.tabs.query({})
-    const tab = tabs.find((candidate) => candidate.url?.startsWith(urlPrefix))
-    await chrome.tabs.sendMessage(tab.id, { v: 2, type: 'picker.toggle' })
-  }, baseUrl)
-  const panel = page.locator('#elements-extension-root-v2 .mainWindow')
-  await panel.waitFor()
-  await page.hover('#newsletter')
-  await page.locator('#newsletter').click()
-  await panel.getByRole('button', { name: 'Round' }).click()
-  await page.close()
+  await resetExtensionState(theme)
+  await worker.evaluate(
+    async ({ site, rule, modified }) => {
+      await chrome.storage.sync.set({
+        [`web:${site}`]: JSON.stringify([rule]),
+        webMeta: { [site]: modified },
+        elementsSchemaVersion: 2,
+      })
+    },
+    { site: fixtureSite, rule: fixtureRule, modified: fixtureModified },
+  )
+}
+
+async function assertSeededSite() {
+  const stored = await worker.evaluate(async (site) => {
+    return chrome.storage.sync.get([`web:${site}`, 'webMeta', 'webPaused', 'elementsSchemaVersion'])
+  }, fixtureSite)
+  assert.deepEqual(stored, {
+    [`web:${fixtureSite}`]: JSON.stringify([fixtureRule]),
+    webMeta: { [fixtureSite]: fixtureModified },
+    elementsSchemaVersion: 2,
+  })
 }
 
 async function captureOptions(theme, file, state = 'default', evidence = {}) {
-  await setTheme(theme)
-  if (state !== 'empty') await seedSavedRule(theme)
+  if (state === 'empty') await resetExtensionState(theme)
+  else {
+    await seedSavedRule(theme)
+    await assertSeededSite()
+  }
   const page = await context.newPage()
   const viewport = evidence.viewport ?? { width: 1280, height: 800 }
   await page.setViewportSize(
@@ -273,7 +312,7 @@ async function captureOptions(theme, file, state = 'default', evidence = {}) {
 }
 
 async function captureOnboarding(theme, file, state = 'initial', evidence = {}) {
-  await setTheme(theme)
+  await resetExtensionState(theme)
   const page = await context.newPage()
   await page.setViewportSize(evidence.viewport ?? { width: 1280, height: 800 })
   await emulateEvidenceMedia(page, evidence)
@@ -407,7 +446,11 @@ if (!qaOnly) {
 
 await writeFile(
   join(outputDirectory, 'manifest.json'),
-  `${JSON.stringify(screenshotManifest, null, 2)}\n`,
+  `${JSON.stringify(
+    screenshotManifest.toSorted((left, right) => left.file.localeCompare(right.file)),
+    null,
+    2,
+  )}\n`,
 )
 
 console.log(`Saved QA screenshots to ${outputDirectory}`)

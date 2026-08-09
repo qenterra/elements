@@ -15,6 +15,13 @@ import { join } from 'node:path'
 
 const extensionPath = join(import.meta.dirname, '../../.output/chrome-mv3')
 const protocolVersion = 2
+const fixtureSettings = {
+  remember: true,
+  theme: 'system',
+  radius: 12,
+  advanced: true,
+  coachmarkSeen: true,
+} as const
 
 const fixtureHtml = `<!doctype html>
 <html lang="en">
@@ -89,6 +96,59 @@ async function extensionId(): Promise<string> {
   return new URL((await background()).url()).host
 }
 
+function settingsFor(theme: 'system' | 'light' | 'dark' = 'system') {
+  return { ...fixtureSettings, theme }
+}
+
+async function resetExtensionState(theme: 'system' | 'light' | 'dark' = 'system'): Promise<void> {
+  await (
+    await background()
+  ).evaluate(async (settings) => {
+    const api = (
+      globalThis as unknown as {
+        chrome: {
+          storage: {
+            local: { clear: () => Promise<void> }
+            sync: {
+              clear: () => Promise<void>
+              set: (value: object) => Promise<void>
+            }
+          }
+        }
+      }
+    ).chrome
+    await Promise.all([api.storage.local.clear(), api.storage.sync.clear()])
+    await api.storage.sync.set({ settings: JSON.stringify(settings) })
+  }, settingsFor(theme))
+}
+
+async function expectIsolatedExtensionState(
+  theme: 'system' | 'light' | 'dark' = 'system',
+): Promise<void> {
+  const state = await (
+    await background()
+  ).evaluate(async () => {
+    const api = (
+      globalThis as unknown as {
+        chrome: {
+          storage: {
+            local: { get: (keys: null) => Promise<Record<string, unknown>> }
+            sync: { get: (keys: null) => Promise<Record<string, unknown>> }
+          }
+        }
+      }
+    ).chrome
+    const [local, sync] = await Promise.all([
+      api.storage.local.get(null),
+      api.storage.sync.get(null),
+    ])
+    return { local, sync }
+  })
+
+  expect(state.local).toEqual({})
+  expect(state.sync).toEqual({ settings: JSON.stringify(settingsFor(theme)) })
+}
+
 async function openExtensionPage(
   path: 'onboarding.html' | 'options.html',
   viewport?: { width: number; height: number },
@@ -101,23 +161,8 @@ async function openExtensionPage(
 }
 
 async function setStoredTheme(theme: 'system' | 'light' | 'dark'): Promise<void> {
-  const worker = await background()
-  await worker.evaluate(async (value) => {
-    const api = (
-      globalThis as unknown as {
-        chrome: { storage: { sync: { set: (value: object) => Promise<void> } } }
-      }
-    ).chrome
-    await api.storage.sync.set({
-      settings: JSON.stringify({
-        remember: true,
-        theme: value,
-        radius: 12,
-        advanced: true,
-        coachmarkSeen: true,
-      }),
-    })
-  }, theme)
+  await resetExtensionState(theme)
+  await expectIsolatedExtensionState(theme)
 }
 
 async function emulateIncreasedContrast(page: Page): Promise<void> {
@@ -132,12 +177,70 @@ async function lockTarget(page: Page, selector: string): Promise<void> {
   await page.locator(selector).click()
 }
 
-async function createSavedRoundRule(selector = '#deep-target'): Promise<void> {
-  const page = await openFixture()
-  await togglePicker()
-  await lockTarget(page, selector)
-  await page.getByRole('button', { name: 'Round' }).last().click()
-  await page.close()
+async function seedSavedRoundRule({
+  selector = '#deep-target',
+  theme = 'system',
+  paused = false,
+}: {
+  selector?: string
+  theme?: 'system' | 'light' | 'dark'
+  paused?: boolean
+} = {}): Promise<void> {
+  await resetExtensionState(theme)
+  const site = new URL(baseUrl).host
+  const modified = 1_700_000_000_000
+  const rule = {
+    id: 'rule_fixture_round',
+    selector,
+    permanent: true,
+    action: 'round',
+    value: '12',
+    createdAt: modified,
+    updatedAt: modified,
+  }
+  const stored = await (
+    await background()
+  ).evaluate(
+    async ({ fixtureSite, fixtureRule, fixtureModified, fixturePaused }) => {
+      const api = (
+        globalThis as unknown as {
+          chrome: {
+            storage: {
+              sync: {
+                get: (keys: string[]) => Promise<Record<string, unknown>>
+                set: (value: object) => Promise<void>
+              }
+            }
+          }
+        }
+      ).chrome
+      await api.storage.sync.set({
+        [`web:${fixtureSite}`]: JSON.stringify([fixtureRule]),
+        webMeta: { [fixtureSite]: fixtureModified },
+        ...(fixturePaused ? { webPaused: JSON.stringify([fixtureSite]) } : {}),
+        elementsSchemaVersion: 2,
+      })
+      return api.storage.sync.get([
+        `web:${fixtureSite}`,
+        'webMeta',
+        'webPaused',
+        'elementsSchemaVersion',
+      ])
+    },
+    {
+      fixtureSite: site,
+      fixtureRule: rule,
+      fixtureModified: modified,
+      fixturePaused: paused,
+    },
+  )
+
+  expect(stored).toEqual({
+    [`web:${site}`]: JSON.stringify([rule]),
+    webMeta: { [site]: modified },
+    ...(paused ? { webPaused: JSON.stringify([site]) } : {}),
+    elementsSchemaVersion: 2,
+  })
 }
 
 async function expectNoSeriousAccessibilityViolations(page: Page, include?: string): Promise<void> {
@@ -212,6 +315,11 @@ test.beforeAll(async () => {
   context.on('page', (page) => {
     page.on('pageerror', (error) => pageErrors.push(`${page.url()}: ${error.message}`))
   })
+})
+
+test.beforeEach(async () => {
+  await resetExtensionState()
+  await expectIsolatedExtensionState()
 })
 
 test.afterAll(async () => {
@@ -494,7 +602,7 @@ test('onboarding centers every step number against its copy', async () => {
 })
 
 test('options initializes its theme, lists the port-scoped site, and reviews imports', async () => {
-  await createSavedRoundRule()
+  await seedSavedRoundRule()
   const page = await openExtensionPage('options.html')
 
   await expect(page.locator('.version')).toHaveText('v1.0')
@@ -555,8 +663,7 @@ test('system, light, and dark appearances resolve without losing their preferenc
 })
 
 test('site deletion exposes durable recovery and restores the saved rule', async () => {
-  await setStoredTheme('dark')
-  await createSavedRoundRule()
+  await seedSavedRoundRule({ theme: 'dark' })
 
   const options = await openExtensionPage('options.html')
   const domain = new URL(baseUrl).host
@@ -573,9 +680,49 @@ test('site deletion exposes durable recovery and restores the saved rule', async
   await options.close()
 })
 
+test('site deletion failure keeps the saved row and does not offer recovery', async () => {
+  await seedSavedRoundRule({ theme: 'dark' })
+  const options = await context.newPage()
+  await options.emulateMedia({ reducedMotion: 'reduce' })
+  await options.addInitScript(() => {
+    const runtime = (
+      globalThis as unknown as {
+        chrome: {
+          runtime: {
+            sendMessage: (message: { type?: string }, ...rest: unknown[]) => Promise<unknown>
+          }
+        }
+      }
+    ).chrome.runtime
+    const original = runtime.sendMessage.bind(runtime)
+    runtime.sendMessage = (message, ...rest) =>
+      message?.type === 'site.delete'
+        ? Promise.resolve({ ok: false, error: 'QA_SYNTHETIC_DELETE_FAILURE' })
+        : original(message, ...rest)
+  })
+  await options.goto(`chrome-extension://${await extensionId()}/options.html`)
+  const domain = new URL(baseUrl).host
+  const row = options.locator('.siteRow', { hasText: domain })
+  try {
+    await expect(row).toBeVisible()
+    await row.getByRole('button', { name: `Delete all rules for ${domain}` }).click()
+
+    await expect(options.getByRole('alert')).toContainText(
+      "The site's saved rules could not be deleted. Try again.",
+    )
+    await expect(row).toBeVisible()
+    await expect(
+      options.getByRole('complementary', { name: 'Deletion can still be undone' }),
+    ).toHaveCount(0)
+  } finally {
+    await options.close()
+    await resetExtensionState()
+  }
+  await expectIsolatedExtensionState()
+})
+
 test('options remain operable with increased contrast and at 200% zoom', async () => {
-  await setStoredTheme('dark')
-  await createSavedRoundRule()
+  await seedSavedRoundRule({ theme: 'dark' })
   // Playwright has no browser-zoom API. Halving the CSS viewport models the
   // reflow pressure of 200% browser zoom from a 640×720 viewport.
   const page = await openExtensionPage('options.html', { width: 320, height: 360 })
