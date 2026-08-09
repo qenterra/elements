@@ -595,6 +595,52 @@ test('Space respects picker and host-page control ownership while keeping the gl
   await page.close()
 })
 
+test('saved-rule preview uses host-safe resolved QDS outline geometry', async () => {
+  const page = await openFixture()
+  await togglePicker()
+  await lockTarget(page, '#promo-banner')
+  const panel = page.locator('#elements-extension-root-v2 .mainWindow')
+  await panel.getByRole('button', { name: 'Hide', exact: true }).click()
+  const target = page.locator('#promo-banner')
+  await expect(target).toBeHidden()
+
+  const preview = panel.getByRole('button', { name: 'Hold to preview the original' })
+  await preview.focus()
+  await page.keyboard.down('Space')
+  await expect(target).toBeVisible()
+  const rendered = await target.evaluate((element) => {
+    const style = getComputedStyle(element)
+    const rootStyle = getComputedStyle(document.documentElement)
+    return {
+      outlineStyle: style.outlineStyle,
+      outlineWidth: style.outlineWidth,
+      outlineOffset: style.outlineOffset,
+      qdsDefault: rootStyle.getPropertyValue('--qds-stroke-default'),
+      qdsFocus: rootStyle.getPropertyValue('--qds-stroke-focus'),
+      injected: document.getElementById('elements-extension-rules-v2')?.textContent ?? '',
+    }
+  })
+  expect(rendered).toMatchObject({
+    outlineStyle: 'solid',
+    outlineWidth: '3px',
+    outlineOffset: '-3px',
+    qdsDefault: '',
+    qdsFocus: '',
+  })
+  expect(rendered.injected).not.toContain('var(--qds-')
+
+  await page.keyboard.up('Space')
+  await expect(target).toBeHidden()
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => document.getElementById('elements-extension-rules-v2')?.textContent ?? '',
+      ),
+    )
+    .not.toContain('outline:')
+  await page.close()
+})
+
 test('menus, history controls, and the text editor stay inside their visible bounds', async () => {
   const page = await openFixture({ width: 600, height: 480 })
   await togglePicker()

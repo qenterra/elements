@@ -57,6 +57,22 @@ describe('RuleEngine', () => {
     expect(root.textContent).toBe('Elements')
   })
 
+  it('serializes preview strokes as host-safe resolved QDS geometry', () => {
+    const engine = new RuleEngine()
+    engine.apply({
+      rules: [{ id: 'rule_hide', selector: '.ad', permanent: true }],
+      paused: false,
+      showOriginal: false,
+      previewSelector: '.ad',
+      defaultRadius: 12,
+    })
+
+    const css = document.getElementById('elements-extension-rules-v2')?.textContent ?? ''
+    expect(css).toContain('outline: solid 3px rgba(34,211,238,.6) !important')
+    expect(css).toContain('outline-offset: -3px !important')
+    expect(css).not.toContain('var(--qds-')
+  })
+
   it('removes styles and restores text during teardown', () => {
     const engine = new RuleEngine()
     engine.apply({

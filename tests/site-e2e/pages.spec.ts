@@ -230,6 +230,34 @@ test('multiline headings keep QDS line geometry without glyph overlap at narrow 
       }
     }
 
+    const heroCopyRole = await page.locator('.hero-copy').evaluate((element) => {
+      const reference = document.createElement('span')
+      reference.style.cssText = `
+        font-family: var(--qds-type-section-title-family);
+        font-size: var(--qds-type-section-title-size);
+        font-weight: var(--qds-type-section-title-weight);
+        line-height: var(--qds-type-section-title-line);
+        letter-spacing: var(--qds-type-section-title-tracking);
+      `
+      document.body.append(reference)
+      const actual = getComputedStyle(element)
+      const expected = getComputedStyle(reference)
+      const fields = [
+        'fontFamily',
+        'fontSize',
+        'fontWeight',
+        'lineHeight',
+        'letterSpacing',
+      ] as const
+      const result = {
+        actual: Object.fromEntries(fields.map((field) => [field, actual[field]])),
+        expected: Object.fromEntries(fields.map((field) => [field, expected[field]])),
+      }
+      reference.remove()
+      return result
+    })
+    expect(heroCopyRole.actual).toEqual(heroCopyRole.expected)
+
     expect(multilineHeadings).toBeGreaterThanOrEqual(3)
   }
 })

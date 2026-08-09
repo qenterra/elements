@@ -130,6 +130,24 @@
       "migrationTrigger": "Injected preview rules gain a QDS host adapter."
     },
     {
+      "id": "host-preview-rule-outline-width",
+      "rule": "raw-stroke",
+      "path": "src/content/rule-engine.ts",
+      "property": "outline",
+      "value": "3px",
+      "reason": "The preview rule is injected into arbitrary host documents where QDS custom properties do not exist; 3px resolves QDS default plus focus strokes.",
+      "migrationTrigger": "QDS publishes a host-safe resolved stroke adapter for injected CSS."
+    },
+    {
+      "id": "host-preview-rule-outline-offset",
+      "rule": "raw-stroke",
+      "path": "src/content/rule-engine.ts",
+      "property": "outline-offset",
+      "value": "-3px",
+      "reason": "The host-page preview keeps its resolved QDS-composed outline inside the target without depending on unavailable custom properties.",
+      "migrationTrigger": "QDS publishes a host-safe resolved stroke adapter for injected CSS."
+    },
+    {
       "id": "badge-active-fill",
       "rule": "raw-color",
       "path": "entrypoints/background.ts",
