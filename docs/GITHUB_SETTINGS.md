@@ -21,8 +21,8 @@
 
 ## Verification record
 
-| Checked at           | Evidence source           | Reviewer                         | Result                                                                                                                       | Remaining boundary                                                                                  |
-| -------------------- | ------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Checked at           | Evidence source           | Reviewer                         | Result                                                                                                                                              | Remaining boundary                                                                        |
+| -------------------- | ------------------------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | 2026-08-29T01:24:30Z | GitHub REST API read-back | Nikita Melnychenko (`@qenterra`) | Metadata, features, merge settings, workflow defaults, security features, private reporting, main protection, and release-tag immutability verified | Code scanning and Chrome Web Store publication remain separate product or release checks. |
 
 Recheck after a visibility, ownership, plan, default-branch, workflow, release,
