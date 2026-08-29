@@ -10,6 +10,8 @@ All notable changes to Elements are documented in this file.
   contribution, maintenance, release, Wiki, and contact documentation.
 - Moved dependency installs, generated builds, browser downloads, reports, and
   release verification into external temporary workspaces.
+- Required pull requests, successful project and governance checks, resolved
+  review conversations, linear history, and immutable release tags at GitHub.
 
 ### Security
 
