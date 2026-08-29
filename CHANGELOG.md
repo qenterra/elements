@@ -6,6 +6,7 @@ All notable changes to Elements are documented in this file.
 
 ### Changed
 
+- Adopted QenTerra repository standard 1.3.0 with the canonical Contact block and funding-surface prohibition.
 - Adopted the QenTerra public repository standard, including complete
   contribution, maintenance, release, Wiki, and contact documentation.
 - Moved dependency installs, generated builds, browser downloads, reports, and
@@ -17,6 +18,10 @@ All notable changes to Elements are documented in this file.
 
 - Updated the transitive `brace-expansion`, `nanoid`, and `postcss` resolutions
   to versions that clear the current high-severity npm audit gate.
+
+### Removed
+
+- Removed external donation configuration, badges, and README prose.
 
 ## [1.0.0] — 2026-07-29
 

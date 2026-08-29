@@ -14,7 +14,6 @@
   <a href="https://github.com/QenTerra/elements/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/QenTerra/elements?display_name=tag&sort=semver"></a>
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-f2f2f2"></a>
   <img alt="Manifest V3" src="https://img.shields.io/badge/manifest-v3-f2f2f2">
-  <a href="https://buymeacoffee.com/qenterra"><img alt="Buy Me a Coffee" src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?logo=buymeacoffee&logoColor=000000"></a>
 </p>
 
 <p align="center">
@@ -199,19 +198,9 @@ local check does not create or replace a release.
 
 ## Contact
 
-Elements is maintained by
-[Nikita Melnychenko (QenTerra)](https://github.com/QenTerra). If it saves you
-time, you can [buy me a coffee](https://buymeacoffee.com/qenterra).
-
-- Product support, help, and technical questions:
-  [support@qenterra.com](mailto:support@qenterra.com)
-- Proposals, general enquiries, and commercial matters:
-  [contact@qenterra.com](mailto:contact@qenterra.com)
-- Suspected vulnerabilities: use the private route in
-  [SECURITY.md](SECURITY.md), never a public issue or either general mailbox.
-
-Bug reports and focused pull requests are welcome. Read
-[CONTRIBUTING.md](CONTRIBUTING.md) before opening one.
+- Product support, product help, and technical questions: [support@qenterra.com](mailto:support@qenterra.com).
+- Proposals, general enquiries, and commercial matters: [contact@qenterra.com](mailto:contact@qenterra.com).
+- Vulnerabilities: follow the private reporting process in [SECURITY.md](SECURITY.md).
 
 ## License
 

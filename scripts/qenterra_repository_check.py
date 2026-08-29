@@ -20,13 +20,17 @@ from typing import Any, Iterable
 from urllib.parse import unquote
 
 
-TOOL_VERSION = "1.2.0"
-STANDARD_VERSION = "1.2.0"
+TOOL_VERSION = "1.3.0"
+STANDARD_VERSION = "1.3.0"
 CONFIG_PATH = Path(".github/qenterra-repository.json")
 COPYRIGHT_HOLDER = "Nikita Melnychenko (QenTerra)"
 GITHUB_OWNER = "QenTerra"
 CONTACT_EMAIL = "contact@qenterra.com"
 SUPPORT_EMAIL = "support@qenterra.com"
+OBSOLETE_FUNDING_MARKERS = (
+    " ".join(("buy", "me", "a", "coffee")),
+    "".join(("buy", "me", "a", "coffee", ".com")),
+)
 
 REQUIRED_CONFIG_KEYS = frozenset(
     {
@@ -796,6 +800,15 @@ def audit_content(root: Path, config: dict[str, Any], expected: set[str], findin
         text = read_text(root / relative)
         if text is None:
             continue
+        if relative == "README.md":
+            canonical = (
+                "## Contact\n\n"
+                f"- Product support, product help, and technical questions: [{SUPPORT_EMAIL}](mailto:{SUPPORT_EMAIL}).\n"
+                f"- Proposals, general enquiries, and commercial matters: [{CONTACT_EMAIL}](mailto:{CONTACT_EMAIL}).\n"
+                "- Vulnerabilities: follow the private reporting process in [SECURITY.md](SECURITY.md)."
+            )
+            if canonical not in text:
+                findings.append(finding("README_CONTACT_BLOCK_INVALID", "error", "README must use the exact QenTerra Contact heading and three canonical bullets.", path=relative, remediation="Restore the canonical Contact block without project-specific prose inside it."))
         for code, email, purpose in (
             ("CONTACT_EMAIL_LINK_MISSING", CONTACT_EMAIL, "proposals, general enquiries, and commercial matters"),
             ("SUPPORT_EMAIL_LINK_MISSING", SUPPORT_EMAIL, "product support, help, and technical questions"),
@@ -824,6 +837,24 @@ def audit_content(root: Path, config: dict[str, Any], expected: set[str], findin
     attribution = read_text(root / attribution_path)
     if attribution is not None and COPYRIGHT_HOLDER not in attribution:
         findings.append(finding("LICENSE_IDENTITY_MISSING", "error", "Legal attribution lacks the exact QenTerra holder.", path=attribution_path))
+
+
+def audit_obsolete_funding_surfaces(root: Path, findings: list[Finding]) -> None:
+    matches: set[str] = set()
+    for path in iter_repository_paths(root):
+        relative = path.relative_to(root).as_posix()
+        if relative.casefold() == ".github/funding.yml":
+            matches.add(relative)
+        if not path.is_file() or path.is_symlink():
+            continue
+        text = read_text(path)
+        if text is None:
+            continue
+        folded = text.casefold()
+        if any(marker in folded for marker in OBSOLETE_FUNDING_MARKERS):
+            matches.add(relative)
+    for relative in sorted(matches):
+        findings.append(finding("OBSOLETE_FUNDING_SURFACE_PROHIBITED", "error", "Repository contains an obsolete external-funding surface.", path=relative, remediation="Remove the funding configuration, link, badge, prose, product action, template, or test reference."))
 
 
 def iter_repository_paths(root: Path) -> Iterable[Path]:
@@ -1416,6 +1447,7 @@ def audit_repository(root: Path) -> dict[str, Any]:
                 "required-files",
                 "identity-and-license",
                 "contact-channels",
+                "obsolete-funding-surfaces",
                 "root-naming",
                 "readme-and-changelog",
                 "path-portability",
@@ -1433,6 +1465,7 @@ def audit_repository(root: Path) -> dict[str, Any]:
         audit_generated_contract(config, expected, findings)
         audit_required_files(root, expected, findings)
         audit_content(root, config, expected, findings)
+        audit_obsolete_funding_surfaces(root, findings)
         audit_portability(root, config, expected, findings)
         audit_public_human_only_boundary(root, config, findings)
         audit_documentation_names(root, findings)
