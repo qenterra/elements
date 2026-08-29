@@ -115,7 +115,14 @@ try {
   if (process.platform === 'linux') installArguments.push('--with-deps')
   installArguments.push('--no-shell', 'chromium')
   await run('npx', installArguments, { cwd: workspace, env: isolatedEnvironment })
-  await run('npm', ['run', 'test:e2e'], { cwd: workspace, env: isolatedEnvironment })
+  if (process.platform === 'linux') {
+    await run('xvfb-run', ['--auto-servernum', 'npm', 'run', 'test:e2e'], {
+      cwd: workspace,
+      env: isolatedEnvironment,
+    })
+  } else {
+    await run('npm', ['run', 'test:e2e'], { cwd: workspace, env: isolatedEnvironment })
+  }
   await run('npm', ['run', 'test:site'], { cwd: workspace, env: isolatedEnvironment })
 
   const packageMetadata = JSON.parse(await readFile(join(workspace, 'package.json'), 'utf8'))

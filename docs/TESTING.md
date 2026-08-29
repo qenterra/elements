@@ -14,7 +14,8 @@ Playwright Chromium there, and runs:
    Vitest validation.
 2. `npm audit` at the high-severity threshold.
 3. The production Chrome build and manifest/package verification.
-4. Headed Chromium extension E2E and GitHub Pages E2E suites.
+4. Headed Chromium extension E2E and GitHub Pages E2E suites; Linux runs the
+   extension suite through Xvfb.
 5. Version/tag/changelog checks, release ZIP creation and inspection, checksum,
    and release-note generation for the current version.
 
