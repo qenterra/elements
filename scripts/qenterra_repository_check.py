@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import codecs
 import fnmatch
 import hashlib
 import json
@@ -844,7 +845,7 @@ def has_generated_header(path: Path) -> bool:
                 if not line:
                     break
                 if len(line) > GENERATED_HEADER_LINE_MAX_BYTES:
-                    return decode_utf8_text(line) is not None
+                    return decode_utf8_text(line, allow_incomplete_terminal=True) is not None
                 lines.append(line)
     except OSError:
         return False
@@ -855,11 +856,19 @@ def has_generated_header(path: Path) -> bool:
     return any(marker in header for marker in PUBLIC_GENERATED_HEADER_MARKERS)
 
 
-def decode_utf8_text(content: bytes) -> str | None:
+def decode_utf8_text(
+    content: bytes,
+    *,
+    allow_incomplete_terminal: bool = False,
+) -> str | None:
     if b"\x00" in content:
         return None
     try:
-        decoded = content.decode("utf-8")
+        if allow_incomplete_terminal:
+            decoder = codecs.getincrementaldecoder("utf-8")(errors="strict")
+            decoded = decoder.decode(content, final=False)
+        else:
+            decoded = content.decode("utf-8")
     except UnicodeDecodeError:
         return None
     if any(ord(character) < 32 and character not in "\t\n\r\f" for character in decoded):
