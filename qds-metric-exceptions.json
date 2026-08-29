@@ -7,8 +7,8 @@
       "path": "src/qds/qds-tokens.css",
       "property": "*",
       "value": "*",
-      "sha256": "d0fc4ebc8335c75941c6abf459cc72b24768d648c9552a09a31134c8985e7a5b",
-      "reason": "Exact generated QDS 1.8.1 CSS artifact committed for self-contained extension builds.",
+      "sha256": "5f91e18a589246e9e2569ae21d957688a8856944a639d822b72e372bd637c957",
+      "reason": "Exact QDS 1.8.1 CSS artifact regenerated from the declared human-maintained source for self-contained extension builds.",
       "migrationTrigger": "Pinned QDS source hash changes."
     },
     {
@@ -17,9 +17,19 @@
       "path": "site/qds-web.css",
       "property": "*",
       "value": "*",
-      "sha256": "d0fc4ebc8335c75941c6abf459cc72b24768d648c9552a09a31134c8985e7a5b",
-      "reason": "Exact QDS 1.8.1 CSS artifact; verify-qds-bridge rejects any byte drift.",
+      "sha256": "5f91e18a589246e9e2569ae21d957688a8856944a639d822b72e372bd637c957",
+      "reason": "Exact QDS 1.8.1 CSS artifact; the provenance verifier and bridge check reject any byte drift.",
       "migrationTrigger": "Pinned QDS source hash changes."
+    },
+    {
+      "id": "canonical-token-source",
+      "rule": "canonical-snapshot",
+      "path": "src/qds/qds-tokens.source.css",
+      "property": "*",
+      "value": "*",
+      "sha256": "ec9aedd1e258d01414487b2fcb328ffc4010268d7ca492464acacbfa24e0c068",
+      "reason": "Human-maintained QDS 1.8.1 token source; the provenance verifier regenerates both committed consumer artifacts from these exact bytes.",
+      "migrationTrigger": "Pinned QDS source values or version change."
     },
     {
       "id": "host-highlight-dark-locked-fill",
