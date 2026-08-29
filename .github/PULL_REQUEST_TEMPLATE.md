@@ -1,18 +1,39 @@
-## Summary
+## Purpose
 
-<!-- What changed and why? -->
+Describe the problem and the observable outcome.
 
-## Validation
+## Scope
 
-- [ ] `npm run validate`
-- [ ] Relevant production build(s)
-- [ ] `npm run verify:build` when build output changed
-- [ ] `npm run test:e2e` when browser behavior changed
+- Included:
+- Excluded:
 
-## Interface changes
+## Verification
 
-<!-- Add before and after screenshots, or write "None". -->
+List the exact commands and manual checks run on this head commit. State what they do not prove.
 
-## Documentation
+## Evidence
 
-<!-- Note any README, changelog, permission, privacy, or release-document updates. -->
+Attach screenshots, recordings, benchmark data, logs, or provider links only when they are safe and relevant. Name the build, fixture, and environment.
+
+## Risk and recovery
+
+- Failure modes:
+- Data or migration impact:
+- Security or privacy impact:
+- Rollback or recovery:
+
+## Documentation and release
+
+- Documentation changed:
+- Changelog entry:
+- Version or release impact:
+- Dependency or license impact:
+
+## Checklist
+
+- [ ] The title follows the repository’s Conventional Commit grammar.
+- [ ] The diff contains one coherent outcome and no unrelated changes.
+- [ ] Tests or checks cover mechanically observable behaviour.
+- [ ] User-visible, API, operational, privacy, and security changes are documented.
+- [ ] No credentials, personal data, private paths, signing material, or unreviewed generated artifacts are included.
+- [ ] External or manual checks that remain unverified are named explicitly.

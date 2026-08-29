@@ -4,6 +4,7 @@ import { access, readdir, readFile } from 'node:fs/promises'
 import { dirname, extname, join, resolve } from 'node:path'
 
 const projectRoot = join(import.meta.dirname, '..')
+const wikiRoot = join(projectRoot, 'docs', 'wiki')
 const ignoredDirectories = new Set(['.git', '.output', 'node_modules'])
 
 async function collectMarkdown(directory) {
@@ -36,10 +37,22 @@ function localTargets(markdown) {
   )
 }
 
+async function anyDestinationExists(destinations) {
+  for (const destination of destinations) {
+    try {
+      await access(destination)
+      return true
+    } catch {
+      // Continue through the valid path forms for this documentation surface.
+    }
+  }
+  return false
+}
+
 const markdownFiles = await collectMarkdown(projectRoot)
 const internalDocuments = markdownFiles
   .map((file) => file.slice(projectRoot.length + 1))
-  .filter((file) => file === 'docs/RELEASING.md' || file.startsWith('docs/design/'))
+  .filter((file) => file.startsWith('docs/design/'))
 if (internalDocuments.length) {
   throw new Error(
     `Internal maintainer documents belong in the private knowledge base:\n${internalDocuments.join('\n')}`,
@@ -53,9 +66,11 @@ for (const file of markdownFiles) {
     const pathWithoutAnchor = decodeURIComponent(target.split('#')[0].split('?')[0])
     if (!pathWithoutAnchor) continue
     const destination = resolve(dirname(file), pathWithoutAnchor)
-    try {
-      await access(destination)
-    } catch {
+    const destinations = [destination]
+    if (file.startsWith(`${wikiRoot}/`) && !extname(pathWithoutAnchor)) {
+      destinations.push(`${destination}.md`)
+    }
+    if (!(await anyDestinationExists(destinations))) {
       brokenLinks.push(`${file.slice(projectRoot.length + 1)} -> ${target}`)
     }
   }

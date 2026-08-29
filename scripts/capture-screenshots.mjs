@@ -4,17 +4,16 @@
 // Usage: CHROMIUM_PATH=/path/to/chrome node scripts/capture-screenshots.mjs
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
-import { copyFile, mkdir, writeFile } from 'node:fs/promises'
+import { copyFile, mkdir, mkdtemp, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium } from '@playwright/test'
 
 const projectDirectory = join(dirname(fileURLToPath(import.meta.url)), '..')
 const extensionPath = join(projectDirectory, '.output/chrome-mv3')
-const outputDirectory = process.env.QA_OUTPUT_DIR
-  ? join(projectDirectory, process.env.QA_OUTPUT_DIR)
-  : join(projectDirectory, '.output/screenshots')
-const qaOnly = Boolean(process.env.QA_OUTPUT_DIR)
+const outputDirectory = await mkdtemp(join(tmpdir(), 'elements-screenshots-'))
+const qaOnly = process.env.QA_ONLY === '1'
 const documentationImageDirectory = join(projectDirectory, 'docs/images')
 const siteImageDirectory = join(projectDirectory, 'site/images')
 

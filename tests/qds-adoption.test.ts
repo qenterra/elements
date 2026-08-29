@@ -9,7 +9,7 @@ const pickerStylesheetPath = resolve(projectRoot, 'src/content/content.css')
 const overlayPath = resolve(projectRoot, 'src/content/ui.tsx')
 const manifestPath = resolve(projectRoot, 'qds-consumer.json')
 const exceptionsPath = resolve(projectRoot, 'qds-exceptions.json')
-const profilePath = resolve(projectRoot, 'docs/qds-product-profile.md')
+const profilePath = resolve(projectRoot, 'docs/QDS_PRODUCT_PROFILE.md')
 const metricExceptionsPath = resolve(projectRoot, 'qds-metric-exceptions.json')
 
 type DocumentedException = { id: string; path: string }

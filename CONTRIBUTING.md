@@ -12,31 +12,32 @@ documentation corrections.
 - Use GitHub's private vulnerability reporting for security issues. Do not put
   exploit details in a public issue.
 
-## Local setup
+## Local verification
 
-Use Node.js 22 and npm:
+Use Node.js 22, npm, and Python 3.11 or later:
 
 ```sh
-npm ci
-npm run validate
-npm run build:chrome
-npm run test:e2e
+node scripts/verify-repository.mjs
 ```
 
-The end-to-end suite opens a headed Chromium instance because extension service
-workers are unreliable in headless mode. Linux CI supplies the display through
-Xvfb.
+The verifier works in a unique temporary directory outside the checkout. It
+installs dependencies, browsers, build output, reports, and release staging
+there, then removes them after the gate. Set
+`ELEMENTS_KEEP_VERIFY_WORKSPACE=1` only when you need to inspect that external
+workspace.
 
 ## Pull requests
 
 - Keep one change per pull request.
 - Add or update tests for behavior changes.
-- Run `npm run validate` before submitting.
-- Run the relevant production builds and `npm run verify:build` when manifests,
-  entrypoints, build scripts, or dependencies change.
+- Run `node scripts/verify-repository.mjs` before submitting.
 - Include before and after screenshots for visible UI changes.
 - Update user-facing documentation when behavior, permissions, storage, or
   installation steps change.
+- Keep caches, dependency installs, build output, reports, temporary files,
+  personal paths, AI or agent operating files, prompts, transcripts, skills,
+  and tool state outside the repository. Ignoring a path does not make it
+  acceptable in a public checkout.
 
 Commit subjects use the Conventional Commits form, for example:
 
@@ -50,8 +51,9 @@ signatures or tool attribution.
 
 ## Formatting
 
-Run `npm run format` only for files in your change, then review the resulting
-diff. The validation command checks TypeScript, Oxlint, Prettier, and Vitest.
+Run Prettier only for files in your change, then review the resulting diff. The
+complete verifier checks TypeScript, Oxlint, Prettier, documentation, Vitest,
+builds, browser flows, release artifacts, and repository governance.
 
 ## License
 

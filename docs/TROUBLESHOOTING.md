@@ -3,16 +3,15 @@
 Start with the canonical checks:
 
 ```sh
-npm ci
-npm run validate
-npm run build:chrome
-npm run verify:build
+node scripts/verify-repository.mjs
 ```
 
 ## The extension does not load
 
-Load `.output/chrome-mv3` rather than the repository root. WXT generates the
-manifest and runtime files; there is intentionally no root `manifest.json`.
+Run the verifier with `ELEMENTS_KEEP_VERIFY_WORKSPACE=1`, then load
+`.output/chrome-mv3` from the printed external `workspace` path rather than the
+repository root. WXT generates the manifest and runtime files; there is
+intentionally no root `manifest.json`.
 
 Rebuild after changing `package.json`, `wxt.config.ts`, entrypoints, permissions,
 icons, or localization files.
@@ -39,14 +38,9 @@ site's access controls or guarantee selectors across redesigns.
 
 ## End-to-end tests cannot find the extension
 
-Use the Playwright Chromium channel installed with:
-
-```sh
-npx playwright install --no-shell chromium
-```
-
-On Linux, extension E2E runs in headed Chromium through Xvfb. A headless shell
-without extension support is not a valid smoke test.
+The complete verifier installs its Playwright Chromium build outside the
+repository. On Linux, extension E2E runs in headed Chromium through Xvfb. A
+headless shell without extension support is not a valid smoke test.
 
 ## Reporting a problem
 

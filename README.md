@@ -2,7 +2,7 @@
   <img src="public/icons/icon_128.png" width="128" height="128" alt="Elements icon">
 </p>
 
-<h1 align="center">Elements</h1>
+# Elements
 
 <p align="center">
   Hide distractions, edit visible text, and restyle page elements.<br>
@@ -18,11 +18,29 @@
 </p>
 
 <p align="center">
+  <a href="#status">Status</a> ·
   <a href="#interface">Interface</a> ·
   <a href="#features">Features</a> ·
-  <a href="#quick-start">Quick start</a> ·
+  <a href="#install">Install</a> ·
   <a href="#documentation">Documentation</a>
 </p>
+
+## Status
+
+Elements 1.0.0 is the current public release for Chrome and compatible
+Chromium browsers. GitHub distributes an unsigned archive for installation in
+Developer mode; Chrome Web Store distribution is not currently available.
+
+The extension is local-first: it has no analytics, advertising, remote code,
+or developer-operated backend. Current limitations are listed below instead of
+being politely hidden in marketing fog.
+
+## Requirements
+
+- Chrome or a compatible Chromium browser for normal use.
+- Developer mode when installing the unsigned GitHub release archive.
+- Node.js 22, npm, Python 3.11 or later, and a supported Chromium build when
+  verifying the source repository.
 
 ## Interface
 
@@ -64,7 +82,7 @@ The picker opens from the toolbar or with `Ctrl/Cmd+Shift+X`. Its layout adapts
 from a desktop corner panel to a touch-sized bottom sheet, with light, dark, and
 system themes throughout the extension.
 
-## Quick start
+## Install
 
 ### Download
 
@@ -84,7 +102,7 @@ Chrome Web Store distribution still requires its signing and review process.
 3. Enable **Developer mode**.
 4. Select **Load unpacked**, then choose the extracted folder.
 
-## Permissions and privacy
+## Privacy and security
 
 | Permission  | Purpose                                                      |
 | ----------- | ------------------------------------------------------------ |
@@ -100,35 +118,28 @@ local storage when data is too large or sync is unavailable. See the
 
 ## Development
 
-Requirements: Node.js 22 and npm.
+Run the complete repository gate from the canonical checkout:
 
 ```sh
-npm ci
-npm run validate
-npm run build:chrome
-npm run verify:build
+node scripts/verify-repository.mjs
 ```
 
-For local development, run `npm run dev`. WXT generates manifests and build
-directories; the repository intentionally has no root `manifest.json`.
-Load `.output/chrome-mv3` from `chrome://extensions`.
+The verifier copies the source into a unique operating-system temporary
+directory, installs dependencies there, and runs formatting, lint, type,
+documentation, unit, security, build, Chromium end-to-end, Pages, and release
+artifact checks. Dependency trees, browser binaries, WXT output, reports, and
+release staging never enter the repository.
 
-The Chromium end-to-end suite drives a built extension:
+To inspect or run the verified external workspace, preserve it explicitly:
 
 ```sh
-npx playwright install --no-shell chromium
-npm run build:chrome
-npm run test:e2e
-npm run test:site
-npm run site:serve
+ELEMENTS_KEEP_VERIFY_WORKSPACE=1 node scripts/verify-repository.mjs
 ```
 
-`npm run test:site` checks the public product page at desktop and narrow
-viewports, including its demo, product tour, accessibility, and reduced-motion
-fallback. `npm run site:serve` opens the static site at
-`http://127.0.0.1:4173` for local review. `npm run screenshots` refreshes the
-product images used by the documentation and GitHub Pages after the Chrome
-build.
+The command prints the external workspace path. Run `npm run dev` there for an
+interactive WXT session, or load its `.output/chrome-mv3` directory in Chrome.
+Make source changes in the canonical checkout and rerun the verifier. See the
+[development guide](docs/DEVELOPMENT.md) for the full boundary.
 
 ## Architecture
 
@@ -145,7 +156,7 @@ src/
   core/                  storage, data contracts, themes, protocol
   content/               selector engine, rule engine, controller, overlay
   components/            shared UI components
-  theme/                 shared design tokens
+  qds/                   shared design tokens and component foundations
 ```
 
 The background service worker validates a versioned message protocol and owns
@@ -156,15 +167,13 @@ React is loaded into the picker only after activation.
 ## Releasing
 
 ```sh
-npm run validate
-npm run audit:all
-npm run release:archives
-npm run verify:build
-npm run verify:release -- v1.0.0
+node scripts/verify-repository.mjs
 ```
 
 A `v*` tag runs the full release workflow, including Chromium E2E tests, and
 publishes the Chrome archive with notes taken from [CHANGELOG.md](CHANGELOG.md).
+Tagging and publishing remain separate maintainer-authorised actions; a green
+local check does not create or replace a release.
 
 ## Current limitations
 
@@ -188,15 +197,21 @@ publishes the Chrome archive with notes taken from [CHANGELOG.md](CHANGELOG.md).
 - [Third-party notices](THIRD_PARTY_NOTICES.md)
 - [MIT License](LICENSE)
 
-## Support
+## Contact
 
 Elements is maintained by
 [Nikita Melnychenko (QenTerra)](https://github.com/QenTerra). If it saves you
 time, you can [buy me a coffee](https://buymeacoffee.com/qenterra).
 
+- Product support, help, and technical questions:
+  [support@qenterra.com](mailto:support@qenterra.com)
+- Proposals, general enquiries, and commercial matters:
+  [contact@qenterra.com](mailto:contact@qenterra.com)
+- Suspected vulnerabilities: use the private route in
+  [SECURITY.md](SECURITY.md), never a public issue or either general mailbox.
+
 Bug reports and focused pull requests are welcome. Read
-[CONTRIBUTING.md](CONTRIBUTING.md) before opening one and use
-[SECURITY.md](SECURITY.md) for private vulnerability reports.
+[CONTRIBUTING.md](CONTRIBUTING.md) before opening one.
 
 ## License
 

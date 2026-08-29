@@ -4,6 +4,18 @@ All notable changes to Elements are documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- Adopted the QenTerra public repository standard, including complete
+  contribution, maintenance, release, Wiki, and contact documentation.
+- Moved dependency installs, generated builds, browser downloads, reports, and
+  release verification into external temporary workspaces.
+
+### Security
+
+- Updated the transitive `brace-expansion`, `nanoid`, and `postcss` resolutions
+  to versions that clear the current high-severity npm audit gate.
+
 ## [1.0.0] — 2026-07-29
 
 ### Added

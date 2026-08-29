@@ -14,63 +14,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  validate:
+  verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Validate source
-        run: npm run validate
-
-      - name: Audit dependencies
-        run: npm run audit:all
-
-      - name: Build Chrome
-        run: npm run build:chrome
-
-      - name: Verify build artifacts
-        run: npm run verify:build
-
-  e2e:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v7
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Chromium
-        run: npx playwright install --with-deps --no-shell chromium
-
-      - name: Install Xvfb
-        run: sudo apt-get update && sudo apt-get install -y xvfb
-
-      - name: Build Chrome
-        run: npm run build:chrome
-
-      - name: End-to-end tests
-        run: xvfb-run --auto-servernum npm run test:e2e
-
-      - name: Pages end-to-end tests
-        run: npm run test:site
+      - name: Verify in an external workspace
+        run: node scripts/verify-repository.mjs

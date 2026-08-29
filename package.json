@@ -13,7 +13,7 @@
     "release:archives": "npm run zip:chrome",
     "release:notes": "node scripts/release-notes.mjs",
     "screenshots": "node scripts/capture-screenshots.mjs",
-    "screenshots:qa": "QA_OUTPUT_DIR=artifacts/qa node scripts/capture-screenshots.mjs",
+    "screenshots:qa": "QA_ONLY=1 node scripts/capture-screenshots.mjs",
     "site:serve": "node scripts/serve-site.mjs",
     "lint": "oxlint --deny-warnings .",
     "format": "prettier --write .",
@@ -31,7 +31,8 @@
     "verify:icons": "node scripts/verify-icons.mjs",
     "verify:site": "node scripts/verify-qds-bridge.mjs && node scripts/verify-site.mjs",
     "verify:release-artifacts": "node scripts/verify-build.mjs --release",
-    "verify:release": "node scripts/verify-release.mjs"
+    "verify:release": "node scripts/verify-release.mjs",
+    "verify:repository": "node scripts/verify-repository.mjs"
   },
   "dependencies": {
     "react": "19.2.7",
@@ -57,8 +58,10 @@
   },
   "overrides": {
     "adm-zip": "0.6.0",
-    "brace-expansion": "5.0.8",
+    "brace-expansion": "5.0.9",
     "esbuild": "0.28.1",
+    "nanoid": "3.3.18",
+    "postcss": "8.5.26",
     "shell-quote": "1.10.0",
     "tmp": "0.2.7",
     "uuid": "11.1.1"

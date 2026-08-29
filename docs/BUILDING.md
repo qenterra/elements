@@ -9,46 +9,41 @@ checkout.
 - npm
 - Chrome or a compatible Chromium browser for extension E2E tests
 
-## Clone and install
+## Clone and verify
 
 ```sh
 git clone https://github.com/QenTerra/elements.git
 cd elements
-npm ci
+node scripts/verify-repository.mjs
 ```
 
-`package-lock.json` is the dependency source of truth. Use `npm ci` for a clean,
-reproducible installation instead of updating packages implicitly.
+`package-lock.json` is the dependency source of truth. The verifier copies the
+source to an operating-system temporary directory, installs the exact lockfile
+there, and runs the complete gate without creating dependency or build caches
+inside the repository.
 
 ## Development
 
+Preserve a verified external workspace when you need an interactive session:
+
 ```sh
-npm run dev
+ELEMENTS_KEEP_VERIFY_WORKSPACE=1 node scripts/verify-repository.mjs
 ```
 
-WXT generates the development build. The repository intentionally has no root
-`manifest.json`; browser manifests are generated from `wxt.config.ts` and
-`package.json`.
+The command prints the temporary path. Run `npm run dev` from its `workspace`
+directory. WXT generates manifests and build output there; the canonical
+repository intentionally has no root `manifest.json`.
 
 ## Production build
 
-```sh
-npm run build:chrome
-npm run verify:build
-```
-
-Load `.output/chrome-mv3` from `chrome://extensions` with **Developer mode**
-enabled.
+The complete verifier builds and checks Chrome output. With the external
+workspace preserved, load its `.output/chrome-mv3` directory from
+`chrome://extensions` with **Developer mode** enabled.
 
 ## Verification
 
 ```sh
-npm run validate
-npm run audit:all
-npm run build:chrome
-npm run verify:build
-npm run test:e2e
-npm run test:site
+node scripts/verify-repository.mjs
 ```
 
 The extension E2E suite requires a Chromium build that supports unpacked
@@ -61,6 +56,8 @@ and clean-profile installation remain manual release checks.
 
 ## Generated and local-only paths
 
-Do not commit `.output/`, `node_modules/`, browser profiles, downloaded test
-browsers, exported backups containing real browsing data, credentials, or
-private screenshots.
+Do not keep `.output/`, `.wxt/`, `node_modules/`, browser profiles, downloaded
+test browsers, reports, exported backups containing real browsing data,
+credentials, private screenshots, or AI and agent operating files anywhere in
+the public checkout, even when ignored. Reproducible working state belongs in a
+unique temporary directory outside the repository.
