@@ -60,6 +60,13 @@ Playwright, TypeScript, Vitest, Oxlint, and Prettier use their versioned project
 configuration. No live credentials or signing material are required for local
 verification.
 
+`src/qds/qds-tokens.source.css` is the human-maintained source for the pinned
+QDS token snapshot. Run `node scripts/verify-qds-artifacts.mjs --write` after a
+reviewed source change; it deterministically refreshes
+`src/qds/qds-tokens.css`, `site/qds-web.css`, and their checksum manifest.
+`npm run verify:qds-artifacts` regenerates the expected bytes in memory and
+fails if either committed output or the manifest drifts.
+
 WXT creates `.output/` and `.wxt/`. npm creates `node_modules/` and cache data.
 Playwright downloads browser binaries and writes reports. Screenshot capture
 uses an operating-system temporary directory before approved images are copied

@@ -107,7 +107,24 @@
   "primary_language": "English",
   "profile": "application",
   "project_name": "Elements",
-  "published_artifacts": [],
+  "published_artifacts": [
+    {
+      "manifest": "src/qds/qds-artifacts-manifest.json",
+      "path": "site/qds-web.css",
+      "purpose": "Static-site QDS token bridge consumed by the published Elements website",
+      "review_trigger": "QDS token source, artifact generator, site integration, or pinned Design System version changes",
+      "source": "src/qds/qds-tokens.source.css",
+      "verification_command": "node scripts/verify-qds-artifacts.mjs"
+    },
+    {
+      "manifest": "src/qds/qds-artifacts-manifest.json",
+      "path": "src/qds/qds-tokens.css",
+      "purpose": "Pinned QDS token stylesheet consumed by the browser extension source",
+      "review_trigger": "QDS token source, artifact generator, extension integration, or pinned Design System version changes",
+      "source": "src/qds/qds-tokens.source.css",
+      "verification_command": "node scripts/verify-qds-artifacts.mjs"
+    }
+  ],
   "quick_start_command": "node scripts/verify-repository.mjs",
   "release_mode": "github-releases",
   "repository_name": "elements",

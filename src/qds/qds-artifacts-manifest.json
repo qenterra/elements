@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "version": "1.8.1",
+  "repository": "https://github.com/qenterra/elements",
+  "files": [
+    {
+      "path": "site/qds-web.css",
+      "sha256": "5f91e18a589246e9e2569ae21d957688a8856944a639d822b72e372bd637c957",
+      "bytes": 11595
+    },
+    {
+      "path": "src/qds/qds-tokens.css",
+      "sha256": "5f91e18a589246e9e2569ae21d957688a8856944a639d822b72e372bd637c957",
+      "bytes": 11595
+    },
+    {
+      "path": "src/qds/qds-tokens.source.css",
+      "sha256": "ec9aedd1e258d01414487b2fcb328ffc4010268d7ca492464acacbfa24e0c068",
+      "bytes": 11529
+    }
+  ]
+}
